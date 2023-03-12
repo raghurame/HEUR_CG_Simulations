@@ -1,0 +1,276 @@
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+
+typedef struct boundary
+{
+	float xlo, xhi, ylo, yhi, zlo, zhi, xy, xz, yz;
+} BOUNDARY;
+
+typedef struct trajectory
+{
+	int sino, atomType, ix, iy, iz;
+	float x, y, z;
+} TRAJECTORY;
+
+typedef struct brigdes
+{
+	int count;
+	float y1lo, y1hi, y2lo, y2hi;
+} BRIDGES;
+
+int countNAtoms (FILE *file_inputTrj)
+{
+	int nAtoms;
+	char lineString[2000];
+
+	for (int i = 0; i < 4; ++i)
+	{
+		fgets (lineString, 2000, file_inputTrj);
+	}
+
+	sscanf (lineString, "%d\n", &nAtoms);
+	rewind (file_inputTrj);
+
+	return nAtoms;
+}
+
+BOUNDARY getBoundary (FILE *file_inputTrj, BOUNDARY simBoundary)
+{
+	char lineString[2000];
+
+	for (int i = 0; i < 5; ++i)
+	{
+		fgets (lineString, 2000, file_inputTrj);
+	}
+
+	fgets (lineString, 2000, file_inputTrj);
+	sscanf (lineString, "%f %f %f\n", &simBoundary.xlo, &simBoundary.xhi, &simBoundary.xy);
+
+	fgets (lineString, 2000, file_inputTrj);
+	sscanf (lineString, "%f %f %f\n", &simBoundary.ylo, &simBoundary.yhi, &simBoundary.xz);
+
+	fgets (lineString, 2000, file_inputTrj);
+	sscanf (lineString, "%f %f %f\n", &simBoundary.zlo, &simBoundary.zhi, &simBoundary.yz);
+
+	rewind (file_inputTrj);
+
+	return simBoundary;
+}
+
+TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, float distanceCutoff, FILE *file_inputTrj, int file_status, TRAJECTORY **micelles, int nMicelles)
+{
+	char lineString[2000];
+	float xLength, yLength, zLength;
+	int currentMicelle = 0;
+
+	for (int i = 0; i < 9; ++i)
+	{
+		fgets (lineString, 2000, file_inputTrj);
+
+		if (i == 5)
+		{
+			sscanf (lineString, "%f %f %f\n", &simBoundary.xlo, &simBoundary.xhi, &simBoundary.xy);
+		}
+		else if (i == 6)
+		{
+			sscanf (lineString, "%f %f %f\n", &simBoundary.ylo, &simBoundary.yhi, &simBoundary.xz);
+		}
+		else if (i == 7)
+		{
+			sscanf (lineString, "%f %f %f\n", &simBoundary.zlo, &simBoundary.zhi, &simBoundary.yz);
+		}
+
+		if (i == 8)
+		{
+			xLength = (simBoundary.xhi - simBoundary.xlo);
+			yLength = (simBoundary.yhi - simBoundary.ylo);
+			zLength = (simBoundary.zhi - simBoundary.zlo);
+		}
+	}
+
+	for (int i = 0; i < nAtoms; ++i)
+	{
+		fgets (lineString, 2000, file_inputTrj);
+		// sscanf (lineString, "%d %d %f %f %f %d %d %d\n", atoms[i].sino, atoms[i].atomType, atoms[i].x, atoms[i].y, atoms[i].z, atoms[i].ix, atoms[i].iy, atoms[i].iz);
+		sscanf (lineString, "%d %d %f %f %f\n", 
+			&atoms[i].sino, 
+			&atoms[i].atomType, 
+			&atoms[i].x, 
+			&atoms[i].y, 
+			&atoms[i].z);
+
+		atoms[i + nAtoms].sino = atoms[i].sino + nAtoms;
+		atoms[i + nAtoms].atomType = atoms[i].atomType;
+		atoms[i + nAtoms].x = atoms[i].x;
+		atoms[i + nAtoms].y = atoms[i].y - yLength; // translating along negative Y direction
+		atoms[i + nAtoms].z = atoms[i].z;
+		// atoms[i + nAtoms].ix = atoms[i].ix;
+		// atoms[i + nAtoms].iy = atoms[i].iy;
+		// atoms[i + nAtoms].iz = atoms[i].iz;
+
+		if (atoms[i].atomType == 2)
+		{
+			(*micelles)[currentMicelle].sino = atoms[i].sino;
+			(*micelles)[currentMicelle].atomType = atoms[i].atomType;
+			(*micelles)[currentMicelle].x = atoms[i].x;
+			(*micelles)[currentMicelle].y = atoms[i].y;
+			(*micelles)[currentMicelle].z = atoms[i].z;
+
+			(*micelles)[currentMicelle + nMicelles].sino = atoms[i].sino;
+			(*micelles)[currentMicelle + nMicelles].atomType = atoms[i].atomType;
+			(*micelles)[currentMicelle + nMicelles].x = atoms[i].x;
+			(*micelles)[currentMicelle + nMicelles].y = atoms[i].y - yLength;
+			(*micelles)[currentMicelle + nMicelles].z = atoms[i].z;
+
+			currentMicelle++;
+		}
+	}
+
+	return atoms;
+}
+
+int countNMicelles (FILE *file_inputTrj, int nAtoms)
+{
+	rewind (file_inputTrj);
+	char lineString[2000];
+	int atomType, nMicelles = 0;
+
+	for (int i = 0; i < 9; ++i)
+	{
+		fgets (lineString, 2000, file_inputTrj);
+	}
+	for (int i = 0; i < nAtoms; ++i)
+	{
+		fgets (lineString, 2000, file_inputTrj);
+		sscanf (lineString, "%*d %d\n", &atomType);
+
+		if (atomType == 2)
+		{
+			nMicelles++;
+		}
+	}
+
+	return nMicelles;
+}
+
+BRIDGES *assignBinBounds (BRIDGES *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
+{
+	for (int i = 0; i < nBins; ++i)
+	{
+		if (i == 0)
+		{
+			bridgeBetweenBins[i].y1lo = simBoundary.ylo - (simBoundary.yhi - simBoundary.ylo);
+		}
+		else
+		{
+			bridgeBetweenBins[i].y1lo = bridgeBetweenBins[i - 1].y1lo + delBinDistance;
+		}
+
+		bridgeBetweenBins[i].y1hi = bridgeBetweenBins[i].y1lo + binWidth;
+		bridgeBetweenBins[i].y2lo = bridgeBetweenBins[i].y1hi;
+		bridgeBetweenBins[i].y2hi = bridgeBetweenBins[i].y2lo + binWidth;
+
+		bridgeBetweenBins[i].count = 0;
+	}
+
+	return bridgeBetweenBins;
+}
+
+BRIDGES *countBridgesBetweenBins (TRAJECTORY *atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGES *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins)
+{
+	float distance1, distance2;
+
+	for (int i = 0; i < (nAtoms * 2); )
+	{
+		for (int j = 0; j < (nMicelles * 2); ++j)
+		{
+			distance1 = sqrt (
+				pow ((atoms[i].x - micelles[j].x), 2) +
+				pow ((atoms[i].y - micelles[j].y), 2) +
+				pow ((atoms[i].z - micelles[j].z), 2)
+				);
+
+			distance2 = sqrt (
+				pow ((atoms[i + 1].x - micelles[j].x), 2) +
+				pow ((atoms[i + 1].y - micelles[j].y), 2) +
+				pow ((atoms[i + 1].z - micelles[j].z), 2)
+				);
+
+			if (distance1 < distanceCutoff && distance2 < distanceCutoff)
+			{
+				// loop through all the bins and check if the bridge is within the bounds
+				for (int k = 0; k < nBins; ++k)
+				{
+					if ((atoms[i].y > bridgeBetweenBins[k].y1lo && 
+						atoms[i].y <= bridgeBetweenBins[k].y1hi && 
+						atoms[i + 1].y > bridgeBetweenBins[k].y2lo && 
+						atoms[i + 1].y <= bridgeBetweenBins[k].y2hi)
+						||
+						(atoms[i + 1].y > bridgeBetweenBins[k].y1lo && 
+						atoms[i + 1].y <= bridgeBetweenBins[k].y1hi && 
+						atoms[i].y > bridgeBetweenBins[k].y2lo && 
+						atoms[i].y <= bridgeBetweenBins[k].y2hi))
+					{
+						// printf("(i) => %f; (i + 1) => %f;\n", atoms[i].y, atoms[i + 1].y);
+						// printf("y1lo: %f; y1hi: %f; y2lo: %f; y2hi: %f;\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi);
+						bridgeBetweenBins[k].count++;
+						// sleep (1);
+					}
+				}
+			}
+		}
+		i += 2;
+	}
+
+	return bridgeBetweenBins;
+}
+
+int main(int argc, char const *argv[])
+{
+	if (argc != 5)
+	{
+		printf("\nINCORRECT ARGUMENTS PASSED:\n~~~~~~~~~~~~~~~~~~~~~~~~~\n\n -> Pass the input file as (char *) argv[1]\n -> Enter bin width as (float) argv[2]\n -> Enter the distance cut off for particle-bead as (float) argv[3]\n -> Enter the increment in bin distance as (float) argv[4]\n\n");
+		exit (1);
+	}
+
+	FILE *file_inputTrj;
+	file_inputTrj = fopen (argv[1], "r");
+
+	int nAtoms = countNAtoms (file_inputTrj), file_status = 0, nMicelles = countNMicelles (file_inputTrj, nAtoms);
+	BOUNDARY simBoundary;
+	simBoundary = getBoundary (file_inputTrj, simBoundary);
+
+	char lineString[2000];
+	float binWidth = atof (argv[2]), distanceCutoff = atof (argv[3]), delBinDistance = atof (argv[4]);
+	int nBins = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth)) / delBinDistance);
+
+	BRIDGES *bridgeBetweenBins;
+	bridgeBetweenBins = (BRIDGES *) malloc (nBins * sizeof (BRIDGES));
+
+	TRAJECTORY *atoms, *micelles;
+	atoms = (TRAJECTORY *) malloc (nAtoms * 2 * sizeof (TRAJECTORY));
+	micelles = (TRAJECTORY *) malloc (nMicelles * 2 * sizeof (TRAJECTORY));
+
+	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth, delBinDistance, nBins);
+
+	while (file_status != EOF)
+	{
+		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff, file_inputTrj, file_status, &micelles, nMicelles);
+		bridgeBetweenBins = countBridgesBetweenBins (atoms, simBoundary, distanceCutoff, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins);
+		
+		for (int i = 0; i < nBins; ++i)
+		{
+			printf("%f to %f and %f to %f => %d\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, bridgeBetweenBins[i].count);
+		}
+		exit (1);
+
+		file_status = fgetc (file_inputTrj);
+	}
+
+	fclose (file_inputTrj);
+	return 0;
+}
