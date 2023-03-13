@@ -329,25 +329,10 @@ int main(int argc, char const *argv[])
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
 		bridgeDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeDistribution, nBins_yDist);
 
-		// for (int i = 0; i < nBins_vertBridges; ++i)
-		// {
-		// 	printf("%f to %f and %f to %f => %d\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, bridgeBetweenBins[i].count);
-		// }
-
-		// for (int i = 0; i < nBins_yDist; ++i)
-		// {
-		// 	printf("%f to %f => %d\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, bridgeDistribution[i].count);
-		// }
-
-		// exit (1);
-
 		file_status = fgetc (file_inputTrj);
 
 		nTimeframes++;
 	}
-
-	// Take time average for bridges between bins here
-	// Then print it to a file
 
 	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeDistributionOutput;
 	file_bridgeBetweenBinsOuptut = fopen ("nBridgesBetweenBins.count", "w");
