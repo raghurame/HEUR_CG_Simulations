@@ -293,7 +293,7 @@ int main(int argc, char const *argv[])
 {
 	if (argc != 5)
 	{
-		printf("\nINCORRECT ARGUMENTS PASSED:\n~~~~~~~~~~~~~~~~~~~~~~~~~\n\n -> Pass the input file as (char *) argv[1]\n -> Enter bin width as (float) argv[2]\n -> Enter the distance cut off for particle-bead as (float) argv[3]\n -> Enter the increment in bin distance as (float) argv[4]\n\nFor example: ./countBridges last.lammpstrj 5.0 3.38 1.0\n\n");
+		printf("\nINCORRECT ARGUMENTS PASSED:\n~~~~~~~~~~~~~~~~~~~~~~~~~\n\n -> Pass the input file as (char *) argv[1]\n -> Enter bin width as (float) argv[2]\n -> Enter the distance cut off for particle-bead as (float) argv[3]\n -> Enter the increment in bin distance as (float) argv[4]\n\nFor example: ./countBridges last.lammpstrj 5.0 3.38 1.0\n~~~~~~~~~~~\n\nTo compile: gcc -o countBridges countBridges.c -lm\n~~~~~~~~~~\n\n");
 		exit (1);
 	}
 
