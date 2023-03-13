@@ -193,37 +193,51 @@ BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, floa
 
 	for (int i = 0; i < (nAtoms * 2); )
 	{
-		for (int j = 0; j < (nMicelles * 2); ++j)
+		if ((*atoms)[i].atomType == 1)
 		{
-			distance1 = sqrt (
-				pow (((*atoms)[i].x - micelles[j].x), 2) +
-				pow (((*atoms)[i].y - micelles[j].y), 2) +
-				pow (((*atoms)[i].z - micelles[j].z), 2)
-				);
-
-			distance2 = sqrt (
-				pow (((*atoms)[i + 1].x - micelles[j].x), 2) +
-				pow (((*atoms)[i + 1].y - micelles[j].y), 2) +
-				pow (((*atoms)[i + 1].z - micelles[j].z), 2)
-				);
-
-			if (distance1 <= distanceCutoff && (*atoms)[i].atomType == 1)
+			for (int j = 0; j < (nMicelles * 2); ++j)
 			{
-				(*atoms)[i].adsorbedID = j;
-			}
+				distance1 = sqrt (
+					pow (((*atoms)[i].x - micelles[j].x), 2) +
+					pow (((*atoms)[i].y - micelles[j].y), 2) +
+					pow (((*atoms)[i].z - micelles[j].z), 2)
+					);
 
-			if (distance2 <= distanceCutoff && (*atoms)[i + 1].atomType == 1)
-			{
-				(*atoms)[i + 1].adsorbedID = j;
+				distance2 = sqrt (
+					pow (((*atoms)[i + 1].x - micelles[j].x), 2) +
+					pow (((*atoms)[i + 1].y - micelles[j].y), 2) +
+					pow (((*atoms)[i + 1].z - micelles[j].z), 2)
+					);
+
+				if (distance1 <= distanceCutoff && (*atoms)[i].atomType == 1)
+				{
+					(*atoms)[i].adsorbedID = j;
+				}
+
+				if (distance2 <= distanceCutoff && (*atoms)[i + 1].atomType == 1)
+				{
+					(*atoms)[i + 1].adsorbedID = j;
+				}
 			}
 		}
+		else if ((*atoms)[i].atomType == 2)
+		{
+			(*atoms)[i].adsorbedID = 0;
+		}
 
-		i += 2;
+		if ((*atoms)[i].atomType == 1)
+		{
+			i += 2;
+		}
+		else if ((*atoms)[i].atomType == 2)
+		{
+			i += 1;
+		}
 	}
 
 	for (int i = 0; i < (nAtoms * 2); )
 	{
-		if ((*atoms)[i].adsorbedID != (*atoms)[i + 1].adsorbedID)
+		if (((*atoms)[i].adsorbedID != (*atoms)[i + 1].adsorbedID) && (*atoms)[i].adsorbedID != 0 && (*atoms)[i + 1].adsorbedID != 0)
 		{
 			for (int k = 0; k < nBins; ++k)
 			{
@@ -272,7 +286,7 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDi
 {
 	for (int i = 0; i < nAtoms; )
 	{
-		if (atoms[i].adsorbedID != atoms[i + 1].adsorbedID)
+		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].adsorbedID != 0 && atoms[i + 1].adsorbedID != 0)
 		{
 			for (int j = 0; j < nBins; ++j)
 			{
