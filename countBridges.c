@@ -14,6 +14,7 @@ typedef struct trajectory
 {
 	int sino, atomType, ix, iy, iz;
 	float x, y, z;
+	int adsorbedID;
 } TRAJECTORY;
 
 typedef struct brigdes
@@ -21,6 +22,12 @@ typedef struct brigdes
 	int count;
 	float y1lo, y1hi, y2lo, y2hi;
 } BRIDGES;
+
+typedef struct yDistribution
+{
+	float ylo, yhi;
+	int count;
+} YDIST;
 
 int countNAtoms (FILE *file_inputTrj)
 {
@@ -180,7 +187,7 @@ BRIDGES *assignBinBounds (BRIDGES *bridgeBetweenBins, BOUNDARY simBoundary, floa
 	return bridgeBetweenBins;
 }
 
-BRIDGES *countBridgesBetweenBins (TRAJECTORY *atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGES *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins)
+BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGES *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins)
 {
 	float distance1, distance2;
 
@@ -189,40 +196,52 @@ BRIDGES *countBridgesBetweenBins (TRAJECTORY *atoms, BOUNDARY simBoundary, float
 		for (int j = 0; j < (nMicelles * 2); ++j)
 		{
 			distance1 = sqrt (
-				pow ((atoms[i].x - micelles[j].x), 2) +
-				pow ((atoms[i].y - micelles[j].y), 2) +
-				pow ((atoms[i].z - micelles[j].z), 2)
+				pow (((*atoms)[i].x - micelles[j].x), 2) +
+				pow (((*atoms)[i].y - micelles[j].y), 2) +
+				pow (((*atoms)[i].z - micelles[j].z), 2)
 				);
 
 			distance2 = sqrt (
-				pow ((atoms[i + 1].x - micelles[j].x), 2) +
-				pow ((atoms[i + 1].y - micelles[j].y), 2) +
-				pow ((atoms[i + 1].z - micelles[j].z), 2)
+				pow (((*atoms)[i + 1].x - micelles[j].x), 2) +
+				pow (((*atoms)[i + 1].y - micelles[j].y), 2) +
+				pow (((*atoms)[i + 1].z - micelles[j].z), 2)
 				);
 
-			if (distance1 < distanceCutoff && distance2 < distanceCutoff)
+			if (distance1 <= distanceCutoff)
 			{
-				// loop through all the bins and check if the bridge is within the bounds
-				for (int k = 0; k < nBins; ++k)
+				(*atoms)[i].adsorbedID = j;
+			}
+
+			if (distance2 <= distanceCutoff)
+			{
+				(*atoms)[i + 1].adsorbedID = j;
+			}
+		}
+
+		i += 2;
+	}
+
+	for (int i = 0; i < (nAtoms * 2); )
+	{
+		if ((*atoms)[i].adsorbedID != (*atoms)[i + 1].adsorbedID)
+		{
+			for (int k = 0; k < nBins; ++k)
+			{
+				if (((*atoms)[i].y > bridgeBetweenBins[k].y1lo && 
+					(*atoms)[i].y <= bridgeBetweenBins[k].y1hi && 
+					(*atoms)[i + 1].y > bridgeBetweenBins[k].y2lo && 
+					(*atoms)[i + 1].y <= bridgeBetweenBins[k].y2hi)
+					||
+					((*atoms)[i + 1].y > bridgeBetweenBins[k].y1lo && 
+					(*atoms)[i + 1].y <= bridgeBetweenBins[k].y1hi && 
+					(*atoms)[i].y > bridgeBetweenBins[k].y2lo && 
+					(*atoms)[i].y <= bridgeBetweenBins[k].y2hi))
 				{
-					if ((atoms[i].y > bridgeBetweenBins[k].y1lo && 
-						atoms[i].y <= bridgeBetweenBins[k].y1hi && 
-						atoms[i + 1].y > bridgeBetweenBins[k].y2lo && 
-						atoms[i + 1].y <= bridgeBetweenBins[k].y2hi)
-						||
-						(atoms[i + 1].y > bridgeBetweenBins[k].y1lo && 
-						atoms[i + 1].y <= bridgeBetweenBins[k].y1hi && 
-						atoms[i].y > bridgeBetweenBins[k].y2lo && 
-						atoms[i].y <= bridgeBetweenBins[k].y2hi))
-					{
-						// printf("(i) => %f; (i + 1) => %f;\n", atoms[i].y, atoms[i + 1].y);
-						// printf("y1lo: %f; y1hi: %f; y2lo: %f; y2hi: %f;\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi);
-						bridgeBetweenBins[k].count++;
-						// sleep (1);
-					}
+					bridgeBetweenBins[k].count++;
 				}
 			}
 		}
+
 		i += 2;
 	}
 
@@ -245,8 +264,8 @@ int main(int argc, char const *argv[])
 	simBoundary = getBoundary (file_inputTrj, simBoundary);
 
 	char lineString[2000];
-	float binWidth = atof (argv[2]), distanceCutoff = atof (argv[3]), delBinDistance = atof (argv[4]);
-	int nBins = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth)) / delBinDistance);
+	float binWidth_vertBridges = atof (argv[2]), distanceCutoff_vertBridges = atof (argv[3]), delBinDistance_vertBridges = atof (argv[4]);
+	int nBins = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth_vertBridges)) / delBinDistance_vertBridges);
 
 	BRIDGES *bridgeBetweenBins;
 	bridgeBetweenBins = (BRIDGES *) malloc (nBins * sizeof (BRIDGES));
@@ -255,18 +274,23 @@ int main(int argc, char const *argv[])
 	atoms = (TRAJECTORY *) malloc (nAtoms * 2 * sizeof (TRAJECTORY));
 	micelles = (TRAJECTORY *) malloc (nMicelles * 2 * sizeof (TRAJECTORY));
 
-	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth, delBinDistance, nBins);
+	float maxFeneExtension = 60.0, binWidth_yDist = (maxFeneExtension / 20);
+	int nBins_yDist = 20; //Taken arbitrarily for now; 20 bins across the maximum extensible length of 60 sigma
+	YDIST *bridgeDistribution;
+	bridgeDistribution = (YDIST *) malloc (nBins_yDist * sizeof (YDIST));
+
+	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth_vertBridges, delBinDistance_vertBridges, nBins);
 
 	while (file_status != EOF)
 	{
-		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff, file_inputTrj, file_status, &micelles, nMicelles);
-		bridgeBetweenBins = countBridgesBetweenBins (atoms, simBoundary, distanceCutoff, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins);
+		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
+		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins);
 		
 		for (int i = 0; i < nBins; ++i)
 		{
 			printf("%f to %f and %f to %f => %d\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, bridgeBetweenBins[i].count);
 		}
-		exit (1);
+		sleep (1);
 
 		file_status = fgetc (file_inputTrj);
 	}
