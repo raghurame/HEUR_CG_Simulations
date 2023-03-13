@@ -6,7 +6,7 @@ The C code calculates the following,
 2. Counts the number of bridges as a function of del(y), where del(y) equals y2 - y1 (the two polymer end groups are located at x1, y1, z1, and x2, y2, z2)
 
 # To compile
-Type 'make'
+Type 'make' in terminal
 
-#To run
-Type 'make run'
+# To run
+Type 'make run'. The code will display the args necessary to run the code.
