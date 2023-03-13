@@ -260,7 +260,7 @@ YDIST *assignBridgeDistribution (float maxFeneExtension, int nBins, float binWid
 		{
 			bridgeDistribution[i].ylo = bridgeDistribution[i - 1].yhi;
 		}
-		
+
 		bridgeDistribution[i].yhi = bridgeDistribution[i].ylo + binWidth;
 		bridgeDistribution[i].count = 0;
 	}
@@ -300,7 +300,7 @@ int main(int argc, char const *argv[])
 	FILE *file_inputTrj;
 	file_inputTrj = fopen (argv[1], "r");
 
-	int nAtoms = countNAtoms (file_inputTrj), file_status = 0, nMicelles = countNMicelles (file_inputTrj, nAtoms);
+	int nAtoms = countNAtoms (file_inputTrj), file_status = 0, nMicelles = countNMicelles (file_inputTrj, nAtoms), nTimeframes = 0;
 	BOUNDARY simBoundary;
 	simBoundary = getBoundary (file_inputTrj, simBoundary);
 
@@ -334,18 +334,37 @@ int main(int argc, char const *argv[])
 		// 	printf("%f to %f and %f to %f => %d\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, bridgeBetweenBins[i].count);
 		// }
 
-		for (int i = 0; i < nBins_yDist; ++i)
-		{
-			printf("%f to %f => %d\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, bridgeDistribution[i].count);
-		}
+		// for (int i = 0; i < nBins_yDist; ++i)
+		// {
+		// 	printf("%f to %f => %d\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, bridgeDistribution[i].count);
+		// }
 
-		exit (1);
+		// exit (1);
 
 		file_status = fgetc (file_inputTrj);
+
+		nTimeframes++;
 	}
 
 	// Take time average for bridges between bins here
 	// Then print it to a file
+
+	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeDistributionOutput;
+	file_bridgeBetweenBinsOuptut = fopen ("nBridgesBetweenBins.count", "w");
+	file_bridgeDistributionOutput = fopen ("bridges.distribution", "w");
+
+	fprintf(file_bridgeBetweenBinsOuptut, "# y1lo, y1hi, y2lo, y2hi, avgCounts\n");
+	fprintf(file_bridgeDistributionOutput, "# ylo, yhi, avgCounts\n");
+
+	for (int i = 0; i < nBins_vertBridges; ++i)
+	{
+		fprintf(file_bridgeBetweenBinsOuptut, "%f %f %f %f %f\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, ((float)bridgeBetweenBins[i].count / (float)nTimeframes));
+	}
+
+	for (int i = 0; i < nBins_yDist; ++i)
+	{
+		fprintf(file_bridgeDistributionOutput, "%f %f %f\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, ((float)bridgeDistribution[i].count / (float)nTimeframes));
+	}
 
 	fclose (file_inputTrj);
 	return 0;
