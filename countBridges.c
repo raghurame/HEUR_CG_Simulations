@@ -207,12 +207,12 @@ BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, floa
 				pow (((*atoms)[i + 1].z - micelles[j].z), 2)
 				);
 
-			if (distance1 <= distanceCutoff)
+			if (distance1 <= distanceCutoff && (*atoms)[i].atomType == 1)
 			{
 				(*atoms)[i].adsorbedID = j;
 			}
 
-			if (distance2 <= distanceCutoff)
+			if (distance2 <= distanceCutoff && (*atoms)[i + 1].atomType == 1)
 			{
 				(*atoms)[i + 1].adsorbedID = j;
 			}
