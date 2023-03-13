@@ -248,6 +248,47 @@ BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, floa
 	return bridgeBetweenBins;
 }
 
+YDIST *assignBridgeDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeDistribution)
+{
+	for (int i = 0; i < nBins; ++i)
+	{
+		if (i == 0)
+		{
+			bridgeDistribution[i].ylo = 0;
+		}
+		else
+		{
+			bridgeDistribution[i].ylo = bridgeDistribution[i - 1].yhi;
+		}
+		
+		bridgeDistribution[i].yhi = bridgeDistribution[i].ylo + binWidth;
+		bridgeDistribution[i].count = 0;
+	}
+
+	return bridgeDistribution;
+}
+
+YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDistribution, int nBins)
+{
+	for (int i = 0; i < nAtoms; )
+	{
+		if (atoms[i].adsorbedID != atoms[i + 1].adsorbedID)
+		{
+			for (int j = 0; j < nBins; ++j)
+			{
+				if (abs (atoms[i].y - atoms[i + 1].y) > bridgeDistribution[j].ylo && abs (atoms[i].y - atoms[i + 1].y) <= bridgeDistribution[j].yhi)
+				{
+					bridgeDistribution[j].count++;
+				}
+			}
+		}
+
+		i += 2;
+	}
+
+	return bridgeDistribution;
+}
+
 int main(int argc, char const *argv[])
 {
 	if (argc != 5)
@@ -265,10 +306,10 @@ int main(int argc, char const *argv[])
 
 	char lineString[2000];
 	float binWidth_vertBridges = atof (argv[2]), distanceCutoff_vertBridges = atof (argv[3]), delBinDistance_vertBridges = atof (argv[4]);
-	int nBins = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth_vertBridges)) / delBinDistance_vertBridges);
+	int nBins_vertBridges = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth_vertBridges)) / delBinDistance_vertBridges);
 
 	BRIDGES *bridgeBetweenBins;
-	bridgeBetweenBins = (BRIDGES *) malloc (nBins * sizeof (BRIDGES));
+	bridgeBetweenBins = (BRIDGES *) malloc (nBins_vertBridges * sizeof (BRIDGES));
 
 	TRAJECTORY *atoms, *micelles;
 	atoms = (TRAJECTORY *) malloc (nAtoms * 2 * sizeof (TRAJECTORY));
@@ -279,21 +320,32 @@ int main(int argc, char const *argv[])
 	YDIST *bridgeDistribution;
 	bridgeDistribution = (YDIST *) malloc (nBins_yDist * sizeof (YDIST));
 
-	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth_vertBridges, delBinDistance_vertBridges, nBins);
+	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth_vertBridges, delBinDistance_vertBridges, nBins_vertBridges);
+	bridgeDistribution = assignBridgeDistribution (maxFeneExtension, nBins_yDist, binWidth_yDist, bridgeDistribution);
 
 	while (file_status != EOF)
 	{
 		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
-		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins);
-		
-		for (int i = 0; i < nBins; ++i)
+		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
+		bridgeDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeDistribution, nBins_yDist);
+
+		// for (int i = 0; i < nBins_vertBridges; ++i)
+		// {
+		// 	printf("%f to %f and %f to %f => %d\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, bridgeBetweenBins[i].count);
+		// }
+
+		for (int i = 0; i < nBins_yDist; ++i)
 		{
-			printf("%f to %f and %f to %f => %d\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, bridgeBetweenBins[i].count);
+			printf("%f to %f => %d\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, bridgeDistribution[i].count);
 		}
-		sleep (1);
+
+		exit (1);
 
 		file_status = fgetc (file_inputTrj);
 	}
+
+	// Take time average for bridges between bins here
+	// Then print it to a file
 
 	fclose (file_inputTrj);
 	return 0;
