@@ -19,11 +19,17 @@ typedef struct trajectory
 	int adsorbedID;
 } TRAJECTORY;
 
-typedef struct brigdes
+typedef struct brigdesBin
 {
 	int count;
 	float y1lo, y1hi, y2lo, y2hi;
-} BRIDGES;
+} BRIDGESBIN;
+
+typedef struct bondIndo
+{
+	float x1, y1, z1, x2, y2, z2;
+	float xc, yc, zc;
+} BONDINFO;
 
 typedef struct yDistribution
 {
@@ -167,22 +173,24 @@ int countNMicelles (FILE *file_inputTrj, int nAtoms)
 	return nMicelles;
 }
 
-BRIDGES *assignBinBounds (BRIDGES *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
+BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
 {
 	for (int i = 0; i < nBins; ++i)
 	{
 		if (i == 0)
 		{
-			bridgeBetweenBins[i].y1lo = simBoundary.ylo - (simBoundary.yhi - simBoundary.ylo);
+			bridgeBetweenBins[i].y1lo = simBoundary.yhi - binWidth;
+			bridgeBetweenBins[i].y1hi = simBoundary.yhi;
+			bridgeBetweenBins[i].y2lo = simBoundary.ylo;
+			bridgeBetweenBins[i].y2hi = simBoundary.ylo + binWidth;
 		}
 		else
 		{
 			bridgeBetweenBins[i].y1lo = bridgeBetweenBins[i - 1].y1lo + delBinDistance;
+			bridgeBetweenBins[i].y1hi = bridgeBetweenBins[i - 1].y1hi + delBinDistance;
+			bridgeBetweenBins[i].y2lo = bridgeBetweenBins[i - 1].y2lo + delBinDistance;
+			bridgeBetweenBins[i].y2hi = bridgeBetweenBins[i - 1].y2hi + delBinDistance;
 		}
-
-		bridgeBetweenBins[i].y1hi = bridgeBetweenBins[i].y1lo + binWidth;
-		bridgeBetweenBins[i].y2lo = bridgeBetweenBins[i].y1hi;
-		bridgeBetweenBins[i].y2hi = bridgeBetweenBins[i].y2lo + binWidth;
 
 		bridgeBetweenBins[i].count = 0;
 	}
@@ -190,26 +198,57 @@ BRIDGES *assignBinBounds (BRIDGES *bridgeBetweenBins, BOUNDARY simBoundary, floa
 	return bridgeBetweenBins;
 }
 
-BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGES *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins)
+BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGESBIN *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins)
 {
 	float distance1, distance2;
+	float tempX, tempY, tempY1, tempY2, tempZ;
 
-	for (int i = 0; i < (nAtoms * 2); )
+	for (int i = 0; i < nAtoms; )
 	{
 		if ((*atoms)[i].atomType == 1)
 		{
 			for (int j = 0; j < (nMicelles * 2); ++j)
 			{
+				if (fabs ((*atoms)[i].x - micelles[j].x) > (simBoundary.xLength / 2))
+				{
+					if ((*atoms)[i].x > micelles[j].x) {
+						tempX = micelles[j].x + simBoundary.xLength; }
+					else if ((*atoms)[i].x < micelles[j].x) {
+						tempX = micelles[j].x - simBoundary.xLength; }
+				}
+				else {
+					tempX = (*atoms)[i].x; }
+
+				if (fabs ((*atoms)[i].y - micelles[j].y) > (simBoundary.yLength / 2))
+				{
+					if ((*atoms)[i].y > micelles[j].y) {
+						tempY = micelles[j].y + simBoundary.yLength; }
+					else if ((*atoms)[i].y < micelles[j].y) {
+						tempY = micelles[j].y - simBoundary.yLength; }
+				}
+				else {
+					tempY = (*atoms)[i].y; }
+
+				if (fabs ((*atoms)[i].z - micelles[j].z) > (simBoundary.zLength / 2))
+				{
+					if ((*atoms)[i].z > micelles[j].z) {
+						tempZ = micelles[j].z + simBoundary.zLength; }
+					else if ((*atoms)[i].z < micelles[j].z) {
+						tempZ = micelles[j].z - simBoundary.zLength; }
+				}
+				else {
+					tempZ = (*atoms)[i].z; }
+
 				distance1 = sqrt (
-					pow (((*atoms)[i].x - micelles[j].x), 2) +
-					pow (((*atoms)[i].y - micelles[j].y), 2) +
-					pow (((*atoms)[i].z - micelles[j].z), 2)
+					pow (((*atoms)[i].x - tempX), 2) +
+					pow (((*atoms)[i].y - tempY), 2) +
+					pow (((*atoms)[i].z - tempZ), 2)
 					);
 
 				distance2 = sqrt (
-					pow (((*atoms)[i + 1].x - micelles[j].x), 2) +
-					pow (((*atoms)[i + 1].y - micelles[j].y), 2) +
-					pow (((*atoms)[i + 1].z - micelles[j].z), 2)
+					pow (((*atoms)[i + 1].x - tempX), 2) +
+					pow (((*atoms)[i + 1].y - tempY), 2) +
+					pow (((*atoms)[i + 1].z - tempZ), 2)
 					);
 
 				if (distance1 <= distanceCutoff) {
@@ -230,19 +269,39 @@ BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, floa
 			i += 1; }
 	}
 
-	for (int i = 0; i < (nAtoms * 2); )
+	for (int i = 0; i < nAtoms; )
 	{
 		if (((*atoms)[i].adsorbedID != (*atoms)[i + 1].adsorbedID) && (*atoms)[i].adsorbedID != 0 && (*atoms)[i + 1].adsorbedID != 0 && (*atoms)[i].atomType == 1 && (*atoms)[i + 1].atomType == 1)
 		{
 			for (int k = 0; k < nBins; ++k)
 			{
-				if (((*atoms)[i].y > bridgeBetweenBins[k].y1lo && 
-					(*atoms)[i].y <= bridgeBetweenBins[k].y1hi && 
+				if (fabs ((*atoms)[i].y - bridgeBetweenBins[k].y1hi) > (simBoundary.yLength / 2))
+				{
+					if ((*atoms)[i].y < bridgeBetweenBins[k].y1hi) {
+						tempY1 = (*atoms)[i].y + simBoundary.yLength; }
+					else if ((*atoms)[i].y > bridgeBetweenBins[k].y1hi) {
+						tempY1 = (*atoms)[i].y - simBoundary.yLength; }
+				}
+				else {
+					tempY1 = (*atoms)[i].y; }
+
+				if (fabs ((*atoms)[i + 1].y - bridgeBetweenBins[k].y1hi) > (simBoundary.yLength / 2))
+				{
+					if ((*atoms)[i + 1].y < bridgeBetweenBins[k].y1hi) {
+						tempY2 = (*atoms)[i + 1].y + simBoundary.yLength; }
+					else if ((*atoms)[i + 1].y > bridgeBetweenBins[k].y1hi) {
+						tempY2 = (*atoms)[i + 1].y - simBoundary.yLength; }
+				}
+				else {
+					tempY2 = (*atoms)[i + 1].y; }
+
+				if ((tempY1 > bridgeBetweenBins[k].y1lo && 
+					tempY1 <= bridgeBetweenBins[k].y1hi && 
 					(*atoms)[i + 1].y > bridgeBetweenBins[k].y2lo && 
 					(*atoms)[i + 1].y <= bridgeBetweenBins[k].y2hi)
 					||
-					((*atoms)[i + 1].y > bridgeBetweenBins[k].y1lo && 
-					(*atoms)[i + 1].y <= bridgeBetweenBins[k].y1hi && 
+					(tempY2 > bridgeBetweenBins[k].y1lo && 
+					tempY2 <= bridgeBetweenBins[k].y1hi && 
 					(*atoms)[i].y > bridgeBetweenBins[k].y2lo && 
 					(*atoms)[i].y <= bridgeBetweenBins[k].y2hi))
 				{
@@ -251,7 +310,10 @@ BRIDGES *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, floa
 			}
 		}
 
-		i += 2;
+		if ((*atoms)[i].atomType == 1) {
+			i += 2; }
+		if ((*atoms)[i].atomType == 2) {
+			i += 1; }
 	}
 
 	return bridgeBetweenBins;
@@ -282,7 +344,7 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDi
 	{
 		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].adsorbedID != 0 && atoms[i + 1].adsorbedID != 0)
 		{
-			if (fabs (atoms[i].y - atoms[i + 1].y) > simBoundary.yLength)
+			if (fabs (atoms[i].y - atoms[i + 1].y) > (simBoundary.yLength / 2))
 			{
 				if (atoms[i + 1].y > atoms[i].y) {
 					yDistance = atoms[i].y - atoms[i + 1].y + simBoundary.yLength; }
@@ -313,6 +375,12 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDi
 	return bridgeDistribution;
 }
 
+BONDINFO *computeBridgeCenterDistribution (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds, BOUNDARY simBoundary, int nBins_bridgeCenter)
+{
+
+	return allBonds;
+}
+
 int main(int argc, char const *argv[])
 {
 	if (argc != 5)
@@ -332,8 +400,8 @@ int main(int argc, char const *argv[])
 	float binWidth_vertBridges = atof (argv[2]), distanceCutoff_vertBridges = atof (argv[3]), delBinDistance_vertBridges = atof (argv[4]);
 	int nBins_vertBridges = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth_vertBridges)) / delBinDistance_vertBridges);
 
-	BRIDGES *bridgeBetweenBins;
-	bridgeBetweenBins = (BRIDGES *) malloc (nBins_vertBridges * sizeof (BRIDGES));
+	BRIDGESBIN *bridgeBetweenBins;
+	bridgeBetweenBins = (BRIDGESBIN *) malloc (nBins_vertBridges * sizeof (BRIDGESBIN));
 
 	TRAJECTORY *atoms, *micelles;
 	atoms = (TRAJECTORY *) malloc (nAtoms * 2 * sizeof (TRAJECTORY));
@@ -347,6 +415,10 @@ int main(int argc, char const *argv[])
 	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth_vertBridges, delBinDistance_vertBridges, nBins_vertBridges);
 	bridgeDistribution = assignBridgeDistribution (maxFeneExtension, nBins_yDist, binWidth_yDist, bridgeDistribution);
 
+	int nBridges = (nAtoms - nMicelles) / 2, nBins_bridgeCenter = 20;
+	BONDINFO *allBonds;
+	allBonds = (BONDINFO *) malloc (nBridges * sizeof (BONDINFO));
+
 	while (file_status != EOF)
 	{
 		if (nTimeframes%1 == 0) {
@@ -354,8 +426,14 @@ int main(int argc, char const *argv[])
 			fflush (stdout); }
 
 		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
+
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
 		bridgeDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeDistribution, nBins_yDist, simBoundary);
+
+		// Finish the bridge center distribution calculations
+		allBonds = computeBridgeCenterDistribution (atoms, nAtoms, allBonds, simBoundary, nBins_bridgeCenter);
+
+		// Plot the distribution of angles between all the bonds and an unit vector along X-axis (along the velocity profile direction.)
 
 		file_status = fgetc (file_inputTrj);
 		nTimeframes++;
@@ -369,7 +447,12 @@ int main(int argc, char const *argv[])
 	fprintf(file_bridgeDistributionOutput, "# ylo, yhi, avgCounts\n");
 
 	for (int i = 0; i < nBins_vertBridges; ++i) {
-		fprintf(file_bridgeBetweenBinsOuptut, "%f %f %f %f %f\n", bridgeBetweenBins[i].y1lo, bridgeBetweenBins[i].y1hi, bridgeBetweenBins[i].y2lo, bridgeBetweenBins[i].y2hi, ((float)bridgeBetweenBins[i].count / (float)nTimeframes)); }
+		fprintf(file_bridgeBetweenBinsOuptut, "%f %f %f %f %f\n", 
+			bridgeBetweenBins[i].y1lo, 
+			bridgeBetweenBins[i].y1hi, 
+			bridgeBetweenBins[i].y2lo, 
+			bridgeBetweenBins[i].y2hi, 
+			((float)bridgeBetweenBins[i].count / (float)nTimeframes)); }
 
 	for (int i = 0; i < nBins_yDist; ++i) {
 		fprintf(file_bridgeDistributionOutput, "%f %f %f\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, ((float)bridgeDistribution[i].count / (float)nTimeframes)); }
