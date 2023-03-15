@@ -9,6 +9,7 @@
 typedef struct boundary
 {
 	float xlo, xhi, ylo, yhi, zlo, zhi, xy, xz, yz;
+	float xLength, yLength, zLength;
 } BOUNDARY;
 
 typedef struct trajectory
@@ -65,6 +66,10 @@ BOUNDARY getBoundary (FILE *file_inputTrj, BOUNDARY simBoundary)
 	sscanf (lineString, "%f %f %f\n", &simBoundary.zlo, &simBoundary.zhi, &simBoundary.yz);
 
 	rewind (file_inputTrj);
+
+	simBoundary.xLength = simBoundary.xhi - simBoundary.xlo;
+	simBoundary.yLength = simBoundary.yhi - simBoundary.ylo;
+	simBoundary.zLength = simBoundary.zhi - simBoundary.zlo;
 
 	return simBoundary;
 }
@@ -268,17 +273,26 @@ YDIST *assignBridgeDistribution (float maxFeneExtension, int nBins, float binWid
 	return bridgeDistribution;
 }
 
-YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDistribution, int nBins)
+YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDistribution, int nBins, BOUNDARY simBoundary)
 {
 	int bridgeCountLocal = 0;
+	float yDistance;
 
 	for (int i = 0; i < nAtoms; )
 	{
 		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].adsorbedID != 0 && atoms[i + 1].adsorbedID != 0)
 		{
+			if (fabs (atoms[i].y - atoms[i + 1].y) > simBoundary.yLength)
+			{
+				if (atoms[i + 1].y > atoms[i].y) {
+					yDistance = atoms[i].y - atoms[i + 1].y + simBoundary.yLength; }
+				else if (atoms[i + 1].y < atoms[i].y) {
+					yDistance = atoms[i + 1].y + simBoundary.yLength - atoms[i].y; }
+			}
+
 			for (int j = 0; j < nBins; ++j)
 			{
-				if (abs (atoms[i].y - atoms[i + 1].y) > bridgeDistribution[j].ylo && abs (atoms[i].y - atoms[i + 1].y) <= bridgeDistribution[j].yhi)
+				if (yDistance > bridgeDistribution[j].ylo && yDistance <= bridgeDistribution[j].yhi)
 				{
 					bridgeDistribution[j].count++;
 				}
@@ -341,7 +355,7 @@ int main(int argc, char const *argv[])
 
 		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
-		bridgeDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeDistribution, nBins_yDist);
+		bridgeDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeDistribution, nBins_yDist, simBoundary);
 
 		file_status = fgetc (file_inputTrj);
 		nTimeframes++;
