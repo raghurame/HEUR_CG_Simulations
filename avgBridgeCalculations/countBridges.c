@@ -207,6 +207,7 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 	{
 		if ((*atoms)[i].atomType == 1)
 		{
+			#pragma omp parallel for
 			for (int j = 0; j < (nMicelles * 2); ++j)
 			{
 				if (fabs ((*atoms)[i].x - micelles[j].x) > (simBoundary.xLength / 2))
@@ -273,6 +274,7 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 	{
 		if (((*atoms)[i].adsorbedID != (*atoms)[i + 1].adsorbedID) && (*atoms)[i].adsorbedID != 0 && (*atoms)[i + 1].adsorbedID != 0 && (*atoms)[i].atomType == 1 && (*atoms)[i + 1].atomType == 1)
 		{
+			#pragma omp parallel for
 			for (int k = 0; k < nBins; ++k)
 			{
 				if (fabs ((*atoms)[i].y - bridgeBetweenBins[k].y1hi) > (simBoundary.yLength / 2))
@@ -352,6 +354,7 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDi
 					yDistance = atoms[i + 1].y + simBoundary.yLength - atoms[i].y; }
 			}
 
+			#pragma omp parallel for
 			for (int j = 0; j < nBins; ++j)
 			{
 				if (yDistance > bridgeDistribution[j].ylo && yDistance <= bridgeDistribution[j].yhi)
