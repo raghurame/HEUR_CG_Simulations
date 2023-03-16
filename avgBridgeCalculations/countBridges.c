@@ -19,12 +19,6 @@ typedef struct trajectory
 	int adsorbedID;
 } TRAJECTORY;
 
-typedef struct brigdesBin
-{
-	int count;
-	float y1lo, y1hi, y2lo, y2hi;
-} BRIDGESBIN;
-
 typedef struct bondIndo
 {
 	float x1, y1, z1, x2, y2, z2;
@@ -36,6 +30,12 @@ typedef struct yDistribution
 	float ylo, yhi;
 	int count;
 } YDIST;
+
+typedef struct brigdesBin
+{
+	int count;
+	float y1lo, y1hi, y2lo, y2hi;
+} BRIDGESBIN;
 
 int countNAtoms (FILE *file_inputTrj)
 {
@@ -321,26 +321,27 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 	return bridgeBetweenBins;
 }
 
-YDIST *assignBridgeDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeDistribution)
+YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeYDistribution)
 {
 	for (int i = 0; i < nBins; ++i)
 	{
 		if (i == 0) {
-			bridgeDistribution[i].ylo = 0; }
+			bridgeYDistribution[i].ylo = 0; }
 		else {
-			bridgeDistribution[i].ylo = bridgeDistribution[i - 1].yhi; }
+			bridgeYDistribution[i].ylo = bridgeYDistribution[i - 1].yhi; }
 
-		bridgeDistribution[i].yhi = bridgeDistribution[i].ylo + binWidth;
-		bridgeDistribution[i].count = 0;
+		bridgeYDistribution[i].yhi = bridgeYDistribution[i].ylo + binWidth;
+		bridgeYDistribution[i].count = 0;
 	}
 
-	return bridgeDistribution;
+	return bridgeYDistribution;
 }
 
-YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDistribution, int nBins, BOUNDARY simBoundary)
+YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeYDistribution, int nBins, BOUNDARY simBoundary)
 {
 	int bridgeCountLocal = 0;
 	float yDistance;
+	float tempX, tempY, tempZ;
 
 	for (int i = 0; i < nAtoms; )
 	{
@@ -349,25 +350,25 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDi
 			if (fabs (atoms[i].y - atoms[i + 1].y) > (simBoundary.yLength / 2))
 			{
 				if (atoms[i + 1].y > atoms[i].y) {
-					yDistance = atoms[i].y - atoms[i + 1].y + simBoundary.yLength; }
+					tempY = atoms[i + 1].y - simBoundary.yLength;
+					yDistance = fabs (atoms[i].y - tempY); }
 				else if (atoms[i + 1].y < atoms[i].y) {
-					yDistance = atoms[i + 1].y + simBoundary.yLength - atoms[i].y; }
+					tempY = atoms[i + 1].y + simBoundary.yLength;
+					yDistance = fabs (atoms[i].y - tempY); }
 			}
+			else {
+				yDistance = fabs (atoms[i].y - atoms[i + 1].y); }
 
 			#pragma omp parallel for
 			for (int j = 0; j < nBins; ++j)
 			{
-				if (yDistance > bridgeDistribution[j].ylo && yDistance <= bridgeDistribution[j].yhi)
-				{
-					bridgeDistribution[j].count++;
-				}
+				if (yDistance > bridgeYDistribution[j].ylo && yDistance <= bridgeYDistribution[j].yhi) {
+					bridgeYDistribution[j].count++; }
 			}
 		}
 
-		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].atomType == 1 && atoms[i + 1].atomType == 1 && atoms[i].adsorbedID > 0 && atoms[i + 1].adsorbedID > 0)
-		{
-			bridgeCountLocal++;
-		}
+		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].atomType == 1 && atoms[i + 1].atomType == 1 && atoms[i].adsorbedID > 0 && atoms[i + 1].adsorbedID > 0) {
+			bridgeCountLocal++; }
 
 		if (atoms[i].atomType == 1) {
 			i += 2; }
@@ -375,13 +376,113 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeDi
 			i += 1; }
 	}
 
-	return bridgeDistribution;
+	return bridgeYDistribution;
 }
 
-BONDINFO *computeBridgeCenterDistribution (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds, BOUNDARY simBoundary, int nBins_bridgeCenter)
+BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds, BOUNDARY simBoundary)
 {
+	int currentBondIndex = 0;
+	float tempX, tempY, tempZ;
+
+	for (int i = 0; i < nAtoms; ++i)
+	{
+		if (atoms[i].atomType == 1 && atoms[i + 1].atomType == 1)
+		{
+			if (fabs (atoms[i].x - atoms[i + 1].x) > (simBoundary.xLength / 2))
+			{
+				if (atoms[i].x > atoms[i + 1].x) {
+					tempX = atoms[i + 1].x + simBoundary.xLength; }
+				else {
+					tempX = atoms[i + 1].x - simBoundary.xLength; }					
+			}
+			else {
+				tempX = atoms[i + 1].x; }
+
+			if (fabs (atoms[i].y - atoms[i + 1].y) > (simBoundary.yLength / 2))
+			{
+				if (atoms[i].y > atoms[i + 1].y) {
+					tempY = atoms[i + 1].y + simBoundary.yLength; }
+				else {
+					tempY = atoms[i + 1].y - simBoundary.yLength; }
+			}
+			else {
+				tempY = atoms[i + 1].y; }
+
+			if (fabs (atoms[i].z - atoms[i + 1].z) > (simBoundary.zLength / 2))
+			{
+				if (atoms[i].z > atoms[i + 1].z) {
+					tempZ = atoms[i + 1].z + simBoundary.zLength; }
+				else {
+					tempZ = atoms[i + 1].z - simBoundary.zLength; }
+			}
+			else {
+				tempZ = atoms[i + 1].z; }
+
+			allBonds[currentBondIndex].xc = (atoms[i].x + tempX) / 2;
+			allBonds[currentBondIndex].yc = (atoms[i].y + tempY) / 2;
+			allBonds[currentBondIndex].zc = (atoms[i].z + tempZ) / 2;
+
+			if (allBonds[currentBondIndex].xc > simBoundary.xhi) {
+				allBonds[currentBondIndex].xc -= simBoundary.xLength; }
+			else if (allBonds[currentBondIndex].xc < simBoundary.xlo) {
+				allBonds[currentBondIndex].xc += simBoundary.xLength; }
+
+			if (allBonds[currentBondIndex].yc > simBoundary.yhi) {
+				allBonds[currentBondIndex].yc -= simBoundary.yLength; }
+			else if (allBonds[currentBondIndex].yc < simBoundary.ylo) {
+				allBonds[currentBondIndex].yc += simBoundary.yLength; }
+
+			if (allBonds[currentBondIndex].zc > simBoundary.zhi) {
+				allBonds[currentBondIndex].zc -= simBoundary.zLength; }
+			else if (allBonds[currentBondIndex].zc < simBoundary.zlo) {
+				allBonds[currentBondIndex].zc += simBoundary.zLength; }
+
+			i += 2;
+			currentBondIndex++;
+		}
+		else
+		{
+			i += 1;
+		}
+	}
 
 	return allBonds;
+}
+
+BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution, float binWidth_centerDistribution, BOUNDARY simBoundary)
+{
+	for (int i = 0; i < nBins_centerDistribution; ++i)
+	{
+		if (i == 0)
+		{
+			bridgeCenterDistribution[i].y1lo = simBoundary.ylo;
+			bridgeCenterDistribution[i].y1hi = simBoundary.ylo + binWidth_centerDistribution;
+		}
+		else
+		{
+			bridgeCenterDistribution[i].y1lo = bridgeCenterDistribution[i - 1].y1hi;
+			bridgeCenterDistribution[i].y1hi = bridgeCenterDistribution[i].y1lo + binWidth_centerDistribution;
+		}
+
+		bridgeCenterDistribution[i].count = 0;
+	}
+
+	return bridgeCenterDistribution;
+}
+
+BRIDGESBIN *computeBridgeCenterDistribution (BONDINFO *allBonds, int nBonds, BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution)
+{
+	#pragma omp parallel for
+	for (int i = 0; i < nBonds; ++i)
+	{
+		for (int j = 0; j < nBins_centerDistribution; ++j)
+		{
+			if (allBonds[i].yc >= bridgeCenterDistribution[j].y1lo && allBonds[i].yc < bridgeCenterDistribution[j].y1hi) {
+				bridgeCenterDistribution[j].count++; }
+		}
+	}
+
+	return bridgeCenterDistribution;
 }
 
 int main(int argc, char const *argv[])
@@ -412,29 +513,36 @@ int main(int argc, char const *argv[])
 
 	float maxFeneExtension = 60.0, binWidth_yDist = (maxFeneExtension / 20);
 	int nBins_yDist = 20; //Taken arbitrarily for now; 20 bins across the maximum extensible length of 60 sigma
-	YDIST *bridgeDistribution;
-	bridgeDistribution = (YDIST *) malloc (nBins_yDist * sizeof (YDIST));
+	YDIST *bridgeYDistribution;
+	bridgeYDistribution = (YDIST *) malloc (nBins_yDist * sizeof (YDIST));
+
+	int nBonds = (nAtoms - nMicelles) / 2, nBins_bridgeCenter = 20;
+	BONDINFO *allBonds;
+	allBonds = (BONDINFO *) malloc (nBonds * sizeof (BONDINFO));
+	BRIDGESBIN *bridgeCenterDistribution;
+
+	float binWidth_centerDistribution = 3;
+	int nBins_centerDistribution = ceil (simBoundary.yLength / binWidth_centerDistribution);
+	bridgeCenterDistribution = (BRIDGESBIN *) malloc (nBins_centerDistribution * sizeof (BRIDGESBIN));
 
 	bridgeBetweenBins = assignBinBounds (bridgeBetweenBins, simBoundary, binWidth_vertBridges, delBinDistance_vertBridges, nBins_vertBridges);
-	bridgeDistribution = assignBridgeDistribution (maxFeneExtension, nBins_yDist, binWidth_yDist, bridgeDistribution);
-
-	int nBridges = (nAtoms - nMicelles) / 2, nBins_bridgeCenter = 20;
-	BONDINFO *allBonds;
-	allBonds = (BONDINFO *) malloc (nBridges * sizeof (BONDINFO));
+	bridgeYDistribution = assignBridgeYDistribution (maxFeneExtension, nBins_yDist, binWidth_yDist, bridgeYDistribution);
+	bridgeCenterDistribution = assignBridgeCenterDistribution (bridgeCenterDistribution, nBins_centerDistribution, binWidth_centerDistribution, simBoundary);
 
 	while (file_status != EOF)
 	{
-		if (nTimeframes%1 == 0) {
-			fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
-			fflush (stdout); }
+		// if (nTimeframes%1 == 0) {
+			// fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
+			// fflush (stdout); }
 
 		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
 
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
-		bridgeDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeDistribution, nBins_yDist, simBoundary);
+		bridgeYDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeYDistribution, nBins_yDist, simBoundary);
 
 		// Finish the bridge center distribution calculations
-		allBonds = computeBridgeCenterDistribution (atoms, nAtoms, allBonds, simBoundary, nBins_bridgeCenter);
+		allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary);
+		bridgeCenterDistribution = computeBridgeCenterDistribution (allBonds, nBonds, bridgeCenterDistribution, nBins_centerDistribution);
 
 		// Plot the distribution of angles between all the bonds and an unit vector along X-axis (along the velocity profile direction.)
 
@@ -442,12 +550,12 @@ int main(int argc, char const *argv[])
 		nTimeframes++;
 	}
 
-	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeDistributionOutput;
+	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeYDistributionOutput;
 	file_bridgeBetweenBinsOuptut = fopen ("nBridgesBetweenBins.count", "w");
-	file_bridgeDistributionOutput = fopen ("bridges.distribution", "w");
+	file_bridgeYDistributionOutput = fopen ("bridges.distribution", "w");
 
 	fprintf(file_bridgeBetweenBinsOuptut, "# y1lo, y1hi, y2lo, y2hi, avgCounts\n");
-	fprintf(file_bridgeDistributionOutput, "# ylo, yhi, avgCounts\n");
+	fprintf(file_bridgeYDistributionOutput, "# ylo, yhi, avgCounts\n");
 
 	for (int i = 0; i < nBins_vertBridges; ++i) {
 		fprintf(file_bridgeBetweenBinsOuptut, "%f %f %f %f %f\n", 
@@ -458,7 +566,7 @@ int main(int argc, char const *argv[])
 			((float)bridgeBetweenBins[i].count / (float)nTimeframes)); }
 
 	for (int i = 0; i < nBins_yDist; ++i) {
-		fprintf(file_bridgeDistributionOutput, "%f %f %f\n", bridgeDistribution[i].ylo, bridgeDistribution[i].yhi, ((float)bridgeDistribution[i].count / (float)nTimeframes)); }
+		fprintf(file_bridgeYDistributionOutput, "%f %f %f\n", bridgeYDistribution[i].ylo, bridgeYDistribution[i].yhi, ((float)bridgeYDistribution[i].count / (float)nTimeframes)); }
 
 	fclose (file_inputTrj);
 	return 0;
