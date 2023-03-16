@@ -550,12 +550,14 @@ int main(int argc, char const *argv[])
 		nTimeframes++;
 	}
 
-	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeYDistributionOutput;
+	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeYDistributionOutput, *file_bridgeCenterDistributionOutput;
 	file_bridgeBetweenBinsOuptut = fopen ("nBridgesBetweenBins.count", "w");
 	file_bridgeYDistributionOutput = fopen ("bridges.distribution", "w");
+	file_bridgeCenterDistributionOutput = fopen ("bridgeCenter.distribution", "w");
 
 	fprintf(file_bridgeBetweenBinsOuptut, "# y1lo, y1hi, y2lo, y2hi, avgCounts\n");
 	fprintf(file_bridgeYDistributionOutput, "# ylo, yhi, avgCounts\n");
+	fprintf(file_bridgeCenterDistributionOutput, "# ylo, yhi, avgCounts\n");
 
 	for (int i = 0; i < nBins_vertBridges; ++i) {
 		fprintf(file_bridgeBetweenBinsOuptut, "%f %f %f %f %f\n", 
@@ -567,6 +569,11 @@ int main(int argc, char const *argv[])
 
 	for (int i = 0; i < nBins_yDist; ++i) {
 		fprintf(file_bridgeYDistributionOutput, "%f %f %f\n", bridgeYDistribution[i].ylo, bridgeYDistribution[i].yhi, ((float)bridgeYDistribution[i].count / (float)nTimeframes)); }
+
+	for (int i = 0; i < nBins_centerDistribution; ++i)
+	{
+		fprintf(file_bridgeCenterDistributionOutput, "%f %f %f\n", bridgeCenterDistribution[i].y1lo, bridgeCenterDistribution[i].y1hi, (float)bridgeCenterDistribution[i].count / (float)nTimeframes);
+	}
 
 	fclose (file_inputTrj);
 	return 0;
