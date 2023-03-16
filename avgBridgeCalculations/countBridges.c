@@ -568,12 +568,16 @@ int main(int argc, char const *argv[])
 			((float)bridgeBetweenBins[i].count / (float)nTimeframes)); }
 
 	for (int i = 0; i < nBins_yDist; ++i) {
-		fprintf(file_bridgeYDistributionOutput, "%f %f %f\n", bridgeYDistribution[i].ylo, bridgeYDistribution[i].yhi, ((float)bridgeYDistribution[i].count / (float)nTimeframes)); }
+		fprintf(file_bridgeYDistributionOutput, "%f %f %f\n", 
+			bridgeYDistribution[i].ylo, 
+			bridgeYDistribution[i].yhi, 
+			((float)bridgeYDistribution[i].count / (float)nTimeframes)); }
 
-	for (int i = 0; i < nBins_centerDistribution; ++i)
-	{
-		fprintf(file_bridgeCenterDistributionOutput, "%f %f %f\n", bridgeCenterDistribution[i].y1lo, bridgeCenterDistribution[i].y1hi, (float)bridgeCenterDistribution[i].count / (float)nTimeframes);
-	}
+	for (int i = 0; i < nBins_centerDistribution; ++i) {
+		fprintf(file_bridgeCenterDistributionOutput, "%f %f %f\n", 
+			bridgeCenterDistribution[i].y1lo, 
+			bridgeCenterDistribution[i].y1hi, 
+			(float)bridgeCenterDistribution[i].count / (float)nTimeframes); }
 
 	fclose (file_inputTrj);
 	return 0;
