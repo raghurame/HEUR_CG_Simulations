@@ -477,7 +477,7 @@ BRIDGESBIN *computeBridgeCenterDistribution (BONDINFO *allBonds, int nBonds, BRI
 	{
 		for (int j = 0; j < nBins_centerDistribution; ++j)
 		{
-			if (allBonds[i].yc >= bridgeCenterDistribution[j].y1lo && allBonds[i].yc < bridgeCenterDistribution[j].y1hi) {
+			if (allBonds[i].yc > bridgeCenterDistribution[j].y1lo && allBonds[i].yc <= bridgeCenterDistribution[j].y1hi) {
 				bridgeCenterDistribution[j].count++; }
 		}
 	}
@@ -531,9 +531,9 @@ int main(int argc, char const *argv[])
 
 	while (file_status != EOF)
 	{
-		// if (nTimeframes%1 == 0) {
-			// fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
-			// fflush (stdout); }
+		if (nTimeframes%1 == 0) {
+			fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
+			fflush (stdout); }
 
 		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
 
