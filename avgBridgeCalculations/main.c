@@ -16,7 +16,7 @@
 int main(int argc, char const *argv[])
 {
 	system ("mkdir outputs");
-	
+
 	FILE *file_inputTrj;
 	file_inputTrj = fopen (INPUTFILE, "r");
 
@@ -55,7 +55,7 @@ int main(int argc, char const *argv[])
 
 	while (file_status != EOF)
 	{
-		if (nTimeframes%1 == 0) {
+		if (nTimeframes%NFREQ_PROGRESS_SCREEN == 0) {
 			fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
 			fflush (stdout); }
 
@@ -102,5 +102,8 @@ int main(int argc, char const *argv[])
 			(float)bridgeCenterDistribution[i].count / (float)nTimeframes); }
 
 	fclose (file_inputTrj);
+	fclose (file_bridgeBetweenBinsOuptut);
+	fclose (file_bridgeYDistributionOutput);
+	fclose (file_bridgeCenterDistributionOutput);
 	return 0;
 }
