@@ -5,16 +5,18 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include "structDefinitions.h"
-#include "inputFunctions.h"
-#include "helperFunctions.h"
-#include "computeBridgesBetweenBins.h"
-#include "computeBridgeYDistribution.h"
-#include "computeBridgeCenterDistribution.h"
-#include "inputParameters.h"
+#include "headers/structDefinitions.h"
+#include "headers/inputFunctions.h"
+#include "headers/helperFunctions.h"
+#include "headers/computeBridgesBetweenBins.h"
+#include "headers/computeBridgeYDistribution.h"
+#include "headers/computeBridgeCenterDistribution.h"
+#include "headers/inputParameters.h"
 
 int main(int argc, char const *argv[])
 {
+	system ("mkdir outputs");
+	
 	FILE *file_inputTrj;
 	file_inputTrj = fopen (INPUTFILE, "r");
 
