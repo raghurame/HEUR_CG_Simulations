@@ -13,6 +13,43 @@
 #include "headers/computeBridgeCenterDistribution.h"
 #include "headers/inputParameters.h"
 
+/*
+LIST OF FUNCTIONS IN HEADER FILES:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. structDefinitions.h - 
+		BOUNDARY, 
+		TRAJECTORY, 
+		BONDINFO, 
+		YDIST, 
+		BRIDGESBIN
+
+2. inputFunctions.h - 
+		BOUNDARY getBoundary (FILE *file_inputTrj, BOUNDARY simBoundary), 
+		int countNAtoms (FILE *file_inputTrj), 
+		TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, 
+		float distanceCutoff, FILE *file_inputTrj, 
+		int file_status, TRAJECTORY **micelles, int nMicelles), 
+		int countNMicelles (FILE *file_inputTrj, int nAtoms).
+
+3. helperFunctions.h
+		float translatePeriodic (float r1, float r2, float simulationBoxLength),
+		float computePeriodicDistance (float x1, float y1, float z1, float x2, float y2, float z2, float xLength, float yLength, float zLength).
+
+4. computeBridgesBetweenBins.h
+		BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins),
+		BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGESBIN *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins).
+
+5. computeBridgeYDistribution.h
+		YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeYDistribution),
+		YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeYDistribution, int nBins, BOUNDARY simBoundary).
+
+6. computeBridgeCenterDistribution.h
+		BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution, float binWidth_centerDistribution, BOUNDARY simBoundary),
+		BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds, BOUNDARY simBoundary),
+		BRIDGESBIN *computeBridgeCenterDistribution (BONDINFO *allBonds, int nBonds, BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution).
+*/
+
 int main(int argc, char const *argv[])
 {
 	system ("mkdir outputs");
