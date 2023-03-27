@@ -11,6 +11,7 @@
 #include "computeBridgesBetweenBins.h"
 #include "computeBridgeYDistribution.h"
 #include "computeBridgeCenterDistribution.h"
+#include "inputParameters.h"
 
 BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution, float binWidth_centerDistribution, BOUNDARY simBoundary)
 {
@@ -103,6 +104,8 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 
 BRIDGESBIN *computeBridgeCenterDistribution (BONDINFO *allBonds, int nBonds, BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution)
 {
+	omp_set_num_threads (NTHREADS);
+
 	#pragma omp parallel for
 	for (int i = 0; i < nBonds; ++i)
 	{

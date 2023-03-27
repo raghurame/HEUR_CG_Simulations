@@ -11,6 +11,7 @@
 #include "computeBridgesBetweenBins.h"
 #include "computeBridgeYDistribution.h"
 #include "computeBridgeCenterDistribution.h"
+#include "inputParameters.h"
 
 YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeYDistribution)
 {
@@ -30,6 +31,8 @@ YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWi
 
 YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeYDistribution, int nBins, BOUNDARY simBoundary)
 {
+	omp_set_num_threads (NTHREADS);
+
 	int bridgeCountLocal = 0;
 	float yDistance;
 	float tempX, tempY, tempZ;

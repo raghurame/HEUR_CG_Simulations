@@ -1,3 +1,6 @@
+#ifndef STRUCTDEFINITIONSHEUR_H
+#define STRUCTDEFINITIONSHEUR_H
+
 typedef struct boundary
 {
 	float xlo, xhi, ylo, yhi, zlo, zhi, xy, xz, yz;
@@ -28,3 +31,5 @@ typedef struct brigdesBin
 	int count;
 	float y1lo, y1hi, y2lo, y2hi;
 } BRIDGESBIN;
+
+#endif

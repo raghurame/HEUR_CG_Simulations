@@ -11,6 +11,7 @@
 #include "computeBridgesBetweenBins.h"
 #include "computeBridgeYDistribution.h"
 #include "computeBridgeCenterDistribution.h"
+#include "inputParameters.h"
 
 BOUNDARY getBoundary (FILE *file_inputTrj, BOUNDARY simBoundary)
 {

@@ -11,6 +11,7 @@
 #include "computeBridgesBetweenBins.h"
 #include "computeBridgeYDistribution.h"
 #include "computeBridgeCenterDistribution.h"
+#include "inputParameters.h"
 
 float translatePeriodic (float r1, float r2, float simulationBoxLength)
 {
@@ -25,13 +26,13 @@ float translatePeriodic (float r1, float r2, float simulationBoxLength)
 	return r2;
 }
 
-float computePeriodicDistance (float x1, float y1, float z1, float x2, float y2, float z2, float simulationBoxLength)
+float computePeriodicDistance (float x1, float y1, float z1, float x2, float y2, float z2, float xLength, float yLength, float zLength)
 {
 	float distance;
 
-	x2 = translatePeriodic (x1, x2, simulationBoxLength);
-	y2 = translatePeriodic (y1, y2, simulationBoxLength);
-	z2 = translatePeriodic (z1, z2, simulationBoxLength);
+	x2 = translatePeriodic (x1, x2, xLength);
+	y2 = translatePeriodic (y1, y2, yLength);
+	z2 = translatePeriodic (z1, z2, zLength);
 
 	distance = sqrt (pow ((x2 - x1), 2) + pow ((y2 - y1), 2) + pow ((z2 - z1), 2));
 

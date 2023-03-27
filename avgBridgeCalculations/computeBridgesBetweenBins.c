@@ -11,6 +11,7 @@
 #include "computeBridgesBetweenBins.h"
 #include "computeBridgeYDistribution.h"
 #include "computeBridgeCenterDistribution.h"
+#include "inputParameters.h"
 
 BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
 {
@@ -39,6 +40,8 @@ BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary
 
 BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, float distanceCutoff, BRIDGESBIN *bridgeBetweenBins, int nAtoms, TRAJECTORY *micelles, int nMicelles, int nBins)
 {
+	omp_set_num_threads (NTHREADS);
+
 	float distance1, distance2;
 	float tempX, tempY, tempY1, tempY2, tempZ;
 
@@ -90,6 +93,11 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 					pow (((*atoms)[i + 1].y - tempY), 2) +
 					pow (((*atoms)[i + 1].z - tempZ), 2)
 					);
+
+				printf("%f\n", distance1);
+				distance1 = computePeriodicDistance ((*atoms)[i].x, (*atoms)[i].y, (*atoms)[i].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);
+				printf("%f\n", distance1);
+				MSLEEP;
 
 				if (distance1 <= distanceCutoff) {
 					(*atoms)[i].adsorbedID = j; 
