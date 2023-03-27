@@ -12,6 +12,7 @@
 #include "../headers/computeBridgeYDistribution.h"
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
+#include "../headers/computeStates.h"
 
 BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution, float binWidth_centerDistribution, BOUNDARY simBoundary)
 {
@@ -43,35 +44,9 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 	{
 		if (atoms[i].atomType == 1 && atoms[i + 1].atomType == 1)
 		{
-			if (fabs (atoms[i].x - atoms[i + 1].x) > (simBoundary.xLength / 2))
-			{
-				if (atoms[i].x > atoms[i + 1].x) {
-					tempX = atoms[i + 1].x + simBoundary.xLength; }
-				else {
-					tempX = atoms[i + 1].x - simBoundary.xLength; }					
-			}
-			else {
-				tempX = atoms[i + 1].x; }
-
-			if (fabs (atoms[i].y - atoms[i + 1].y) > (simBoundary.yLength / 2))
-			{
-				if (atoms[i].y > atoms[i + 1].y) {
-					tempY = atoms[i + 1].y + simBoundary.yLength; }
-				else {
-					tempY = atoms[i + 1].y - simBoundary.yLength; }
-			}
-			else {
-				tempY = atoms[i + 1].y; }
-
-			if (fabs (atoms[i].z - atoms[i + 1].z) > (simBoundary.zLength / 2))
-			{
-				if (atoms[i].z > atoms[i + 1].z) {
-					tempZ = atoms[i + 1].z + simBoundary.zLength; }
-				else {
-					tempZ = atoms[i + 1].z - simBoundary.zLength; }
-			}
-			else {
-				tempZ = atoms[i + 1].z; }
+			tempX = translatePeriodic (atoms[i].x, atoms[i + 1].x, simBoundary.xLength);
+			tempY = translatePeriodic (atoms[i].y, atoms[i + 1].y, simBoundary.yLength);
+			tempZ = translatePeriodic (atoms[i].z, atoms[i + 1].z, simBoundary.zLength);
 
 			allBonds[currentBondIndex].xc = (atoms[i].x + tempX) / 2;
 			allBonds[currentBondIndex].yc = (atoms[i].y + tempY) / 2;

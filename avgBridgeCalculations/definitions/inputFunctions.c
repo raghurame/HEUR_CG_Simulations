@@ -12,6 +12,7 @@
 #include "../headers/computeBridgeYDistribution.h"
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
+#include "../headers/computeStates.h"
 
 BOUNDARY getBoundary (FILE *file_inputTrj, BOUNDARY simBoundary)
 {
@@ -92,16 +93,6 @@ TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, float
 
 		atoms[i].adsorbedID = 0;
 
-		// atoms[i + nAtoms].sino = atoms[i].sino + nAtoms;
-		// atoms[i + nAtoms].atomType = atoms[i].atomType;
-		// atoms[i + nAtoms].x = atoms[i].x;
-		// atoms[i + nAtoms].y = atoms[i].y - yLength; // translating along negative Y direction
-		// atoms[i + nAtoms].z = atoms[i].z;
-		// atoms[i + nAtoms].ix = atoms[i].ix;
-		// atoms[i + nAtoms].iy = atoms[i].iy;
-		// atoms[i + nAtoms].iz = atoms[i].iz;
-		// atoms[i + nAtoms].adsorbedID = 0;
-
 		if (atoms[i].atomType == 2)
 		{
 			(*micelles)[currentMicelle].sino = atoms[i].sino;
@@ -110,13 +101,6 @@ TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, float
 			(*micelles)[currentMicelle].y = atoms[i].y;
 			(*micelles)[currentMicelle].z = atoms[i].z;
 			(*micelles)[currentMicelle].adsorbedID = -1;
-
-			// (*micelles)[currentMicelle + nMicelles].sino = atoms[i].sino;
-			// (*micelles)[currentMicelle + nMicelles].atomType = atoms[i].atomType;
-			// (*micelles)[currentMicelle + nMicelles].x = atoms[i].x;
-			// (*micelles)[currentMicelle + nMicelles].y = atoms[i].y - yLength;
-			// (*micelles)[currentMicelle + nMicelles].z = atoms[i].z;
-			// (*micelles)[currentMicelle + nMicelles].adsorbedID = -1;
 
 			currentMicelle++;
 		}

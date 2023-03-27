@@ -12,6 +12,7 @@
 #include "../headers/computeBridgeYDistribution.h"
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
+#include "../headers/computeStates.h"
 
 float translatePeriodic (float r1, float r2, float simulationBoxLength)
 {

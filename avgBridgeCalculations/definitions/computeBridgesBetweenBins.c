@@ -12,6 +12,7 @@
 #include "../headers/computeBridgeYDistribution.h"
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
+#include "../headers/computeStates.h"
 
 BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
 {
@@ -52,52 +53,8 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 			#pragma omp parallel for
 			for (int j = 0; j < (nMicelles); ++j)
 			{
-				if (fabs ((*atoms)[i].x - micelles[j].x) > (simBoundary.xLength / 2))
-				{
-					if ((*atoms)[i].x > micelles[j].x) {
-						tempX = micelles[j].x + simBoundary.xLength; }
-					else if ((*atoms)[i].x < micelles[j].x) {
-						tempX = micelles[j].x - simBoundary.xLength; }
-				}
-				else {
-					tempX = (*atoms)[i].x; }
-
-				if (fabs ((*atoms)[i].y - micelles[j].y) > (simBoundary.yLength / 2))
-				{
-					if ((*atoms)[i].y > micelles[j].y) {
-						tempY = micelles[j].y + simBoundary.yLength; }
-					else if ((*atoms)[i].y < micelles[j].y) {
-						tempY = micelles[j].y - simBoundary.yLength; }
-				}
-				else {
-					tempY = (*atoms)[i].y; }
-
-				if (fabs ((*atoms)[i].z - micelles[j].z) > (simBoundary.zLength / 2))
-				{
-					if ((*atoms)[i].z > micelles[j].z) {
-						tempZ = micelles[j].z + simBoundary.zLength; }
-					else if ((*atoms)[i].z < micelles[j].z) {
-						tempZ = micelles[j].z - simBoundary.zLength; }
-				}
-				else {
-					tempZ = (*atoms)[i].z; }
-
-				distance1 = sqrt (
-					pow (((*atoms)[i].x - tempX), 2) +
-					pow (((*atoms)[i].y - tempY), 2) +
-					pow (((*atoms)[i].z - tempZ), 2)
-					);
-
-				distance2 = sqrt (
-					pow (((*atoms)[i + 1].x - tempX), 2) +
-					pow (((*atoms)[i + 1].y - tempY), 2) +
-					pow (((*atoms)[i + 1].z - tempZ), 2)
-					);
-
-				printf("%f\n", distance1);
 				distance1 = computePeriodicDistance ((*atoms)[i].x, (*atoms)[i].y, (*atoms)[i].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);
-				printf("%f\n", distance1);
-				MSLEEP;
+				distance2 = computePeriodicDistance ((*atoms)[i + 1].x, (*atoms)[i + 1].y, (*atoms)[i + 1].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);
 
 				if (distance1 <= distanceCutoff) {
 					(*atoms)[i].adsorbedID = j; 
@@ -124,25 +81,8 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 			#pragma omp parallel for
 			for (int k = 0; k < nBins; ++k)
 			{
-				if (fabs ((*atoms)[i].y - bridgeBetweenBins[k].y1hi) > (simBoundary.yLength / 2))
-				{
-					if ((*atoms)[i].y < bridgeBetweenBins[k].y1hi) {
-						tempY1 = (*atoms)[i].y + simBoundary.yLength; }
-					else if ((*atoms)[i].y > bridgeBetweenBins[k].y1hi) {
-						tempY1 = (*atoms)[i].y - simBoundary.yLength; }
-				}
-				else {
-					tempY1 = (*atoms)[i].y; }
-
-				if (fabs ((*atoms)[i + 1].y - bridgeBetweenBins[k].y1hi) > (simBoundary.yLength / 2))
-				{
-					if ((*atoms)[i + 1].y < bridgeBetweenBins[k].y1hi) {
-						tempY2 = (*atoms)[i + 1].y + simBoundary.yLength; }
-					else if ((*atoms)[i + 1].y > bridgeBetweenBins[k].y1hi) {
-						tempY2 = (*atoms)[i + 1].y - simBoundary.yLength; }
-				}
-				else {
-					tempY2 = (*atoms)[i + 1].y; }
+				tempY1 = translatePeriodic (bridgeBetweenBins[k].y1hi, (*atoms)[i].y, simBoundary.yLength);
+				tempY2 = translatePeriodic (bridgeBetweenBins[k].y1hi, (*atoms)[i + 1].y, simBoundary.yLength);
 
 				if ((tempY1 > bridgeBetweenBins[k].y1lo && 
 					tempY1 <= bridgeBetweenBins[k].y1hi && 

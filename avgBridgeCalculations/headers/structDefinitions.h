@@ -32,4 +32,9 @@ typedef struct brigdesBin
 	float y1lo, y1hi, y2lo, y2hi;
 } BRIDGESBIN;
 
+typedef struct states
+{
+	float nBridges, nLoops, nDangles, nFreeChains;
+} STATES;
+
 #endif

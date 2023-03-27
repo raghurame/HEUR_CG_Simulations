@@ -12,6 +12,7 @@
 #include "../headers/computeBridgeYDistribution.h"
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
+#include "../headers/computeStates.h"
 
 YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeYDistribution)
 {
@@ -41,17 +42,8 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeYD
 	{
 		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].adsorbedID != 0 && atoms[i + 1].adsorbedID != 0)
 		{
-			if (fabs (atoms[i].y - atoms[i + 1].y) > (simBoundary.yLength / 2))
-			{
-				if (atoms[i + 1].y > atoms[i].y) {
-					tempY = atoms[i + 1].y - simBoundary.yLength;
-					yDistance = fabs (atoms[i].y - tempY); }
-				else if (atoms[i + 1].y < atoms[i].y) {
-					tempY = atoms[i + 1].y + simBoundary.yLength;
-					yDistance = fabs (atoms[i].y - tempY); }
-			}
-			else {
-				yDistance = fabs (atoms[i].y - atoms[i + 1].y); }
+			tempY = translatePeriodic (atoms[i].y, atoms[i + 1].y, simBoundary.yLength);
+			yDistance = fabs (atoms[i].y - tempY);
 
 			#pragma omp parallel for
 			for (int j = 0; j < nBins; ++j)

@@ -12,6 +12,7 @@
 #include "headers/computeBridgeYDistribution.h"
 #include "headers/computeBridgeCenterDistribution.h"
 #include "headers/inputParameters.h"
+#include "headers/computeStates.h"
 
 /*
 LIST OF FUNCTIONS IN HEADER FILES:
@@ -90,6 +91,14 @@ int main(int argc, char const *argv[])
 	bridgeYDistribution = assignBridgeYDistribution (maxFeneExtension, nBins_yDist, binWidth_yDist, bridgeYDistribution);
 	bridgeCenterDistribution = assignBridgeCenterDistribution (bridgeCenterDistribution, nBins_centerDistribution, binWidth_centerDistribution, simBoundary);
 
+	STATES currentStates, avgStates, stdevStates, *allStates;
+	avgStates = initializeStates (avgStates);
+	stdevStates = initializeStates (stdevStates);
+
+	FILE *file_printStates;
+	file_printStates = fopen (OUTPUT_CURRENT_STATES, "w");
+	fprintf(file_printStates, "#free, dangles, loop, bridges\n");
+
 	while (file_status != EOF)
 	{
 		if (nTimeframes%NFREQ_PROGRESS_SCREEN == 0) {
@@ -105,9 +114,29 @@ int main(int argc, char const *argv[])
 		allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary);
 		bridgeCenterDistribution = computeBridgeCenterDistribution (allBonds, nBonds, bridgeCenterDistribution, nBins_centerDistribution);
 
+		// Calculate the overall bridges, loops, dangles, free chains
+		currentStates = initializeStates (currentStates);
+		currentStates = computeAllStates (currentStates, atoms, nAtoms);
+		avgStates = sumAllStates (currentStates, avgStates, nTimeframes);
+		printCurrentStates (file_printStates, currentStates);
+
+		// Calculate the distribution of centers of bridges, loops, dangles, free chains
+
+		// Calculate the distribution of orientation angles of bridges, loops, dangles, free chains
+
 		file_status = fgetc (file_inputTrj);
 		nTimeframes++;
 	}
+
+	avgStates = computeAvgStates (avgStates, nTimeframes);
+
+	allStates = (STATES *) malloc (nTimeframes * sizeof (STATES));
+	allStates = readAllStates (allStates, nTimeframes, OUTPUT_CURRENT_STATES);
+
+	stdevStates = initializeStates (stdevStates);
+	stdevStates = computeStdevStates (stdevStates, avgStates, allStates, nTimeframes);
+
+	printAverageStates (OUTPUT_AVG_STATES, avgStates, stdevStates);
 
 	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeYDistributionOutput, *file_bridgeCenterDistributionOutput;
 	file_bridgeBetweenBinsOuptut = fopen (OUTPUT_BRIDGESBETWEENBINS, "w");
@@ -142,5 +171,7 @@ int main(int argc, char const *argv[])
 	fclose (file_bridgeBetweenBinsOuptut);
 	fclose (file_bridgeYDistributionOutput);
 	fclose (file_bridgeCenterDistributionOutput);
+	fclose (file_printStates);
+
 	return 0;
 }
