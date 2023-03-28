@@ -65,8 +65,8 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 			allBonds[currentBondIndex].y2 = tempY;
 			allBonds[currentBondIndex].z2 = tempZ;
 
-			allBonds[currentBondIndex].index1 = i;
-			allBonds[currentBondIndex].index2 = i + 1;
+			allBonds[currentBondIndex].adsorbedID1 = atoms[i].adsorbedID;
+			allBonds[currentBondIndex].adsorbedID2 = atoms[i + 1].adsorbedID;
 
 			if (allBonds[currentBondIndex].xc > simBoundary.xhi) {
 				allBonds[currentBondIndex].xc -= simBoundary.xLength; }

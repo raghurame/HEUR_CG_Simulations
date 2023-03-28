@@ -18,6 +18,6 @@
 #define OUTPUT_BONDCENTERDISTRIBUTION "outputs/bridgeCenter.distribution"
 #define OUTPUT_CURRENT_STATES "outputs/current.states"
 #define OUTPUT_AVG_STATES "outputs/average.states"
-#define BINWIDTH_ANGLEORIENTATION 5.0
+#define BINWIDTH_ANGLEORIENTATION 10.0
 
 #endif

@@ -34,19 +34,70 @@ ANGLE_DISTRIBUTION *assignBeadOrientation (ANGLE_DISTRIBUTION *beadOrientation, 
 	return beadOrientation;
 }
 
-ANGLE_DISTRIBUTION *computeBeadOrientationDistribution (TRAJECTORY *atoms, int nBins_orientation, BONDINFO *allBonds, int nBonds, ANGLE_DISTRIBUTION **bridgeOrientation, ANGLE_DISTRIBUTION **loopOrientation, ANGLE_DISTRIBUTION **dangleOrientation, ANGLE_DISTRIBUTION **loopOrientation)
+ANGLE_DISTRIBUTION *computeBridgeOrientationDistribution (ANGLE_DISTRIBUTION *bridgeOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
 {
 	for (int i = 0; i < nBonds; ++i)
 	{
-		// allBonds[currentBondIndex].xOrientationAngle
-		for (int j = 0; j < nBins_orientation; ++j)
+		if (allBonds[i].adsorbedID1 > 0 && allBonds[i].adsorbedID2 > 0 && allBonds[i].adsorbedID1 != allBonds[i].adsorbedID2)
 		{
-			if (allBonds[i].xOrientationAngle > beadOrientation[j].angleLo && allBonds[i].xOrientationAngle <= beadOrientation[j].angleHi) 
+			for (int j = 0; j < nBins_orientation; ++j)
 			{
-				
+				if (allBonds[i].xOrientationAngle > bridgeOrientation[j].angleLo && allBonds[i].xOrientationAngle <= bridgeOrientation[j].angleHi) {
+					bridgeOrientation[j].count++; }
 			}
 		}
 	}
 
-	return beadOrientation;
+	return bridgeOrientation;
+}
+
+ANGLE_DISTRIBUTION *computeLoopOrientationDistribution (ANGLE_DISTRIBUTION *loopOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
+{
+	for (int i = 0; i < nBonds; ++i)
+	{
+		if (allBonds[i].adsorbedID1 > 0 && allBonds[i].adsorbedID2 > 0 && allBonds[i].adsorbedID1 == allBonds[i].adsorbedID2)
+		{
+			for (int j = 0; j < nBins_orientation; ++j)
+			{
+				if (allBonds[i].xOrientationAngle > loopOrientation[j].angleLo && allBonds[i].xOrientationAngle <= loopOrientation[j].angleHi) {
+					loopOrientation[j].count++; }
+			}
+		}
+	}
+
+	return loopOrientation;
+}
+
+ANGLE_DISTRIBUTION *computeDangleOrientationDistribution (ANGLE_DISTRIBUTION *dangleOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
+{
+	for (int i = 0; i < nBonds; ++i)
+	{
+		if ((allBonds[i].adsorbedID1 > 0 && allBonds[i].adsorbedID2 == 0) || (allBonds[i].adsorbedID1 == 0 && allBonds[i].adsorbedID2 > 0))
+		{
+			for (int j = 0; j < nBins_orientation; ++j)
+			{
+				if (allBonds[i].xOrientationAngle > dangleOrientation[j].angleLo && allBonds[i].xOrientationAngle <= dangleOrientation[j].angleHi) {
+					dangleOrientation[j].count++; }
+			}
+		}
+	}
+
+	return dangleOrientation;
+}
+
+ANGLE_DISTRIBUTION *computeFreeOrientationDistribution (ANGLE_DISTRIBUTION *freeOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
+{
+	for (int i = 0; i < nBonds; ++i)
+	{
+		if (allBonds[i].adsorbedID1 == 0 && allBonds[i].adsorbedID2 == 0)
+		{
+			for (int j = 0; j < nBins_orientation; ++j)
+			{
+				if (allBonds[i].xOrientationAngle > freeOrientation[j].angleLo && allBonds[i].xOrientationAngle <= freeOrientation[j].angleHi) {
+					freeOrientation[j].count++; }
+			}
+		}
+	}
+
+	return freeOrientation;
 }

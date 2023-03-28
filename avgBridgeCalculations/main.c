@@ -101,7 +101,7 @@ int main(int argc, char const *argv[])
 	fprintf(file_printStates, "# free, dangles, loop, bridges\n");
 
 	ANGLE_DISTRIBUTION *bridgeOrientation, *freeOrientation, *dangleOrientation, *loopOrientation;
-	int nBins_orientation = ceil (360.0 / BINWIDTH_ANGLEORIENTATION);
+	int nBins_orientation = ceil (180.0 / BINWIDTH_ANGLEORIENTATION);
 
 	bridgeOrientation = (ANGLE_DISTRIBUTION *) malloc (nBins_orientation * sizeof (ANGLE_DISTRIBUTION));
 	freeOrientation = (ANGLE_DISTRIBUTION *) malloc (nBins_orientation * sizeof (ANGLE_DISTRIBUTION));
@@ -140,7 +140,11 @@ int main(int argc, char const *argv[])
 		// Calculate the distribution of centers of bridges, loops, dangles, free chains
 
 		// Calculate the distribution of orientation angles of bridges, loops, dangles, free chains
-		computeBeadOrientationDistribution (atoms, nBins_orientation, allBonds, nBonds, &bridgeOrientation, &loopOrientation, &dangleOrientation, &loopOrientation);
+		// computeBeadOrientationDistribution (nBins_orientation, allBonds, nBonds, &bridgeOrientation, &loopOrientation, &dangleOrientation, &freeOrientation);
+		bridgeOrientation = computeBridgeOrientationDistribution (bridgeOrientation, nBins_orientation, nBonds, allBonds);
+		loopOrientation = computeLoopOrientationDistribution (loopOrientation, nBins_orientation, nBonds, allBonds);
+		dangleOrientation = computeDangleOrientationDistribution (dangleOrientation, nBins_orientation, nBonds, allBonds);
+		freeOrientation = computeFreeOrientationDistribution (freeOrientation, nBins_orientation, nBonds, allBonds);
 
 		file_status = fgetc (file_inputTrj);
 		nTimeframes++;
