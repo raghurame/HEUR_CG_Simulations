@@ -13,6 +13,7 @@
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
 #include "../headers/computeStates.h"
+#include "../headers/computeBeadOrientation.h"
 
 BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution, float binWidth_centerDistribution, BOUNDARY simBoundary)
 {
@@ -63,6 +64,9 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 			allBonds[currentBondIndex].x2 = tempX;
 			allBonds[currentBondIndex].y2 = tempY;
 			allBonds[currentBondIndex].z2 = tempZ;
+
+			allBonds[currentBondIndex].index1 = i;
+			allBonds[currentBondIndex].index2 = i + 1;
 
 			if (allBonds[currentBondIndex].xc > simBoundary.xhi) {
 				allBonds[currentBondIndex].xc -= simBoundary.xLength; }

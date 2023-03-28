@@ -13,6 +13,7 @@
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
 #include "../headers/computeStates.h"
+#include "../headers/computeBeadOrientation.h"
 
 YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeYDistribution)
 {

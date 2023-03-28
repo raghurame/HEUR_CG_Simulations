@@ -13,6 +13,7 @@
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
 #include "../headers/computeStates.h"
+#include "../headers/computeBeadOrientation.h"
 
 STATES initializeStates (STATES currentStates)
 {
@@ -33,13 +34,13 @@ STATES computeAllStates (STATES currentStates, TRAJECTORY *atoms, int nAtoms)
 			if (atoms[i].adsorbedID == 0 && atoms[i + 1].adsorbedID == 0) {
 				currentStates.nFreeChains++; }
 
-			else if ((atoms[i].adsorbedID == 0 && atoms[i + 1].adsorbedID != 0) || (atoms[i].adsorbedID != 0 && atoms[i + 1].adsorbedID == 0)) {
+			if ((atoms[i].adsorbedID == 0 && atoms[i + 1].adsorbedID > 0) || (atoms[i].adsorbedID > 0 && atoms[i + 1].adsorbedID == 0)) {
 				currentStates.nDangles++; }
 
-			else if (atoms[i].adsorbedID == atoms[i + 1].adsorbedID) {
+			if (atoms[i].adsorbedID == atoms[i + 1].adsorbedID && atoms[i].adsorbedID > 0 && atoms[i + 1].adsorbedID > 0) {
 				currentStates.nLoops++; }
 
-			else if (atoms[i].adsorbedID > 0 && atoms[i + 1].adsorbedID > 0 && (atoms[i].adsorbedID != atoms[i + 1].adsorbedID)) {
+			if (atoms[i].adsorbedID > 0 && atoms[i + 1].adsorbedID > 0 && (atoms[i].adsorbedID != atoms[i + 1].adsorbedID)) {
 				currentStates.nBridges++; }
 
 			i += 2;
@@ -79,21 +80,26 @@ STATES computeAvgStates (STATES avgStates, int nTimeframes)
 STATES *readAllStates (STATES *allStates, int nTimeframes, const char *filename_states)
 {
 	FILE *file_statesReopen;
-	file_statesReopen = fopen (filename_states, "r");
+	file_statesReopen = fopen (OUTPUT_CURRENT_STATES, "r");
 
 	char lineString[2000];
+	int nLines = 0;
 
-	omp_set_num_threads (NTHREADS);
+	while (fgets (lineString, 2000, file_statesReopen) != NULL) {
+		nLines++; }
 
-	#pragma omp parallel for
-	for (int i = 0; i < nTimeframes; ++i)
+	for (int i = 0; i < nLines; ++i)
 	{
 		fgets (lineString, 2000, file_statesReopen);
-		sscanf (lineString, "%f %f %f %f\n", 
-			&allStates[i].nFreeChains, 
-			&allStates[i].nDangles, 
-			&allStates[i].nLoops, 
-			&allStates[i].nBridges);
+
+		if (lineString[0] != '#')
+		{
+			sscanf (lineString, "%f %f %f %f\n", 
+				&allStates[i].nFreeChains, 
+				&allStates[i].nDangles, 
+				&allStates[i].nLoops, 
+				&allStates[i].nBridges);
+		}
 	}
 
 	fclose (file_statesReopen);
@@ -119,6 +125,11 @@ STATES computeStdevStates (STATES stdevStates, STATES avgStates, STATES *allStat
 	stdevStates.nLoops /= nTimeframes;
 	stdevStates.nBridges /= nTimeframes;
 
+	stdevStates.nFreeChains = sqrt (stdevStates.nFreeChains);
+	stdevStates.nDangles = sqrt (stdevStates.nDangles);
+	stdevStates.nLoops = sqrt (stdevStates.nLoops);
+	stdevStates.nBridges = sqrt (stdevStates.nBridges);
+
 	return stdevStates;
 }
 
@@ -127,6 +138,7 @@ void printAverageStates (const char *filename_avgStates, STATES avgStates, STATE
 	FILE *file_avgStates;
 	file_avgStates = fopen (filename_avgStates, "w");
 
+	fprintf(file_avgStates, "# State, average, stdev\n");
 	fprintf(file_avgStates, "FreeChains, %f, %f\n", avgStates.nFreeChains, stdevStates.nFreeChains);
 	fprintf(file_avgStates, "Dangles, %f, %f\n", avgStates.nDangles, stdevStates.nDangles);
 	fprintf(file_avgStates, "Loops, %f, %f\n", avgStates.nLoops, stdevStates.nLoops);

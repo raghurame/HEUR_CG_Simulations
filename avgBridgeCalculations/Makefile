@@ -18,7 +18,8 @@ compile: main.c definitions/inputFunctions.c definitions/helperFunctions.c defin
 	gcc -c definitions/computeBridgeYDistribution.c -Wall -fstack-protector -g -fopenmp -lm
 	gcc -c definitions/computeBridgeCenterDistribution.c -Wall -fstack-protector -g -fopenmp -lm
 	gcc -c definitions/computeStates.c -Wall -fstack-protector -g -fopenmp -lm
-	gcc main.o computeStates.o inputFunctions.o helperFunctions.o computeBridgesBetweenBins.o computeBridgeYDistribution.o computeBridgeCenterDistribution.o -o countBridges -lm -fopenmp -Wall -g -fstack-protector
+	gcc -c definitions/computeBeadOrientation.c -Wall -fstack-protector -g -fopenmp -lm
+	gcc main.o computeBeadOrientation.o computeStates.o inputFunctions.o helperFunctions.o computeBridgesBetweenBins.o computeBridgeYDistribution.o computeBridgeCenterDistribution.o -o countBridges -lm -fopenmp -Wall -g -fstack-protector
 run: countBridges
 	./countBridges
 clean:

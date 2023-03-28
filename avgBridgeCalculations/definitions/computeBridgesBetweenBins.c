@@ -13,6 +13,7 @@
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
 #include "../headers/computeStates.h"
+#include "../headers/computeBeadOrientation.h"
 
 BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
 {

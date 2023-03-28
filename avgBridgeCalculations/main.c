@@ -13,6 +13,7 @@
 #include "headers/computeBridgeCenterDistribution.h"
 #include "headers/inputParameters.h"
 #include "headers/computeStates.h"
+#include "headers/computeBeadOrientation.h"
 
 /*
 LIST OF FUNCTIONS IN HEADER FILES:
@@ -99,6 +100,19 @@ int main(int argc, char const *argv[])
 	file_printStates = fopen (OUTPUT_CURRENT_STATES, "w");
 	fprintf(file_printStates, "# free, dangles, loop, bridges\n");
 
+	ANGLE_DISTRIBUTION *bridgeOrientation, *freeOrientation, *dangleOrientation, *loopOrientation;
+	int nBins_orientation = ceil (360.0 / BINWIDTH_ANGLEORIENTATION);
+
+	bridgeOrientation = (ANGLE_DISTRIBUTION *) malloc (nBins_orientation * sizeof (ANGLE_DISTRIBUTION));
+	freeOrientation = (ANGLE_DISTRIBUTION *) malloc (nBins_orientation * sizeof (ANGLE_DISTRIBUTION));
+	dangleOrientation = (ANGLE_DISTRIBUTION *) malloc (nBins_orientation * sizeof (ANGLE_DISTRIBUTION));
+	loopOrientation = (ANGLE_DISTRIBUTION *) malloc (nBins_orientation * sizeof (ANGLE_DISTRIBUTION));
+
+	bridgeOrientation = assignBeadOrientation (bridgeOrientation, nBins_orientation);
+	freeOrientation = assignBeadOrientation (freeOrientation, nBins_orientation);
+	dangleOrientation = assignBeadOrientation (dangleOrientation, nBins_orientation);
+	loopOrientation = assignBeadOrientation (loopOrientation, nBins_orientation);
+
 	while (file_status != EOF)
 	{
 		if (MAXTIMESTEPS != 0 && nTimeframes >= MAXTIMESTEPS) {
@@ -126,10 +140,13 @@ int main(int argc, char const *argv[])
 		// Calculate the distribution of centers of bridges, loops, dangles, free chains
 
 		// Calculate the distribution of orientation angles of bridges, loops, dangles, free chains
+		computeBeadOrientationDistribution (atoms, nBins_orientation, allBonds, nBonds, &bridgeOrientation, &loopOrientation, &dangleOrientation, &loopOrientation);
 
 		file_status = fgetc (file_inputTrj);
 		nTimeframes++;
 	}
+
+	fclose (file_printStates);
 
 	avgStates = computeAvgStates (avgStates, nTimeframes);
 
@@ -174,7 +191,6 @@ int main(int argc, char const *argv[])
 	fclose (file_bridgeBetweenBinsOuptut);
 	fclose (file_bridgeYDistributionOutput);
 	fclose (file_bridgeCenterDistributionOutput);
-	fclose (file_printStates);
 
 	return 0;
 }

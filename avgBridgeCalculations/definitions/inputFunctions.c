@@ -13,6 +13,7 @@
 #include "../headers/computeBridgeCenterDistribution.h"
 #include "../headers/inputParameters.h"
 #include "../headers/computeStates.h"
+#include "../headers/computeBeadOrientation.h"
 
 BOUNDARY getBoundary (FILE *file_inputTrj, BOUNDARY simBoundary)
 {
