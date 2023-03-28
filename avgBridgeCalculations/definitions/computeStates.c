@@ -83,6 +83,9 @@ STATES *readAllStates (STATES *allStates, int nTimeframes, const char *filename_
 
 	char lineString[2000];
 
+	omp_set_num_threads (NTHREADS);
+
+	#pragma omp parallel for
 	for (int i = 0; i < nTimeframes; ++i)
 	{
 		fgets (lineString, 2000, file_statesReopen);
@@ -100,6 +103,9 @@ STATES *readAllStates (STATES *allStates, int nTimeframes, const char *filename_
 
 STATES computeStdevStates (STATES stdevStates, STATES avgStates, STATES *allStates, int nTimeframes)
 {
+	omp_set_num_threads (NTHREADS);
+
+	#pragma omp parallel for
 	for (int i = 0; i < nTimeframes; ++i)
 	{
 		stdevStates.nFreeChains += pow ((allStates[i].nFreeChains - avgStates.nFreeChains), 2);

@@ -97,7 +97,7 @@ int main(int argc, char const *argv[])
 
 	FILE *file_printStates;
 	file_printStates = fopen (OUTPUT_CURRENT_STATES, "w");
-	fprintf(file_printStates, "#free, dangles, loop, bridges\n");
+	fprintf(file_printStates, "# free, dangles, loop, bridges\n");
 
 	while (file_status != EOF)
 	{

@@ -14,10 +14,11 @@ typedef struct trajectory
 	int adsorbedID;
 } TRAJECTORY;
 
-typedef struct bondIndo
+typedef struct bondInfo
 {
 	float x1, y1, z1, x2, y2, z2;
 	float xc, yc, zc;
+	float xOrientationAngle;
 } BONDINFO;
 
 typedef struct yDistribution

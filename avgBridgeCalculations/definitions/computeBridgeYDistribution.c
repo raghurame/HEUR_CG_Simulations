@@ -16,6 +16,9 @@
 
 YDIST *assignBridgeYDistribution (float maxFeneExtension, int nBins, float binWidth, YDIST *bridgeYDistribution)
 {
+	omp_set_num_threads (NTHREADS);
+
+	#pragma omp parallel for
 	for (int i = 0; i < nBins; ++i)
 	{
 		if (i == 0) {

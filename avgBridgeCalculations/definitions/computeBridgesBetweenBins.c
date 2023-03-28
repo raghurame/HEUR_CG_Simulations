@@ -16,6 +16,9 @@
 
 BRIDGESBIN *assignBinBounds (BRIDGESBIN *bridgeBetweenBins, BOUNDARY simBoundary, float binWidth, float delBinDistance, int nBins)
 {
+	omp_set_num_threads (NTHREADS);
+
+	#pragma omp parallel for
 	for (int i = 0; i < nBins; ++i)
 	{
 		if (i == 0)
