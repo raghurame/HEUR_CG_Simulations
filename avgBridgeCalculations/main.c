@@ -63,7 +63,6 @@ int main(int argc, char const *argv[])
 	BOUNDARY simBoundary;
 	simBoundary = getBoundary (file_inputTrj, simBoundary);
 
-	char lineString[2000];
 	float binWidth_vertBridges = BINWIDTH_VERTICALBRIDGES, distanceCutoff_vertBridges = ADSORPTION_DISTANCE_CUTOFF, delBinDistance_vertBridges = DELBINDISTANCE_VERTICALBRIDGES;
 	int nBins_vertBridges = ceil ((((simBoundary.yhi - simBoundary.ylo) * 2) - (2 * binWidth_vertBridges)) / delBinDistance_vertBridges);
 
@@ -79,7 +78,7 @@ int main(int argc, char const *argv[])
 	YDIST *bridgeYDistribution;
 	bridgeYDistribution = (YDIST *) malloc (nBins_yDist * sizeof (YDIST));
 
-	int nBonds = (nAtoms - nMicelles) / 2, nBins_bridgeCenter = NBINS_YDISTRIBUTIONBRIDGES;
+	int nBonds = (nAtoms - nMicelles) / 2;
 	BONDINFO *allBonds;
 	allBonds = (BONDINFO *) malloc (nBonds * sizeof (BONDINFO));
 	BRIDGESBIN *bridgeCenterDistribution;
@@ -127,20 +126,14 @@ int main(int argc, char const *argv[])
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
 		bridgeYDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeYDistribution, nBins_yDist, simBoundary);
 
-		// Finish the bridge center distribution calculations
 		allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary);
 		bridgeCenterDistribution = computeBridgeCenterDistribution (allBonds, nBonds, bridgeCenterDistribution, nBins_centerDistribution);
 
-		// Calculate the overall bridges, loops, dangles, free chains
 		currentStates = initializeStates (currentStates);
 		currentStates = computeAllStates (currentStates, atoms, nAtoms);
 		avgStates = sumAllStates (currentStates, avgStates);
 		printCurrentStates (file_printStates, currentStates);
 
-		// Calculate the distribution of centers of bridges, loops, dangles, free chains
-
-		// Calculate the distribution of orientation angles of bridges, loops, dangles, free chains
-		// computeBeadOrientationDistribution (nBins_orientation, allBonds, nBonds, &bridgeOrientation, &loopOrientation, &dangleOrientation, &freeOrientation);
 		bridgeOrientation = computeBridgeOrientationDistribution (bridgeOrientation, nBins_orientation, nBonds, allBonds);
 		loopOrientation = computeLoopOrientationDistribution (loopOrientation, nBins_orientation, nBonds, allBonds);
 		dangleOrientation = computeDangleOrientationDistribution (dangleOrientation, nBins_orientation, nBonds, allBonds);
@@ -161,6 +154,16 @@ int main(int argc, char const *argv[])
 	stdevStates = computeStdevStates (stdevStates, avgStates, allStates, nTimeframes);
 
 	printAverageStates (OUTPUT_AVG_STATES, avgStates, stdevStates);
+
+	bridgeOrientation = computeAverageOrientationDistribution (bridgeOrientation, nBins_orientation, nTimeframes);
+	loopOrientation = computeAverageOrientationDistribution (loopOrientation, nBins_orientation, nTimeframes);
+	dangleOrientation = computeAverageOrientationDistribution (dangleOrientation, nBins_orientation, nTimeframes);
+	freeOrientation = computeAverageOrientationDistribution (freeOrientation, nBins_orientation, nTimeframes);
+
+	printAverageOrientationDistribution (bridgeOrientation, nBins_orientation, OUTPUT_BRIDGEORIENTATIONDISTRIBUTION);
+	printAverageOrientationDistribution (loopOrientation, nBins_orientation, OUTPUT_LOOPORIENTATIONDISTRIBUTION);
+	printAverageOrientationDistribution (dangleOrientation, nBins_orientation, OUTPUT_DANGLEORIENTATIONDISTRIBUTION);
+	printAverageOrientationDistribution (freeOrientation, nBins_orientation, OUTPUT_FREEORIENTATIONDISTRIBUTION);
 
 	FILE *file_bridgeBetweenBinsOuptut, *file_bridgeYDistributionOutput, *file_bridgeCenterDistributionOutput;
 	file_bridgeBetweenBinsOuptut = fopen (OUTPUT_BRIDGESBETWEENBINS, "w");

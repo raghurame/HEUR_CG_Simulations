@@ -6,5 +6,7 @@ ANGLE_DISTRIBUTION *computeBridgeOrientationDistribution (ANGLE_DISTRIBUTION *br
 ANGLE_DISTRIBUTION *computeLoopOrientationDistribution (ANGLE_DISTRIBUTION *loopOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds);
 ANGLE_DISTRIBUTION *computeDangleOrientationDistribution (ANGLE_DISTRIBUTION *dangleOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds);
 ANGLE_DISTRIBUTION *computeFreeOrientationDistribution (ANGLE_DISTRIBUTION *freeOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds);
+ANGLE_DISTRIBUTION *computeAverageOrientationDistribution (ANGLE_DISTRIBUTION *beadOrientation, int nBins_orientation, int nTimeframes);
+void printAverageOrientationDistribution (ANGLE_DISTRIBUTION *beadOrientation, int nBins_orientation, const char *filename_orientationDistribution);
 
 #endif

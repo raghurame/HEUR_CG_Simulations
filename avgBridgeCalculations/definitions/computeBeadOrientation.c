@@ -101,3 +101,28 @@ ANGLE_DISTRIBUTION *computeFreeOrientationDistribution (ANGLE_DISTRIBUTION *free
 
 	return freeOrientation;
 }
+
+ANGLE_DISTRIBUTION *computeAverageOrientationDistribution (ANGLE_DISTRIBUTION *beadOrientation, int nBins_orientation, int nTimeframes)
+{
+	for (int i = 0; i < nBins_orientation; ++i)
+	{
+		beadOrientation[i].count /= nTimeframes;
+	}
+
+	return beadOrientation;
+}
+
+void printAverageOrientationDistribution (ANGLE_DISTRIBUTION *beadOrientation, int nBins_orientation, const char *filename_orientationDistribution)
+{
+	FILE *file_orientationDistribution;
+	file_orientationDistribution = fopen (filename_orientationDistribution, "w");
+
+	fprintf(file_orientationDistribution, "# angleLo, angleHi, avgCount\n");
+
+	for (int i = 0; i < nBins_orientation; ++i)
+	{
+		fprintf(file_orientationDistribution, "%f %f %f\n", beadOrientation[i].angleLo, beadOrientation[i].angleHi, beadOrientation[i].count);
+	}
+
+	fclose (file_orientationDistribution);
+}

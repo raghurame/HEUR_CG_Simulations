@@ -48,7 +48,7 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 	omp_set_num_threads (NTHREADS);
 
 	float distance1, distance2;
-	float tempX, tempY, tempY1, tempY2, tempZ;
+	float tempY1, tempY2;
 
 	for (int i = 0; i < nAtoms; )
 	{

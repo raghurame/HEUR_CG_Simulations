@@ -12,12 +12,16 @@
 #define NBINS_YDISTRIBUTIONBRIDGES 20
 #define BINWIDTH_BONDCENTERDISTRIBUTION 3.0
 #define NFREQ_PROGRESS_SCREEN 1
-#define MAXTIMESTEPS 100
+#define MAXTIMESTEPS 10
+#define BINWIDTH_ANGLEORIENTATION 10.0
 #define OUTPUT_BRIDGESBETWEENBINS "outputs/nBridgesBetweenBins.count"
 #define OUTPUT_YDISTRIBUTIONBRIDGES "outputs/bridges.distribution"
 #define OUTPUT_BONDCENTERDISTRIBUTION "outputs/bridgeCenter.distribution"
 #define OUTPUT_CURRENT_STATES "outputs/current.states"
 #define OUTPUT_AVG_STATES "outputs/average.states"
-#define BINWIDTH_ANGLEORIENTATION 10.0
+#define OUTPUT_BRIDGEORIENTATIONDISTRIBUTION "outputs/bridges.orientationDistribution"
+#define OUTPUT_LOOPORIENTATIONDISTRIBUTION "outputs/loops.orientationDistribution"
+#define OUTPUT_FREEORIENTATIONDISTRIBUTION "outputs/free.orientationDistribution"
+#define OUTPUT_DANGLEORIENTATIONDISTRIBUTION "outputs/dangle.orientationDistribution"
 
 #endif

@@ -41,8 +41,7 @@ typedef struct states
 
 typedef struct angleDistribution
 {
-	float angleLo, angleHi;
-	float count;
+	float angleLo, angleHi, count;
 } ANGLE_DISTRIBUTION;
 
 #endif

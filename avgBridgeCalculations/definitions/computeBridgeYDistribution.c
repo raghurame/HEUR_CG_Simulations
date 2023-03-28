@@ -40,7 +40,7 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeYD
 
 	int bridgeCountLocal = 0;
 	float yDistance;
-	float tempX, tempY, tempZ;
+	float tempY;
 
 	for (int i = 0; i < nAtoms; )
 	{
