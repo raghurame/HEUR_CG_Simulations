@@ -1,5 +1,5 @@
-#ifndef STRUCTDEFINITIONS_H
-#define STRUCTDEFINITIONS_H
+#ifndef INPUTPARAMETERSHEUR_H
+#define INPUTPARAMETERSHEUR_H
 
 #define MSLEEP usleep (1000000)
 #define NTHREADS 8
@@ -16,5 +16,6 @@
 #define NFREQ_PROGRESS_SCREEN 5
 #define OUTPUT_CURRENT_STATES "outputs/current.states"
 #define OUTPUT_AVG_STATES "outputs/average.states"
+#define MAXTIMESTEPS 100
 
 #endif

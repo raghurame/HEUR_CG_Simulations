@@ -48,7 +48,7 @@ STATES computeAllStates (STATES currentStates, TRAJECTORY *atoms, int nAtoms)
 			i += 1; }
 	}
 
-	return currentStates
+	return currentStates;
 }
 
 STATES sumAllStates (STATES currentStates, STATES avgStates)
@@ -76,7 +76,7 @@ STATES computeAvgStates (STATES avgStates, int nTimeframes)
 	return avgStates;
 }
 
-STATES readAllStates (STATES *allStates, int nTimeframes, const char *filename_states)
+STATES *readAllStates (STATES *allStates, int nTimeframes, const char *filename_states)
 {
 	FILE *file_statesReopen;
 	file_statesReopen = fopen (filename_states, "r");

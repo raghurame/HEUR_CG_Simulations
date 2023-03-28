@@ -101,6 +101,9 @@ int main(int argc, char const *argv[])
 
 	while (file_status != EOF)
 	{
+		if (MAXTIMESTEPS != 0 && nTimeframes >= MAXTIMESTEPS) {
+			break; }
+
 		if (nTimeframes%NFREQ_PROGRESS_SCREEN == 0) {
 			fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
 			fflush (stdout); }
@@ -117,7 +120,7 @@ int main(int argc, char const *argv[])
 		// Calculate the overall bridges, loops, dangles, free chains
 		currentStates = initializeStates (currentStates);
 		currentStates = computeAllStates (currentStates, atoms, nAtoms);
-		avgStates = sumAllStates (currentStates, avgStates, nTimeframes);
+		avgStates = sumAllStates (currentStates, avgStates);
 		printCurrentStates (file_printStates, currentStates);
 
 		// Calculate the distribution of centers of bridges, loops, dangles, free chains
