@@ -17,9 +17,6 @@
 
 BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution, int nBins_centerDistribution, float binWidth_centerDistribution, BOUNDARY simBoundary)
 {
-	omp_set_num_threads (NTHREADS);
-
-	#pragma omp parallel for
 	for (int i = 0; i < nBins_centerDistribution; ++i)
 	{
 		if (i == 0)
