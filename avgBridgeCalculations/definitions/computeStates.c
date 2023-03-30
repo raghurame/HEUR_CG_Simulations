@@ -83,22 +83,19 @@ STATES *readAllStates (STATES *allStates, int nTimeframes, const char *filename_
 	file_statesReopen = fopen (OUTPUT_CURRENT_STATES, "r");
 
 	char lineString[2000];
-	int nLines = 0;
+	int index = 0;
 
-	while (fgets (lineString, 2000, file_statesReopen) != NULL) {
-		nLines++; }
-
-	for (int i = 0; i < nLines; ++i)
+	while (fgets (lineString, 2000, file_statesReopen) != NULL)
 	{
-		fgets (lineString, 2000, file_statesReopen);
-
 		if (lineString[0] != '#')
 		{
 			sscanf (lineString, "%f %f %f %f\n", 
-				&allStates[i].nFreeChains, 
-				&allStates[i].nDangles, 
-				&allStates[i].nLoops, 
-				&allStates[i].nBridges);
+				&allStates[index].nFreeChains, 
+				&allStates[index].nDangles, 
+				&allStates[index].nLoops, 
+				&allStates[index].nBridges);
+
+			index++;
 		}
 	}
 
@@ -109,14 +106,18 @@ STATES *readAllStates (STATES *allStates, int nTimeframes, const char *filename_
 
 STATES computeStdevStates (STATES stdevStates, STATES avgStates, STATES *allStates, int nTimeframes)
 {
-	omp_set_num_threads (NTHREADS);
+
+	stdevStates.nFreeChains = 0;
+	stdevStates.nDangles = 0;
+	stdevStates.nLoops = 0;
+	stdevStates.nBridges = 0;
 
 	for (int i = 0; i < nTimeframes; ++i)
 	{
-		stdevStates.nFreeChains += pow ((allStates[i].nFreeChains - avgStates.nFreeChains), 2);
-		stdevStates.nDangles += pow ((allStates[i].nDangles - avgStates.nDangles), 2);
-		stdevStates.nLoops += pow ((allStates[i].nLoops - avgStates.nLoops), 2);
-		stdevStates.nBridges += pow ((allStates[i].nBridges - avgStates.nBridges), 2);
+		stdevStates.nFreeChains += ((allStates[i].nFreeChains - avgStates.nFreeChains) * (allStates[i].nFreeChains - avgStates.nFreeChains));
+		stdevStates.nDangles += ((allStates[i].nDangles - avgStates.nDangles) * (allStates[i].nDangles - avgStates.nDangles));
+		stdevStates.nLoops += ((allStates[i].nLoops - avgStates.nLoops) * (allStates[i].nLoops - avgStates.nLoops));
+		stdevStates.nBridges += ((allStates[i].nBridges - avgStates.nBridges) * (allStates[i].nBridges - avgStates.nBridges));
 	}
 
 	stdevStates.nFreeChains /= nTimeframes;

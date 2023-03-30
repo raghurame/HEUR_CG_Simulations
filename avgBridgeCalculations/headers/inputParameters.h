@@ -3,7 +3,7 @@
 
 #define PI 3.14159
 #define MSLEEP usleep (1000000)
-#define NTHREADS 1
+#define NTHREADS 7
 #define INPUTFILE "dump.lammpstrj"
 #define BINWIDTH_VERTICALBRIDGES 6.0
 #define ADSORPTION_DISTANCE_CUTOFF 3.38

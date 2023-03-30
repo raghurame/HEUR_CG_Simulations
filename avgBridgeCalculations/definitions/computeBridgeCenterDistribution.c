@@ -65,6 +65,9 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 			allBonds[currentBondIndex].y2 = tempY;
 			allBonds[currentBondIndex].z2 = tempZ;
 
+			allBonds[currentBondIndex].bondLength = ((atoms[i].x - tempX) * (atoms[i].x - tempX)) + ((atoms[i].y - tempY) * (atoms[i].y - tempY)) + ((atoms[i].y - tempY) * (atoms[i].y - tempY));
+			allBonds[currentBondIndex].bondLength = sqrt (allBonds[currentBondIndex].bondLength);
+
 			allBonds[currentBondIndex].adsorbedID1 = atoms[i].adsorbedID;
 			allBonds[currentBondIndex].adsorbedID2 = atoms[i + 1].adsorbedID;
 

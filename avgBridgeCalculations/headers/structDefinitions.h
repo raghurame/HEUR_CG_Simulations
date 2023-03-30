@@ -20,6 +20,7 @@ typedef struct bondInfo
 	float xc, yc, zc;
 	float xOrientationAngle;
 	int adsorbedID1, adsorbedID2;
+	float bondLength;
 } BONDINFO;
 
 typedef struct yDistribution
@@ -41,7 +42,7 @@ typedef struct states
 
 typedef struct angleDistribution
 {
-	float angleLo, angleHi, count;
+	float angleLo, angleHi, count, avgBondLength;
 } ANGLE_DISTRIBUTION;
 
 #endif

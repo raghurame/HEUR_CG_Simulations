@@ -29,6 +29,7 @@ ANGLE_DISTRIBUTION *assignBeadOrientation (ANGLE_DISTRIBUTION *beadOrientation, 
 		}
 
 		beadOrientation[i].count = 0;
+		beadOrientation[i].avgBondLength = 0;
 	}
 
 	return beadOrientation;
@@ -36,6 +37,9 @@ ANGLE_DISTRIBUTION *assignBeadOrientation (ANGLE_DISTRIBUTION *beadOrientation, 
 
 ANGLE_DISTRIBUTION *computeBridgeOrientationDistribution (ANGLE_DISTRIBUTION *bridgeOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
 {
+	int *denominator;
+	denominator = (int *) calloc (nBins_orientation, sizeof (int));
+
 	for (int i = 0; i < nBonds; ++i)
 	{
 		if (allBonds[i].adsorbedID1 > 0 && allBonds[i].adsorbedID2 > 0 && allBonds[i].adsorbedID1 != allBonds[i].adsorbedID2)
@@ -43,9 +47,16 @@ ANGLE_DISTRIBUTION *computeBridgeOrientationDistribution (ANGLE_DISTRIBUTION *br
 			for (int j = 0; j < nBins_orientation; ++j)
 			{
 				if (allBonds[i].xOrientationAngle > bridgeOrientation[j].angleLo && allBonds[i].xOrientationAngle <= bridgeOrientation[j].angleHi) {
-					bridgeOrientation[j].count++; }
+					bridgeOrientation[j].count++; 
+					bridgeOrientation[j].avgBondLength += allBonds[i].bondLength;
+					denominator[j]++;
+				}
 			}
 		}
+	}
+
+	for (int i = 0; i < nBins_orientation; ++i) {
+		bridgeOrientation[i].avgBondLength /= denominator[i];
 	}
 
 	return bridgeOrientation;
@@ -53,6 +64,9 @@ ANGLE_DISTRIBUTION *computeBridgeOrientationDistribution (ANGLE_DISTRIBUTION *br
 
 ANGLE_DISTRIBUTION *computeLoopOrientationDistribution (ANGLE_DISTRIBUTION *loopOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
 {
+	int *denominator;
+	denominator = (int *) calloc (nBins_orientation, sizeof (int));
+
 	for (int i = 0; i < nBonds; ++i)
 	{
 		if (allBonds[i].adsorbedID1 > 0 && allBonds[i].adsorbedID2 > 0 && allBonds[i].adsorbedID1 == allBonds[i].adsorbedID2)
@@ -60,9 +74,16 @@ ANGLE_DISTRIBUTION *computeLoopOrientationDistribution (ANGLE_DISTRIBUTION *loop
 			for (int j = 0; j < nBins_orientation; ++j)
 			{
 				if (allBonds[i].xOrientationAngle > loopOrientation[j].angleLo && allBonds[i].xOrientationAngle <= loopOrientation[j].angleHi) {
-					loopOrientation[j].count++; }
+					loopOrientation[j].count++; 
+					loopOrientation[j].avgBondLength += allBonds[i].bondLength;
+					denominator[j]++;
+				}
 			}
 		}
+	}
+
+	for (int i = 0; i < nBins_orientation; ++i) {
+		loopOrientation[i].avgBondLength /= denominator[i];
 	}
 
 	return loopOrientation;
@@ -70,6 +91,9 @@ ANGLE_DISTRIBUTION *computeLoopOrientationDistribution (ANGLE_DISTRIBUTION *loop
 
 ANGLE_DISTRIBUTION *computeDangleOrientationDistribution (ANGLE_DISTRIBUTION *dangleOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
 {
+	int *denominator;
+	denominator = (int *) calloc (nBins_orientation, sizeof (int));
+
 	for (int i = 0; i < nBonds; ++i)
 	{
 		if ((allBonds[i].adsorbedID1 > 0 && allBonds[i].adsorbedID2 == 0) || (allBonds[i].adsorbedID1 == 0 && allBonds[i].adsorbedID2 > 0))
@@ -77,9 +101,16 @@ ANGLE_DISTRIBUTION *computeDangleOrientationDistribution (ANGLE_DISTRIBUTION *da
 			for (int j = 0; j < nBins_orientation; ++j)
 			{
 				if (allBonds[i].xOrientationAngle > dangleOrientation[j].angleLo && allBonds[i].xOrientationAngle <= dangleOrientation[j].angleHi) {
-					dangleOrientation[j].count++; }
+					dangleOrientation[j].count++; 
+					dangleOrientation[j].avgBondLength += allBonds[i].bondLength;
+					denominator[j]++;
+				}
 			}
 		}
+	}
+
+	for (int i = 0; i < nBins_orientation; ++i) {
+		dangleOrientation[i].avgBondLength /= denominator[i];
 	}
 
 	return dangleOrientation;
@@ -87,6 +118,9 @@ ANGLE_DISTRIBUTION *computeDangleOrientationDistribution (ANGLE_DISTRIBUTION *da
 
 ANGLE_DISTRIBUTION *computeFreeOrientationDistribution (ANGLE_DISTRIBUTION *freeOrientation, int nBins_orientation, int nBonds, BONDINFO *allBonds)
 {
+	int *denominator;
+	denominator = (int *) calloc (nBins_orientation, sizeof (int));
+
 	for (int i = 0; i < nBonds; ++i)
 	{
 		if (allBonds[i].adsorbedID1 == 0 && allBonds[i].adsorbedID2 == 0)
@@ -94,9 +128,16 @@ ANGLE_DISTRIBUTION *computeFreeOrientationDistribution (ANGLE_DISTRIBUTION *free
 			for (int j = 0; j < nBins_orientation; ++j)
 			{
 				if (allBonds[i].xOrientationAngle > freeOrientation[j].angleLo && allBonds[i].xOrientationAngle <= freeOrientation[j].angleHi) {
-					freeOrientation[j].count++; }
+					freeOrientation[j].count++; 
+					freeOrientation[j].avgBondLength += allBonds[i].bondLength;
+					denominator[j]++;
+				}
 			}
 		}
+	}
+
+	for (int i = 0; i < nBins_orientation; ++i) {
+		freeOrientation[i].avgBondLength /= denominator[i];
 	}
 
 	return freeOrientation;
@@ -104,9 +145,9 @@ ANGLE_DISTRIBUTION *computeFreeOrientationDistribution (ANGLE_DISTRIBUTION *free
 
 ANGLE_DISTRIBUTION *computeAverageOrientationDistribution (ANGLE_DISTRIBUTION *beadOrientation, int nBins_orientation, int nTimeframes)
 {
-	for (int i = 0; i < nBins_orientation; ++i)
-	{
+	for (int i = 0; i < nBins_orientation; ++i) {
 		beadOrientation[i].count /= nTimeframes;
+		beadOrientation[i].avgBondLength /= nTimeframes;
 	}
 
 	return beadOrientation;
@@ -117,11 +158,11 @@ void printAverageOrientationDistribution (ANGLE_DISTRIBUTION *beadOrientation, i
 	FILE *file_orientationDistribution;
 	file_orientationDistribution = fopen (filename_orientationDistribution, "w");
 
-	fprintf(file_orientationDistribution, "# angleLo, angleHi, avgCount\n");
+	fprintf(file_orientationDistribution, "# angleLo, angleHi, avgCount, avgBondDistance\n");
 
 	for (int i = 0; i < nBins_orientation; ++i)
 	{
-		fprintf(file_orientationDistribution, "%f %f %f\n", beadOrientation[i].angleLo, beadOrientation[i].angleHi, beadOrientation[i].count);
+		fprintf(file_orientationDistribution, "%f %f %f\n", beadOrientation[i].angleLo, beadOrientation[i].angleHi, beadOrientation[i].count, beadOrientation[i].avgBondLength);
 	}
 
 	fclose (file_orientationDistribution);
