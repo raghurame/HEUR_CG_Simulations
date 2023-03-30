@@ -14,6 +14,7 @@
 #define NFREQ_PROGRESS_SCREEN 1
 #define MAXTIMESTEPS 1000
 #define BINWIDTH_ANGLEORIENTATION 10.0
+#define NPOLYMERS 9620
 #define OUTPUT_BRIDGESBETWEENBINS "outputs/nBridgesBetweenBins.count"
 #define OUTPUT_YDISTRIBUTIONBRIDGES "outputs/bridges.distribution"
 #define OUTPUT_BONDCENTERDISTRIBUTION "outputs/bridgeCenter.distribution"

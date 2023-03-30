@@ -49,6 +49,11 @@ STATES computeAllStates (STATES currentStates, TRAJECTORY *atoms, int nAtoms)
 			i += 1; }
 	}
 
+	currentStates.nFreeChains /= NPOLYMERS;
+	currentStates.nDangles /= NPOLYMERS;
+	currentStates.nLoops /= NPOLYMERS;
+	currentStates.nBridges /= NPOLYMERS;
+
 	return currentStates;
 }
 
