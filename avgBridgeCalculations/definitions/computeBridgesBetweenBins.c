@@ -55,7 +55,7 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 		if ((*atoms)[i].atomType == 1)
 		{
 			#pragma omp parallel for
-			for (int j = 0; j < (nMicelles); ++j)
+			for (int j = 0; j < nMicelles; ++j)
 			{
 				distance1 = computePeriodicDistance ((*atoms)[i].x, (*atoms)[i].y, (*atoms)[i].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);
 				distance2 = computePeriodicDistance ((*atoms)[i + 1].x, (*atoms)[i + 1].y, (*atoms)[i + 1].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);

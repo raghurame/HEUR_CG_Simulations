@@ -111,7 +111,6 @@ STATES computeStdevStates (STATES stdevStates, STATES avgStates, STATES *allStat
 {
 	omp_set_num_threads (NTHREADS);
 
-	#pragma omp parallel for
 	for (int i = 0; i < nTimeframes; ++i)
 	{
 		stdevStates.nFreeChains += pow ((allStates[i].nFreeChains - avgStates.nFreeChains), 2);
