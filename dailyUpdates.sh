@@ -5,5 +5,6 @@ git add avgBridgeCalculations/Makefile
 git add dailyUpdates.sh
 git add moleculeBoundary/computeMaxMolBoundary.c
 git add moleculeBoundary/Makefile
+git add misc/*
 git commit -m "daily updates"
 git push
