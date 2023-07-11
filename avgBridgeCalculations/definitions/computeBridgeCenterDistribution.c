@@ -50,6 +50,15 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 			tempY = translatePeriodic (atoms[i].y, atoms[i + 1].y, simBoundary.yLength);
 			tempZ = translatePeriodic (atoms[i].z, atoms[i + 1].z, simBoundary.zLength);
 
+			if (tempY > atoms[i + 1].y)
+			{
+				tempX += simBoundary.xy;
+			}
+			else if (tempY < atoms[i + 1].y)
+			{
+				tempX -= simBoundary.xy;
+			}
+
 			allBonds[currentBondIndex].xc = (atoms[i].x + tempX) / 2;
 			allBonds[currentBondIndex].yc = (atoms[i].y + tempY) / 2;
 			allBonds[currentBondIndex].zc = (atoms[i].z + tempZ) / 2;

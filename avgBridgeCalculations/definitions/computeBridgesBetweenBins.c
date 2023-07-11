@@ -57,8 +57,8 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 			#pragma omp parallel for
 			for (int j = 0; j < nMicelles; ++j)
 			{
-				distance1 = computePeriodicDistance ((*atoms)[i].x, (*atoms)[i].y, (*atoms)[i].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);
-				distance2 = computePeriodicDistance ((*atoms)[i + 1].x, (*atoms)[i + 1].y, (*atoms)[i + 1].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary.xLength, simBoundary.yLength, simBoundary.zLength);
+				distance1 = computePeriodicDistance ((*atoms)[i].x, (*atoms)[i].y, (*atoms)[i].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary);
+				distance2 = computePeriodicDistance ((*atoms)[i + 1].x, (*atoms)[i + 1].y, (*atoms)[i + 1].z, micelles[j].x, micelles[j].y, micelles[j].z, simBoundary);
 
 				if (distance1 <= distanceCutoff) {
 					(*atoms)[i].adsorbedID = j; 
@@ -88,6 +88,24 @@ BRIDGESBIN *countBridgesBetweenBins (TRAJECTORY **atoms, BOUNDARY simBoundary, f
 				tempY1 = translatePeriodic (bridgeBetweenBins[k].y1hi, (*atoms)[i].y, simBoundary.yLength);
 				tempY2 = translatePeriodic (bridgeBetweenBins[k].y1hi, (*atoms)[i + 1].y, simBoundary.yLength);
 
+/*				if (tempY1 > y2)
+				{
+					tempY1 += simBoundary.xy;
+				}
+				else if (tempY1 < y2)
+				{
+					tempY1 -= simBoundary.xy;
+				}
+
+				if (tempY2 > y2)
+				{
+					tempY2 += simBoundary.xy;
+				}
+				else if (tempY2 < y2)
+				{
+					tempY2 -= simBoundary.xy;
+				}
+*/
 				if ((tempY1 > bridgeBetweenBins[k].y1lo && 
 					tempY1 <= bridgeBetweenBins[k].y1hi && 
 					(*atoms)[i + 1].y > bridgeBetweenBins[k].y2lo && 

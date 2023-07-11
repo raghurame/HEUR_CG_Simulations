@@ -76,9 +76,9 @@ TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, float
 			sscanf (lineString, "%f %f %f\n", &simBoundary.zlo, &simBoundary.zhi, &simBoundary.yz); }
 
 		if (i == 8) {
-			xLength = (simBoundary.xhi - simBoundary.xlo);
-			yLength = (simBoundary.yhi - simBoundary.ylo);
-			zLength = (simBoundary.zhi - simBoundary.zlo); }
+			simBoundary.xLength = (simBoundary.xhi - simBoundary.xlo);
+			simBoundary.yLength = (simBoundary.yhi - simBoundary.ylo);
+			simBoundary.zLength = (simBoundary.zhi - simBoundary.zlo); }
 	}
 
 	for (int i = 0; i < nAtoms; ++i)

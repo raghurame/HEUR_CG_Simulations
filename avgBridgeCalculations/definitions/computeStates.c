@@ -49,16 +49,24 @@ STATES computeAllStates (STATES currentStates, TRAJECTORY *atoms, int nAtoms)
 			i += 1; }
 	}
 
-	currentStates.nFreeChains /= NPOLYMERS;
-	currentStates.nDangles /= NPOLYMERS;
-	currentStates.nLoops /= NPOLYMERS;
-	currentStates.nBridges /= NPOLYMERS;
-
+/*	currentStates.nFreeChains /= (float)NPOLYMERS;
+	currentStates.nDangles /= (float)NPOLYMERS;
+	currentStates.nLoops /= (float)NPOLYMERS;
+	currentStates.nBridges /= (float)NPOLYMERS;
+*/
+/*	printf("%d %d %d %d\n", (int)ceil(currentStates.nFreeChains), (int)ceil(currentStates.nDangles), (int)ceil(currentStates.nLoops), (int)ceil(currentStates.nBridges));
+*/
 	return currentStates;
 }
 
 STATES sumAllStates (STATES currentStates, STATES avgStates)
 {
+
+	currentStates.nFreeChains /= (float)NPOLYMERS;
+	currentStates.nDangles /= (float)NPOLYMERS;
+	currentStates.nLoops /= (float)NPOLYMERS;
+	currentStates.nBridges /= (float)NPOLYMERS;
+
 	avgStates.nFreeChains += currentStates.nFreeChains;
 	avgStates.nDangles += currentStates.nDangles;
 	avgStates.nLoops += currentStates.nLoops;

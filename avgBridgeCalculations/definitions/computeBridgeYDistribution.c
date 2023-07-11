@@ -47,6 +47,16 @@ YDIST *computeBridgeDistribution (TRAJECTORY *atoms, int nAtoms, YDIST *bridgeYD
 		if ((atoms[i].adsorbedID != atoms[i + 1].adsorbedID) && atoms[i].adsorbedID != 0 && atoms[i + 1].adsorbedID != 0)
 		{
 			tempY = translatePeriodic (atoms[i].y, atoms[i + 1].y, simBoundary.yLength);
+
+/*			if (tempY > y2)
+			{
+				tempY += simBoundary.xy;
+			}
+			else if (tempY < y2)
+			{
+				tempY -= simBoundary.xy;
+			}
+*/
 			yDistance = fabs (atoms[i].y - tempY);
 
 			#pragma omp parallel for

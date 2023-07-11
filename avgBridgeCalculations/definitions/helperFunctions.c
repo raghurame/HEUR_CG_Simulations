@@ -28,15 +28,26 @@ float translatePeriodic (float r1, float r2, float simulationBoxLength)
 	return r2;
 }
 
-float computePeriodicDistance (float x1, float y1, float z1, float x2, float y2, float z2, float xLength, float yLength, float zLength)
+float computePeriodicDistance (float x1, float y1, float z1, float x2, float y2, float z2, BOUNDARY simBoundary)
 {
 	float distance;
+	float x2_new, y2_new, z2_new;
 
-	x2 = translatePeriodic (x1, x2, xLength);
-	y2 = translatePeriodic (y1, y2, yLength);
-	z2 = translatePeriodic (z1, z2, zLength);
+	x2_new = translatePeriodic (x1, x2, simBoundary.xLength);
+	y2_new = translatePeriodic (y1, y2, simBoundary.yLength);
+	z2_new = translatePeriodic (z1, z2, simBoundary.zLength);
 
-	distance = sqrt (pow ((x2 - x1), 2) + pow ((y2 - y1), 2) + pow ((z2 - z1), 2));
+	// simBoundary.xy, simBoundary.xz, simBoundary.yz
+	if (y2_new > y2)
+	{
+		x2_new += simBoundary.xy;
+	}
+	else if (y2_new < y2)
+	{
+		x2_new -= simBoundary.xy;
+	}
+
+	distance = sqrt (pow ((x2_new - x1), 2) + pow ((y2_new - y1), 2) + pow ((z2_new - z1), 2));
 
 	return distance;
 }
