@@ -24,5 +24,6 @@
 #define OUTPUT_LOOPORIENTATIONDISTRIBUTION "outputs/loops.orientationDistribution"
 #define OUTPUT_FREEORIENTATIONDISTRIBUTION "outputs/free.orientationDistribution"
 #define OUTPUT_DANGLEORIENTATIONDISTRIBUTION "outputs/dangle.orientationDistribution"
+#define OUTPUT_BONDDUMP "outputs/bond.dump"
 
 #endif

@@ -112,6 +112,9 @@ int main(int argc, char const *argv[])
 	dangleOrientation = assignBeadOrientation (dangleOrientation, nBins_orientation);
 	loopOrientation = assignBeadOrientation (loopOrientation, nBins_orientation);
 
+	FILE *file_bondDump;
+	file_bondDump = fopen (OUTPUT_BONDDUMP, "w");
+
 	while (file_status != EOF)
 	{
 		if (MAXTIMESTEPS != 0 && nTimeframes >= MAXTIMESTEPS) {
@@ -126,7 +129,8 @@ int main(int argc, char const *argv[])
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
 		bridgeYDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeYDistribution, nBins_yDist, simBoundary);
 
-		allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary);
+		fprintf(file_bondDump, "#Timestep: %d\n", nTimeframes);
+		allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary, file_bondDump);
 		bridgeCenterDistribution = computeBridgeCenterDistribution (allBonds, nBonds, bridgeCenterDistribution, nBins_centerDistribution);
 
 		currentStates = initializeStates (currentStates);
@@ -194,6 +198,7 @@ int main(int argc, char const *argv[])
 			bridgeCenterDistribution[i].y1hi, 
 			(float)bridgeCenterDistribution[i].count / (float)nTimeframes); }
 
+	fclose (file_bondDump);
 	fclose (file_inputTrj);
 	fclose (file_bridgeBetweenBinsOuptut);
 	fclose (file_bridgeYDistributionOutput);

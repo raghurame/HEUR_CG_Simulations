@@ -36,7 +36,7 @@ BRIDGESBIN *assignBridgeCenterDistribution (BRIDGESBIN *bridgeCenterDistribution
 	return bridgeCenterDistribution;
 }
 
-BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds, BOUNDARY simBoundary)
+BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds, BOUNDARY simBoundary, FILE *file_bondDump)
 {
 	int currentBondIndex = 0;
 	float tempX, tempY, tempZ;
@@ -103,6 +103,8 @@ BONDINFO *computeBridgeCenter (TRAJECTORY *atoms, int nAtoms, BONDINFO *allBonds
 			allBonds[currentBondIndex].xOrientationAngle = (acosf (cosTheta) * 180) / PI;
 
 			i += 2;
+			fprintf(file_bondDump, "%d %d %f %f %f %f %f %f %f\n", i + 1, i + 2, allBonds[currentBondIndex].x1, allBonds[currentBondIndex].y1, allBonds[currentBondIndex].z1, allBonds[currentBondIndex].x2, allBonds[currentBondIndex].y2, allBonds[currentBondIndex].z2, allBonds[currentBondIndex].bondLength);
+
 			currentBondIndex++;
 		}
 		else {
