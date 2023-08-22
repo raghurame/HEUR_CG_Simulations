@@ -58,7 +58,7 @@ int countNAtoms (FILE *file_inputTrj)
 	return nAtoms;
 }
 
-TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, float distanceCutoff, FILE *file_inputTrj, int file_status, TRAJECTORY **micelles, int nMicelles)
+TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY *simBoundary, float distanceCutoff, FILE *file_inputTrj, int file_status, TRAJECTORY **micelles, int nMicelles)
 {
 	char lineString[2000];
 	float xLength, yLength, zLength;
@@ -69,16 +69,16 @@ TRAJECTORY *getAtoms (TRAJECTORY *atoms, int nAtoms, BOUNDARY simBoundary, float
 		fgets (lineString, 2000, file_inputTrj);
 
 		if (i == 5) {
-			sscanf (lineString, "%f %f %f\n", &simBoundary.xlo, &simBoundary.xhi, &simBoundary.xy); }
+			sscanf (lineString, "%f %f %f\n", &(*simBoundary).xlo, &(*simBoundary).xhi, &(*simBoundary).xy); }
 		else if (i == 6) {
-			sscanf (lineString, "%f %f %f\n", &simBoundary.ylo, &simBoundary.yhi, &simBoundary.xz); }
+			sscanf (lineString, "%f %f %f\n", &(*simBoundary).ylo, &(*simBoundary).yhi, &(*simBoundary).xz); }
 		else if (i == 7) {
-			sscanf (lineString, "%f %f %f\n", &simBoundary.zlo, &simBoundary.zhi, &simBoundary.yz); }
+			sscanf (lineString, "%f %f %f\n", &(*simBoundary).zlo, &(*simBoundary).zhi, &(*simBoundary).yz); }
 
 		if (i == 8) {
-			simBoundary.xLength = (simBoundary.xhi - simBoundary.xlo);
-			simBoundary.yLength = (simBoundary.yhi - simBoundary.ylo);
-			simBoundary.zLength = (simBoundary.zhi - simBoundary.zlo); }
+			(*simBoundary).xLength = ((*simBoundary).xhi - (*simBoundary).xlo);
+			(*simBoundary).yLength = ((*simBoundary).yhi - (*simBoundary).ylo);
+			(*simBoundary).zLength = ((*simBoundary).zhi - (*simBoundary).zlo); }
 	}
 
 	for (int i = 0; i < nAtoms; ++i)

@@ -124,7 +124,7 @@ int main(int argc, char const *argv[])
 			fprintf(stdout, "computing %d timesteps...         \r", nTimeframes);
 			fflush (stdout); }
 
-		atoms = getAtoms (atoms, nAtoms, simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
+		atoms = getAtoms (atoms, nAtoms, &simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
 
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
 		bridgeYDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeYDistribution, nBins_yDist, simBoundary);
