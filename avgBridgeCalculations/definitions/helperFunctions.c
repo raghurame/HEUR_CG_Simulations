@@ -38,14 +38,14 @@ float computePeriodicDistance (float x1, float y1, float z1, float x2, float y2,
 	z2_new = translatePeriodic (z1, z2, simBoundary.zLength);
 
 	// simBoundary.xy, simBoundary.xz, simBoundary.yz
-	if (y2_new > y2)
-	{
-		x2_new += simBoundary.xy;
-	}
-	else if (y2_new < y2)
-	{
-		x2_new -= simBoundary.xy;
-	}
+	// if (y2_new > y2)
+	// {
+	// 	x2_new += simBoundary.xy;
+	// }
+	// else if (y2_new < y2)
+	// {
+	// 	x2_new -= simBoundary.xy;
+	// }
 
 	distance = sqrt (pow ((x2_new - x1), 2) + pow ((y2_new - y1), 2) + pow ((z2_new - z1), 2));
 

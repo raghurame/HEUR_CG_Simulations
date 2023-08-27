@@ -127,21 +127,21 @@ int main(int argc, char const *argv[])
 		atoms = getAtoms (atoms, nAtoms, &simBoundary, distanceCutoff_vertBridges, file_inputTrj, file_status, &micelles, nMicelles);
 
 		bridgeBetweenBins = countBridgesBetweenBins (&atoms, simBoundary, distanceCutoff_vertBridges, bridgeBetweenBins, nAtoms, micelles, nMicelles, nBins_vertBridges);
-		bridgeYDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeYDistribution, nBins_yDist, simBoundary);
+		// bridgeYDistribution = computeBridgeDistribution (atoms, nAtoms, bridgeYDistribution, nBins_yDist, simBoundary);
 
-		fprintf(file_bondDump, "#Timestep: %d\n", nTimeframes);
-		allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary, file_bondDump);
-		bridgeCenterDistribution = computeBridgeCenterDistribution (allBonds, nBonds, bridgeCenterDistribution, nBins_centerDistribution);
+		// fprintf(file_bondDump, "#Timestep: %d\n", nTimeframes);
+		// allBonds = computeBridgeCenter (atoms, nAtoms, allBonds, simBoundary, file_bondDump);
+		// bridgeCenterDistribution = computeBridgeCenterDistribution (allBonds, nBonds, bridgeCenterDistribution, nBins_centerDistribution);
 
 		currentStates = initializeStates (currentStates);
 		currentStates = computeAllStates (currentStates, atoms, nAtoms);
 		avgStates = sumAllStates (currentStates, avgStates);
 		printCurrentStates (file_printStates, currentStates);
 
-		bridgeOrientation = computeBridgeOrientationDistribution (bridgeOrientation, nBins_orientation, nBonds, allBonds);
-		loopOrientation = computeLoopOrientationDistribution (loopOrientation, nBins_orientation, nBonds, allBonds);
-		dangleOrientation = computeDangleOrientationDistribution (dangleOrientation, nBins_orientation, nBonds, allBonds);
-		freeOrientation = computeFreeOrientationDistribution (freeOrientation, nBins_orientation, nBonds, allBonds);
+		// bridgeOrientation = computeBridgeOrientationDistribution (bridgeOrientation, nBins_orientation, nBonds, allBonds);
+		// loopOrientation = computeLoopOrientationDistribution (loopOrientation, nBins_orientation, nBonds, allBonds);
+		// dangleOrientation = computeDangleOrientationDistribution (dangleOrientation, nBins_orientation, nBonds, allBonds);
+		// freeOrientation = computeFreeOrientationDistribution (freeOrientation, nBins_orientation, nBonds, allBonds);
 
 		file_status = fgetc (file_inputTrj);
 		nTimeframes++;

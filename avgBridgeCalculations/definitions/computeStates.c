@@ -78,6 +78,7 @@ STATES sumAllStates (STATES currentStates, STATES avgStates)
 void printCurrentStates (FILE *file_printStates, STATES currentStates)
 {
 	fprintf(file_printStates, "%d %d %d %d\n", (int)currentStates.nFreeChains, (int)currentStates.nDangles, (int)currentStates.nLoops, (int)currentStates.nBridges);
+	fflush (file_printStates);
 }
 
 STATES computeAvgStates (STATES avgStates, int nTimeframes)
