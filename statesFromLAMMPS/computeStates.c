@@ -42,6 +42,7 @@ typedef struct datafile_bonds
 {
 	int id, bondType, atom1, atom2;
 	int isBridge, isDangle, isFree, isLoop;
+	int attachedGhost1, attachedGhost2;
 } DATA_BONDS;
 
 typedef struct datafile_angles
@@ -362,25 +363,61 @@ int main(int argc, char const *argv[])
 
 	for (int i = 0; i < (nTimesteps_cluster - 1); ++i)
 	{
-		for (int i = 0; i < 9; ++i)
+		for (int j = 0; j < 9; ++j)
 		{
 			fgets (lineString, 2000, inputCluster);
 		}
 
-		for (int i = 0; i < nAtoms; ++i)
+		for (int j = 0; j < nAtoms; ++j)
 		{
 			fgets (lineString, 2000, inputCluster);
-			sscanf (lineString, "%d\n", &cluster[i]);
+			sscanf (lineString, "%d\n", &cluster[j]);
 		}
 
-		for (int i = 0; i < nGhostParticles; ++i)
+		for (int j = 0; j < nGhostParticles; ++j)
 		{
-			ghostParticleClusterIDs[i] = cluster[ghostParticleIDs[i] - 1];
+			ghostParticleClusterIDs[j] = cluster[ghostParticleIDs[j] - 1];
 		}
 
-		for (int i = 0; i < datafile.nBonds; ++i)
+		for (int j = 0; j < datafile.nBonds; ++j)
 		{
-			printf("%d (%d) %d (%d)\n", dataBonds[i].atom1, cluster[dataBonds[i].atom1 - 1], dataBonds[i].atom2, cluster[dataBonds[i].atom2 - 1]);
+			printf("%d %d\n", dataBonds[j].atom1, dataBonds[j].atom2);
+			printf("%d %d\n", cluster[dataBonds[j].atom1 - 1], cluster[dataBonds[j].atom2 - 1]);
+			dataBonds[j].attachedGhost1 = -1;
+			dataBonds[j].attachedGhost2 = -1;
+
+			for (int k = 0; k < nGhostParticles; ++k)
+			{
+				if (cluster[dataBonds[j].atom1 - 1] == ghostParticleClusterIDs[k])
+				{
+					dataBonds[j].attachedGhost1 = k;
+				}
+				if (cluster[dataBonds[j].atom2 - 1] == ghostParticleClusterIDs[k])
+				{
+					dataBonds[j].attachedGhost2 = k;
+				}
+			}
+
+			if ((dataBonds[j].attachedGhost1 == dataBonds[j].attachedGhost2) && (dataBonds[j].attachedGhost1 > -1) && (dataBonds[j].attachedGhost2 > -1))
+			{
+				dataBonds[j].isLoop = 1;
+			}
+			if ((dataBonds[j].attachedGhost1 != dataBonds[j].attachedGhost2) && (dataBonds[j].attachedGhost1 > -1) && (dataBonds[j].attachedGhost2 > -1))
+			{
+				dataBonds[j].isBridge = 1;
+			}
+			if (dataBonds[j].attachedGhost1 == -1 && dataBonds[j].attachedGhost2 == -1)
+			{
+				dataBonds[j].isFree = 1;
+			}
+			if ((dataBonds[j].attachedGhost1 == -1 && dataBonds[j].attachedGhost2 > -1) || (dataBonds[j].attachedGhost2 == -1 && dataBonds[j].attachedGhost1 > -1))
+			{
+				dataBonds[j].isDangle = 1;
+			}
+
+			printf("%d %d\n", dataBonds[j].attachedGhost1, dataBonds[j].attachedGhost2);
+			printf("%d %d %d %d\n", dataBonds[j].isFree, dataBonds[j].isBridge, dataBonds[j].isDangle, dataBonds[j].isLoop);
+			printf("\n");
 
 			// check if the cluster IDs belong to ghost particles
 			// then classify the states
