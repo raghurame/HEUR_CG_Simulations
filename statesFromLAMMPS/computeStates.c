@@ -512,14 +512,63 @@ int **initBridgeStatus (int **bridgeStatus, DATAFILE_INFO datafile, int nTimeste
 	return bridgeStatus;
 }
 
-int **getBridgeStatus (int **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INFO datafile, int nTimesteps_cluster)
+int **getBridgeStatus (int **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INFO datafile, int currentTime)
 {
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		bridgeStatus[nTimesteps_cluster][i] = dataBonds[i].isBridge;
+		bridgeStatus[currentTime][i] = dataBonds[i].isBridge;
 	}
 
 	return bridgeStatus;
+}
+
+float *computeCorrelation (float *bridgeCorrelation, int **bridgeStatus, int nTimesteps_cluster, DATAFILE_INFO datafile)
+{
+	for (int i = 0; i < nTimesteps_cluster; ++i)
+	{
+		bridgeCorrelation[i] = 0;
+	}
+
+	int stat1, stat2;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		// moving the reference timestep
+		for (int j = 0; j < nTimesteps_cluster; ++j)
+		{
+			// iterating through different lags
+			for (int k = 0; k < nTimesteps_cluster; ++k)
+			{
+				if ((j + k) < nTimesteps_cluster)
+				{
+					if (bridgeStatus[j][i] == 1)
+					{
+						stat1 = 1;
+					}
+					else
+					{
+						stat1 = 0;
+					}
+
+					if (bridgeStatus[j + k][i] == 1)
+					{
+						stat2 = 1;
+					}
+					else
+					{
+						stat2 = 0;
+						goto endThisLagCalc;
+					}
+
+					bridgeCorrelation[k] += (stat1 * stat2);
+				}
+			}
+
+			endThisLagCalc: ;
+		}
+	}
+
+	return bridgeCorrelation;
 }
 
 int main(int argc, char const *argv[])
@@ -596,6 +645,12 @@ int main(int argc, char const *argv[])
 
 	for (int i = 0; i < (nTimesteps_cluster - 1); ++i)
 	{
+		if ((i%100) != 1)
+		{
+			printf("Scanning timestep...%d                         \r", i + 1);
+			fflush (stdout);
+		}
+
 		skipHeaderLines (inputCluster);
 		cluster = readClusterData (cluster, inputCluster, nAtoms);
 		ghostParticleClusterIDs = getGhostClusterIDs (nGhostParticles, ghostParticleClusterIDs, ghostParticleIDs, cluster);
@@ -607,10 +662,31 @@ int main(int argc, char const *argv[])
 			nTransitions = countTransitions (nTransitions, dataBonds, dataBonds_previous, datafile);
 		}
 
-		bridgeStatus = getBridgeStatus (bridgeStatus, dataBonds, datafile, nTimesteps_cluster);
+		bridgeStatus = getBridgeStatus (bridgeStatus, dataBonds, datafile, i);
 
 		cluster_previous = cluster;
 		dataBonds_previous = copyDataBonds (dataBonds, dataBonds_previous, datafile);
+	}
+
+	float *bridgeCorrelation;
+	bridgeCorrelation = (float *) malloc (nTimesteps_cluster * sizeof (float));
+
+	bridgeCorrelation = computeCorrelation (bridgeCorrelation, bridgeStatus, nTimesteps_cluster, datafile);
+
+	for (int i = 0; i < nTimesteps_cluster; ++i)
+	{
+		printf("%f", bridgeCorrelation[i]/bridgeCorrelation[0]);
+
+		if (i > 0)
+		{
+			printf("; %f\n", (bridgeCorrelation[i - 1]/bridgeCorrelation[0]) - (bridgeCorrelation[i]/bridgeCorrelation[0]));
+		}
+		else
+		{
+			printf("\n");
+		}
+
+		usleep (100000);
 	}
 
 	fclose (inputData);
