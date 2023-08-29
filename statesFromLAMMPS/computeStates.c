@@ -22,6 +22,18 @@ INPUT ARGUMENTS:
 
 */
 
+typedef struct states
+{
+	int nFree, nDangles, nLoops, nBridges;
+} STATES;
+
+typedef struct transitions
+{
+	int nBridgesToDangles, nBridgesToLoops, nBridgesToFree;
+	int nDanglesToBridges, nLoopsToBridges, nFreeToBridges;
+	int nBridgesToBridges;
+} TRANSITIONS;
+
 typedef struct datafileInfo
 {
 	int nAtoms, nBonds, nAngles, nDihedrals, nImpropers;
@@ -303,6 +315,213 @@ DATAFILE_INFO readData (const char *dataFileName, DATA_ATOMS **atoms, DATA_BONDS
 	return datafile;
 }
 
+void skipHeaderLines (FILE *inputCluster)
+{
+	char lineString[3000];
+
+	for (int j = 0; j < 9; ++j)
+	{
+		fgets (lineString, 2000, inputCluster);
+	}
+}
+
+int *readClusterData (int *cluster, FILE *inputCluster, int nAtoms)
+{
+	char lineString[3000];
+
+	for (int j = 0; j < nAtoms; ++j)
+	{
+		fgets (lineString, 2000, inputCluster);
+		sscanf (lineString, "%d\n", &cluster[j]);
+	}
+
+	return cluster;
+}
+
+int *getGhostClusterIDs (int nGhostParticles, int *ghostParticleClusterIDs, int *ghostParticleIDs, int *cluster)
+{
+	for (int j = 0; j < nGhostParticles; ++j)
+	{
+		ghostParticleClusterIDs[j] = cluster[ghostParticleIDs[j] - 1];
+	}
+
+	return ghostParticleClusterIDs;
+}
+
+DATA_BONDS *initializeStates (DATA_BONDS *dataBonds, DATAFILE_INFO datafile)
+{
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		dataBonds[i].attachedGhost1 = -1;
+		dataBonds[i].attachedGhost2 = -1;
+		dataBonds[i].isBridge = -1;
+		dataBonds[i].isFree = -1;
+		dataBonds[i].isDangle = -1;
+		dataBonds[i].isLoop = -1;
+	}
+
+	return dataBonds;
+}
+
+DATA_BONDS *findCurrentStates (DATA_BONDS *dataBonds, DATAFILE_INFO datafile, int *cluster, int nGhostParticles, int *ghostParticleClusterIDs)
+{
+	dataBonds = initializeStates (dataBonds, datafile);
+
+	for (int j = 0; j < datafile.nBonds; ++j)
+	{
+		dataBonds[j].attachedGhost1 = -1;
+		dataBonds[j].attachedGhost2 = -1;
+
+		for (int k = 0; k < nGhostParticles; ++k)
+		{
+			if (cluster[dataBonds[j].atom1 - 1] == ghostParticleClusterIDs[k])
+			{
+				dataBonds[j].attachedGhost1 = k;
+			}
+			if (cluster[dataBonds[j].atom2 - 1] == ghostParticleClusterIDs[k])
+			{
+				dataBonds[j].attachedGhost2 = k;
+			}
+		}
+
+		if ((dataBonds[j].attachedGhost1 == dataBonds[j].attachedGhost2) && (dataBonds[j].attachedGhost1 > -1) && (dataBonds[j].attachedGhost2 > -1))
+		{
+			dataBonds[j].isLoop = 1;
+		}
+		if ((dataBonds[j].attachedGhost1 != dataBonds[j].attachedGhost2) && (dataBonds[j].attachedGhost1 > -1) && (dataBonds[j].attachedGhost2 > -1))
+		{			
+			dataBonds[j].isBridge = 1;
+		}
+		if (dataBonds[j].attachedGhost1 == -1 && dataBonds[j].attachedGhost2 == -1)
+		{
+			dataBonds[j].isFree = 1;
+		}
+		if ((dataBonds[j].attachedGhost1 == -1 && dataBonds[j].attachedGhost2 > -1) || (dataBonds[j].attachedGhost2 == -1 && dataBonds[j].attachedGhost1 > -1))
+		{
+			dataBonds[j].isDangle = 1;
+		}
+
+		// compare with the previous states to check transitions
+		// count the number of transitions from state1 to state2
+		// compute the correlation plot to find the residence time
+		// compute the correlation plot to find the stability of states
+	}
+
+	return dataBonds;
+}
+
+TRANSITIONS countTransitions (TRANSITIONS nTransitions, DATA_BONDS *dataBonds, DATA_BONDS *dataBonds_previous, DATAFILE_INFO datafile)
+{
+
+	nTransitions.nBridgesToDangles = 0; nTransitions.nBridgesToLoops = 0; nTransitions.nBridgesToFree = 0;
+	nTransitions.nDanglesToBridges = 0; nTransitions.nLoopsToBridges = 0; nTransitions.nFreeToBridges = 0;
+	nTransitions.nBridgesToBridges = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{		
+		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isDangle  == 1)
+		{
+			nTransitions.nBridgesToDangles++;
+		}
+		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isLoop  == 1)
+		{
+			nTransitions.nBridgesToLoops++;
+		}
+		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isFree  == 1)
+		{
+			nTransitions.nBridgesToFree++;
+		}
+		if (dataBonds_previous[i].isDangle  == 1 && dataBonds[i].isBridge  == 1)
+		{
+			nTransitions.nDanglesToBridges++;
+		}
+		if (dataBonds_previous[i].isLoop  == 1 && dataBonds[i].isBridge  == 1)
+		{
+			nTransitions.nLoopsToBridges++;
+		}
+		if (dataBonds_previous[i].isFree  == 1 && dataBonds[i].isBridge  == 1)
+		{
+			nTransitions.nFreeToBridges++;
+		}
+		if (dataBonds_previous[i].isBridge == 1 && dataBonds[i].isBridge == 1)
+		{
+			nTransitions.nBridgesToBridges++;
+		}
+	}
+
+	return nTransitions;
+}
+
+STATES countCurrentStates (DATA_BONDS *dataBonds, DATAFILE_INFO datafile, STATES currentStates)
+{
+	currentStates.nFree = 0;
+	currentStates.nDangles = 0;
+	currentStates.nLoops = 0;
+	currentStates.nBridges = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		if (dataBonds[i].isBridge == 1)
+		{
+			currentStates.nBridges++;
+		}
+		else if (dataBonds[i].isFree == 1)
+		{
+			currentStates.nFree++;
+		}
+		else if (dataBonds[i].isLoop == 1)
+		{
+			currentStates.nLoops++;
+		}
+		else if (dataBonds[i].isDangle == 1)
+		{
+			currentStates.nDangles++;
+		}
+	}
+
+	return currentStates;
+}
+
+DATA_BONDS *copyDataBonds (DATA_BONDS *dataBonds, DATA_BONDS *dataBonds_previous, DATAFILE_INFO datafile)
+{
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		dataBonds_previous[i].atom1 = dataBonds[i].atom1;
+		dataBonds_previous[i].atom2 = dataBonds[i].atom2;
+		dataBonds_previous[i].attachedGhost1 = dataBonds[i].attachedGhost1;
+		dataBonds_previous[i].attachedGhost2 = dataBonds[i].attachedGhost2;
+		dataBonds_previous[i].isBridge = dataBonds[i].isBridge;
+		dataBonds_previous[i].isFree = dataBonds[i].isFree;
+		dataBonds_previous[i].isDangle = dataBonds[i].isDangle;
+		dataBonds_previous[i].isLoop = dataBonds[i].isLoop;
+	}
+
+	return dataBonds_previous;
+}
+
+int **initBridgeStatus (int **bridgeStatus, DATAFILE_INFO datafile, int nTimesteps_cluster)
+{
+	for (int i = 0; i < nTimesteps_cluster; ++i)
+	{
+		for (int j = 0; j < datafile.nBonds; ++j)
+		{
+			bridgeStatus[i][j] = 0;
+		}
+	}
+
+	return bridgeStatus;
+}
+
+int **getBridgeStatus (int **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INFO datafile, int nTimesteps_cluster)
+{
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		bridgeStatus[nTimesteps_cluster][i] = dataBonds[i].isBridge;
+	}
+
+	return bridgeStatus;
+}
+
 int main(int argc, char const *argv[])
 {
 	if (argc != 3)
@@ -326,13 +545,14 @@ int main(int argc, char const *argv[])
 	int nAtoms = countNAtoms (nAtoms, argv[1]), nTimesteps_cluster = countNTimesteps (nTimesteps_cluster, argv[1]);
 
 	DATA_ATOMS *dataAtoms;
-	DATA_BONDS *dataBonds;
+	DATA_BONDS *dataBonds, *dataBonds_previous;
 	DATA_ANGLES *dataAngles;
 	DATA_DIHEDRALS *dataDihedrals;
 	DATA_IMPROPERS *dataImpropers;
 	DATAFILE_INFO datafile;
 
 	datafile = readData (argv[2], &dataAtoms, &dataBonds, &dataAngles, &dataDihedrals, &dataImpropers);
+	dataBonds_previous = (DATA_BONDS *) malloc (datafile.nBonds * sizeof (DATA_BONDS));
 
 	int *cluster, *cluster_previous, *ghostParticleIDs, *ghostParticleClusterIDs, nGhostParticles = 0;
 	cluster = (int *) malloc (nAtoms * sizeof (int));
@@ -361,71 +581,36 @@ int main(int argc, char const *argv[])
 			currentGhostParticle++; }
 	}
 
+	TRANSITIONS nTransitions;
+	STATES currentStates;
+
+	int **bridgeStatus; // for time correlation
+	bridgeStatus = (int **) malloc (nTimesteps_cluster * sizeof (int *));
+
+	for (int i = 0; i < nTimesteps_cluster; ++i)
+	{
+		bridgeStatus[i] = (int *) malloc (datafile.nBonds * sizeof (int));
+	}
+
+	bridgeStatus = initBridgeStatus (bridgeStatus, datafile, nTimesteps_cluster);
+
 	for (int i = 0; i < (nTimesteps_cluster - 1); ++i)
 	{
-		for (int j = 0; j < 9; ++j)
+		skipHeaderLines (inputCluster);
+		cluster = readClusterData (cluster, inputCluster, nAtoms);
+		ghostParticleClusterIDs = getGhostClusterIDs (nGhostParticles, ghostParticleClusterIDs, ghostParticleIDs, cluster);
+		dataBonds = findCurrentStates (dataBonds, datafile, cluster, nGhostParticles, ghostParticleClusterIDs);
+		currentStates = countCurrentStates (dataBonds, datafile, currentStates);
+
+		if (i > 0)
 		{
-			fgets (lineString, 2000, inputCluster);
+			nTransitions = countTransitions (nTransitions, dataBonds, dataBonds_previous, datafile);
 		}
 
-		for (int j = 0; j < nAtoms; ++j)
-		{
-			fgets (lineString, 2000, inputCluster);
-			sscanf (lineString, "%d\n", &cluster[j]);
-		}
-
-		for (int j = 0; j < nGhostParticles; ++j)
-		{
-			ghostParticleClusterIDs[j] = cluster[ghostParticleIDs[j] - 1];
-		}
-
-		for (int j = 0; j < datafile.nBonds; ++j)
-		{
-			printf("%d %d\n", dataBonds[j].atom1, dataBonds[j].atom2);
-			printf("%d %d\n", cluster[dataBonds[j].atom1 - 1], cluster[dataBonds[j].atom2 - 1]);
-			dataBonds[j].attachedGhost1 = -1;
-			dataBonds[j].attachedGhost2 = -1;
-
-			for (int k = 0; k < nGhostParticles; ++k)
-			{
-				if (cluster[dataBonds[j].atom1 - 1] == ghostParticleClusterIDs[k])
-				{
-					dataBonds[j].attachedGhost1 = k;
-				}
-				if (cluster[dataBonds[j].atom2 - 1] == ghostParticleClusterIDs[k])
-				{
-					dataBonds[j].attachedGhost2 = k;
-				}
-			}
-
-			if ((dataBonds[j].attachedGhost1 == dataBonds[j].attachedGhost2) && (dataBonds[j].attachedGhost1 > -1) && (dataBonds[j].attachedGhost2 > -1))
-			{
-				dataBonds[j].isLoop = 1;
-			}
-			if ((dataBonds[j].attachedGhost1 != dataBonds[j].attachedGhost2) && (dataBonds[j].attachedGhost1 > -1) && (dataBonds[j].attachedGhost2 > -1))
-			{
-				dataBonds[j].isBridge = 1;
-			}
-			if (dataBonds[j].attachedGhost1 == -1 && dataBonds[j].attachedGhost2 == -1)
-			{
-				dataBonds[j].isFree = 1;
-			}
-			if ((dataBonds[j].attachedGhost1 == -1 && dataBonds[j].attachedGhost2 > -1) || (dataBonds[j].attachedGhost2 == -1 && dataBonds[j].attachedGhost1 > -1))
-			{
-				dataBonds[j].isDangle = 1;
-			}
-
-			printf("%d %d\n", dataBonds[j].attachedGhost1, dataBonds[j].attachedGhost2);
-			printf("%d %d %d %d\n", dataBonds[j].isFree, dataBonds[j].isBridge, dataBonds[j].isDangle, dataBonds[j].isLoop);
-			printf("\n");
-
-			// check if the cluster IDs belong to ghost particles
-			// then classify the states
-			// compare with the previous states to check transitions
-			usleep (100000);
-		}
+		bridgeStatus = getBridgeStatus (bridgeStatus, dataBonds, datafile, nTimesteps_cluster);
 
 		cluster_previous = cluster;
+		dataBonds_previous = copyDataBonds (dataBonds, dataBonds_previous, datafile);
 	}
 
 	fclose (inputData);
