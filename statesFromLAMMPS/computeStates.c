@@ -660,6 +660,10 @@ int main(int argc, char const *argv[])
 		if (i > 0)
 		{
 			nTransitions = countTransitions (nTransitions, dataBonds, dataBonds_previous, datafile);
+
+			printf("%d + %d + %d --> %d --> %d + %d + %d\n", nTransitions.nDanglesToBridges, nTransitions.nFreeToBridges, nTransitions.nLoopsToBridges, currentStates.nBridges, nTransitions.nBridgesToDangles, nTransitions.nBridgesToFree, nTransitions.nBridgesToLoops);
+
+			usleep (100000);
 		}
 
 		bridgeStatus = getBridgeStatus (bridgeStatus, dataBonds, datafile, i);
