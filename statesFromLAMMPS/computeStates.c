@@ -1,9 +1,11 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdbool.h>
 
 /*
 This program computes the number of states, such as
@@ -31,7 +33,14 @@ typedef struct transitions
 {
 	int nBridgesToDangles, nBridgesToLoops, nBridgesToFree;
 	int nDanglesToBridges, nLoopsToBridges, nFreeToBridges;
-	int nBridgesToBridges;
+	int nDanglesToLoops, nDanglesToFree;
+	int nFreeToDangles, nFreeToLoop;
+	int nLoopsToDangles, nLoopsToFree;
+
+	int nBridgesToBridges, nLoopsToLoops, nDanglesToDangles, nFreeToFree;
+	int nBridgesToBridges_stable, nBridgesToBridges_unstable;
+	int nLoopsToLoops_stable, nLoopsToLoops_unstable;
+	int nDanglesToDangles_stable, nDanglesToDangles_unstable;
 } TRANSITIONS;
 
 typedef struct datafileInfo
@@ -416,37 +425,77 @@ TRANSITIONS countTransitions (TRANSITIONS nTransitions, DATA_BONDS *dataBonds, D
 	nTransitions.nBridgesToDangles = 0; nTransitions.nBridgesToLoops = 0; nTransitions.nBridgesToFree = 0;
 	nTransitions.nDanglesToBridges = 0; nTransitions.nLoopsToBridges = 0; nTransitions.nFreeToBridges = 0;
 	nTransitions.nBridgesToBridges = 0;
+	nTransitions.nBridgesToBridges_stable = 0; nTransitions.nBridgesToBridges_unstable = 0;
+
+	nTransitions.nFreeToFree = 0;
+
+	nTransitions.nDanglesToDangles = 0;
+	nTransitions.nDanglesToDangles_stable = 0; nTransitions.nDanglesToDangles_unstable = 0;
+
+	nTransitions.nLoopsToLoops = 0;
+	nTransitions.nLoopsToLoops_stable = 0; nTransitions.nLoopsToLoops_unstable = 0;
+
+	nTransitions.nDanglesToLoops = 0; nTransitions.nDanglesToFree = 0; 
+	nTransitions.nFreeToDangles = 0; nTransitions.nFreeToLoop = 0; 
+	nTransitions.nLoopsToDangles = 0; nTransitions.nLoopsToFree = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{		
-		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isDangle  == 1)
-		{
-			nTransitions.nBridgesToDangles++;
-		}
-		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isLoop  == 1)
-		{
-			nTransitions.nBridgesToLoops++;
-		}
-		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isFree  == 1)
-		{
-			nTransitions.nBridgesToFree++;
-		}
-		if (dataBonds_previous[i].isDangle  == 1 && dataBonds[i].isBridge  == 1)
-		{
-			nTransitions.nDanglesToBridges++;
-		}
-		if (dataBonds_previous[i].isLoop  == 1 && dataBonds[i].isBridge  == 1)
-		{
-			nTransitions.nLoopsToBridges++;
-		}
-		if (dataBonds_previous[i].isFree  == 1 && dataBonds[i].isBridge  == 1)
-		{
-			nTransitions.nFreeToBridges++;
-		}
+		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isDangle  == 1) {
+			nTransitions.nBridgesToDangles++; }
+		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isLoop  == 1) {
+			nTransitions.nBridgesToLoops++; }
+		if (dataBonds_previous[i].isBridge  == 1 && dataBonds[i].isFree  == 1) {
+			nTransitions.nBridgesToFree++; }
+		if (dataBonds_previous[i].isDangle  == 1 && dataBonds[i].isBridge  == 1) {
+			nTransitions.nDanglesToBridges++; }
+		if (dataBonds_previous[i].isLoop  == 1 && dataBonds[i].isBridge  == 1) {
+			nTransitions.nLoopsToBridges++; }
+		if (dataBonds_previous[i].isFree  == 1 && dataBonds[i].isBridge  == 1) {
+			nTransitions.nFreeToBridges++; }
 		if (dataBonds_previous[i].isBridge == 1 && dataBonds[i].isBridge == 1)
 		{
 			nTransitions.nBridgesToBridges++;
+
+			if (dataBonds_previous[i].attachedGhost1 == dataBonds[i].attachedGhost1 && dataBonds_previous[i].attachedGhost2 == dataBonds[i].attachedGhost2) {
+				nTransitions.nBridgesToBridges_stable++; }
+			else {
+				nTransitions.nBridgesToBridges_unstable++; }
 		}
+		if (dataBonds_previous[i].isFree == 1 && dataBonds[i].isFree == 1)
+		{
+			nTransitions.nFreeToFree++;
+		}
+		if (dataBonds_previous[i].isDangle == 1 && dataBonds[i].isDangle == 1)
+		{
+			nTransitions.nDanglesToDangles++;
+
+			if (dataBonds_previous[i].attachedGhost1 == dataBonds[i].attachedGhost1 && dataBonds_previous[i].attachedGhost2 == dataBonds[i].attachedGhost2) {
+				nTransitions.nDanglesToDangles_stable++; }
+			else {
+				nTransitions.nDanglesToDangles_unstable++; }
+		}
+		if (dataBonds_previous[i].isLoop == 1 && dataBonds[i].isLoop == 1)
+		{
+			nTransitions.nLoopsToLoops++;
+
+			if (dataBonds_previous[i].attachedGhost1 == dataBonds[i].attachedGhost1 && dataBonds_previous[i].attachedGhost2 == dataBonds[i].attachedGhost2) {
+				nTransitions.nLoopsToLoops_stable++; }
+			else {
+				nTransitions.nLoopsToLoops_unstable++; }
+		}
+		if (dataBonds_previous[i].isDangle == 1 && dataBonds[i].isLoop == 1) {
+			nTransitions.nDanglesToLoops++; }
+		if (dataBonds_previous[i].isDangle == 1 && dataBonds[i].isFree == 1) {
+			nTransitions.nDanglesToFree++; }
+		if (dataBonds_previous[i].isFree == 1 && dataBonds[i].isDangle == 1) {
+			nTransitions.nFreeToDangles++; }
+		if (dataBonds_previous[i].isFree == 1 && dataBonds[i].isLoop == 1) {
+			nTransitions.nFreeToLoop++; }
+		if (dataBonds_previous[i].isLoop == 1 && dataBonds[i].isDangle == 1) {
+			nTransitions.nLoopsToDangles++; }
+		if (dataBonds_previous[i].isLoop == 1 && dataBonds[i].isFree == 1) {
+			nTransitions.nLoopsToFree++; }
 	}
 
 	return nTransitions;
@@ -499,7 +548,7 @@ DATA_BONDS *copyDataBonds (DATA_BONDS *dataBonds, DATA_BONDS *dataBonds_previous
 	return dataBonds_previous;
 }
 
-int **initBridgeStatus (int **bridgeStatus, DATAFILE_INFO datafile, int nTimesteps_cluster)
+bool **initBridgeStatus (bool **bridgeStatus, DATAFILE_INFO datafile, int nTimesteps_cluster)
 {
 	for (int i = 0; i < nTimesteps_cluster; ++i)
 	{
@@ -512,17 +561,25 @@ int **initBridgeStatus (int **bridgeStatus, DATAFILE_INFO datafile, int nTimeste
 	return bridgeStatus;
 }
 
-int **getBridgeStatus (int **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INFO datafile, int currentTime)
+bool **getBridgeStatus (bool **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INFO datafile, int currentTime)
 {
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		bridgeStatus[currentTime][i] = dataBonds[i].isBridge;
+		if (dataBonds[i].isBridge == 1)
+		{
+			bridgeStatus[currentTime][i] = true;
+		}
+		else
+		{
+			bridgeStatus[currentTime][i] = false;
+		}
+		/*bridgeStatus[currentTime][i] = dataBonds[i].isBridge;*/
 	}
 
 	return bridgeStatus;
 }
 
-float *computeCorrelation (float *bridgeCorrelation, int **bridgeStatus, int nTimesteps_cluster, DATAFILE_INFO datafile)
+float *computeCorrelation (float *bridgeCorrelation, bool **bridgeStatus, int nTimesteps_cluster, DATAFILE_INFO datafile)
 {
 	for (int i = 0; i < nTimesteps_cluster; ++i)
 	{
@@ -573,15 +630,21 @@ float *computeCorrelation (float *bridgeCorrelation, int **bridgeStatus, int nTi
 
 int main(int argc, char const *argv[])
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
-		printf("REQUIRED ARGUMENTS:\n\n {~} argv[0] = program\n {~} argv[1] = input cluster file\n {~} argv[2] = input data file\n\n");
+		printf("REQUIRED ARGUMENTS:\n\n {~} argv[0] = program\n {~} argv[1] = input cluster file\n {~} argv[2] = input data file\n{~} argv[3] = max. RAM to use for correlation function (in GB).\n\n");
 		exit (1);
 	}
 
 	FILE *inputData, *inputCluster;
 	char *pipeString, lineString[3000];
 	pipeString = (char *) malloc (1000 * sizeof (char));
+
+	FILE *outputFree, *outputDangles, *outputLoops, *outputBridges;
+	outputFree = fopen ("free.output", "w");
+	outputDangles = fopen ("dangles.output", "w");
+	outputLoops = fopen ("loops.output", "w");
+	outputBridges = fopen ("bridges.output", "w");
 
 	inputData = fopen (argv[2], "r");
 
@@ -633,15 +696,24 @@ int main(int argc, char const *argv[])
 	TRANSITIONS nTransitions;
 	STATES currentStates;
 
-	int **bridgeStatus; // for time correlation
-	bridgeStatus = (int **) malloc (nTimesteps_cluster * sizeof (int *));
+	int maxRAM = atoi (argv[3]);
+	uint64_t maxRAM_inBytes = maxRAM * (uint64_t)1000000000;
+	int nTimesteps_toRead = (int)(maxRAM_inBytes / (uint64_t)(datafile.nBonds));
 
-	for (int i = 0; i < nTimesteps_cluster; ++i)
+	if (nTimesteps_toRead > nTimesteps_cluster) {
+		nTimesteps_toRead = nTimesteps_cluster; }
+
+	printf("Reading %d timesteps...\n", nTimesteps_toRead);
+
+	bool **bridgeStatus; // for time correlation
+	bridgeStatus = (bool **) malloc (nTimesteps_toRead * sizeof (bool *));
+
+	for (int i = 0; i < nTimesteps_toRead; ++i)
 	{
-		bridgeStatus[i] = (int *) malloc (datafile.nBonds * sizeof (int));
+		bridgeStatus[i] = (bool *) malloc (datafile.nBonds * sizeof (bool));
 	}
 
-	bridgeStatus = initBridgeStatus (bridgeStatus, datafile, nTimesteps_cluster);
+	bridgeStatus = initBridgeStatus (bridgeStatus, datafile, nTimesteps_toRead);
 
 	for (int i = 0; i < (nTimesteps_cluster - 1); ++i)
 	{
@@ -657,27 +729,60 @@ int main(int argc, char const *argv[])
 		dataBonds = findCurrentStates (dataBonds, datafile, cluster, nGhostParticles, ghostParticleClusterIDs);
 		currentStates = countCurrentStates (dataBonds, datafile, currentStates);
 
+/*
+	nBridgesToDangles, nBridgesToLoops, nBridgesToFree;
+	nDanglesToBridges, nLoopsToBridges, nFreeToBridges;
+	nDanglesToLoops, nDanglesToFree;
+	nFreeToDangles, nFreeToLoop;
+	nLoopsToDangles, nLoopsToFree;
+
+	nBridgesToBridges, nLoopsToLoops, nDanglesToDangles, nFreeToFree;
+	nBridgesToBridges_stable, nBridgesToBridges_unstable;
+	nLoopsToLoops_stable, nLoopsToLoops_unstable;
+	nDanglesToDangles_stable, nDanglesToDangles_unstable;
+
+*/
+		fprintf(outputFree, "nFree, nFreeToDangles, nFreeToLoop, nFreeToFree\n");
+		fprintf(outputDangles, "nDangles, nDanglesToBridges, nDanglesToLoops, nDanglesToFree, nDanglesToDangles, nDanglesToDangles_stable, nDanglesToDangles_unstable\n");
+		fprintf(outputBridges, "nBridges, \n");
+		fprintf(outputLoops, "nLoops, \n");
+
 		if (i > 0)
 		{
 			nTransitions = countTransitions (nTransitions, dataBonds, dataBonds_previous, datafile);
 
-			printf("%d + %d + %d --> %d --> %d + %d + %d\n", nTransitions.nDanglesToBridges, nTransitions.nFreeToBridges, nTransitions.nLoopsToBridges, currentStates.nBridges, nTransitions.nBridgesToDangles, nTransitions.nBridgesToFree, nTransitions.nBridgesToLoops);
+			//fprintf(outputFree, "%d %d %d\n", currentStates.nFree, nTransitions.nFreeToDangles, nTransitions.nFreeToLoop, nTransitions.nFreeToFree);
+			//fprintf(outputDangles, "%s\n", );
 
-			usleep (100000);
+			// printf("%d + %d + %d --> %d --> %d + %d + %d\n", nTransitions.nDanglesToBridges, nTransitions.nFreeToBridges, nTransitions.nLoopsToBridges, currentStates.nBridges, nTransitions.nBridgesToDangles, nTransitions.nBridgesToFree, nTransitions.nBridgesToLoops);
+
+			// free to other states
+			// printf("%d %d %d\n", nTransitions.nFreeToLoop, nTransitions.nFreeToBridges, nTransitions.nFreeToDangles);
+
+			// dangle to other states
+			// printf("%d %d %d\n", nTransitions.nDanglesToFree, nTransitions.nDanglesToLoops, nTransitions.nDanglesToBridges);
+
+			// loops to other states
+			// printf("%d %d %d\n", nTransitions.nLoopsToBridges, nTransitions.nLoopsToFree, nTransitions.nLoopsToDangles);
+
+			// printf("%d (%d and %d)\n", nTransitions.nBridgesToBridges, nTransitions.nBridgesToBridges_stable, nTransitions.nBridgesToBridges_unstable);
+
+			// usleep (100000);
 		}
 
-		bridgeStatus = getBridgeStatus (bridgeStatus, dataBonds, datafile, i);
+		if (i < nTimesteps_toRead) {
+			bridgeStatus = getBridgeStatus (bridgeStatus, dataBonds, datafile, i); }
 
 		cluster_previous = cluster;
 		dataBonds_previous = copyDataBonds (dataBonds, dataBonds_previous, datafile);
 	}
 
 	float *bridgeCorrelation;
-	bridgeCorrelation = (float *) malloc (nTimesteps_cluster * sizeof (float));
+	bridgeCorrelation = (float *) malloc (nTimesteps_toRead * sizeof (float));
 
-	bridgeCorrelation = computeCorrelation (bridgeCorrelation, bridgeStatus, nTimesteps_cluster, datafile);
+	bridgeCorrelation = computeCorrelation (bridgeCorrelation, bridgeStatus, nTimesteps_toRead, datafile);
 
-	for (int i = 0; i < nTimesteps_cluster; ++i)
+	for (int i = 0; i < nTimesteps_toRead; ++i)
 	{
 		printf("%f", bridgeCorrelation[i]/bridgeCorrelation[0]);
 
