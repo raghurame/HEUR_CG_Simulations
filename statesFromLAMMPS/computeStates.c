@@ -582,6 +582,8 @@ bool **getBridgeStatus (bool **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INF
 
 float *computeCorrelation (float *bridgeCorrelation, bool **bridgeStatus, int nTimesteps_cluster, DATAFILE_INFO datafile)
 {
+	printf("computing correlatin...\n");
+
 	for (int i = 0; i < nTimesteps_cluster; ++i)
 	{
 		bridgeCorrelation[i] = 0;
@@ -643,11 +645,12 @@ int main(int argc, char const *argv[])
 	char *pipeString, lineString[3000];
 	pipeString = (char *) malloc (1000 * sizeof (char));
 
-	FILE *outputFree, *outputDangles, *outputLoops, *outputBridges;
+	FILE *outputFree, *outputDangles, *outputLoops, *outputBridges, *outputCorrelation;
 	outputFree = fopen ("free.output", "w");
 	outputDangles = fopen ("dangles.output", "w");
 	outputLoops = fopen ("loops.output", "w");
 	outputBridges = fopen ("bridges.output", "w");
+	outputCorrelation = fopen ("bridges.correlation", "w");
 
 	inputData = fopen (argv[2], "r");
 
@@ -836,18 +839,16 @@ int main(int argc, char const *argv[])
 
 	for (int i = 0; i < nTimesteps_toRead; ++i)
 	{
-		printf("%f", bridgeCorrelation[i]/bridgeCorrelation[0]);
+		fprintf(outputCorrelation, "%f", bridgeCorrelation[i]/bridgeCorrelation[0]);
 
 		if (i > 0)
 		{
-			printf("; %f\n", (bridgeCorrelation[i - 1]/bridgeCorrelation[0]) - (bridgeCorrelation[i]/bridgeCorrelation[0]));
+			fprintf(outputCorrelation, "; %f\n", (bridgeCorrelation[i - 1]/bridgeCorrelation[0]) - (bridgeCorrelation[i]/bridgeCorrelation[0]));
 		}
 		else
 		{
-			printf("\n");
+			fprintf(outputCorrelation, "\n");
 		}
-
-		usleep (100000);
 	}
 
 	fclose (inputData);
