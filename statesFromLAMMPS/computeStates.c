@@ -554,7 +554,7 @@ bool **initBridgeStatus (bool **bridgeStatus, DATAFILE_INFO datafile, int nTimes
 	{
 		for (int j = 0; j < datafile.nBonds; ++j)
 		{
-			bridgeStatus[i][j] = 0;
+			bridgeStatus[i][j] = false;
 		}
 	}
 
@@ -573,7 +573,6 @@ bool **getBridgeStatus (bool **bridgeStatus, DATA_BONDS *dataBonds, DATAFILE_INF
 		{
 			bridgeStatus[currentTime][i] = false;
 		}
-		/*bridgeStatus[currentTime][i] = dataBonds[i].isBridge;*/
 	}
 
 	return bridgeStatus;
@@ -593,12 +592,14 @@ float *computeCorrelation (float *bridgeCorrelation, bool **bridgeStatus, int nT
 		// moving the reference timestep
 		for (int j = 0; j < nTimesteps_cluster; ++j)
 		{
+			// if the bridge is true in reference timestep,
+			// then go to other timesteps and see its status
 			// iterating through different lags
 			for (int k = 0; k < nTimesteps_cluster; ++k)
 			{
 				if ((j + k) < nTimesteps_cluster)
 				{
-					if (bridgeStatus[j][i] == 1)
+					if (bridgeStatus[j][i] == true)
 					{
 						stat1 = 1;
 					}
@@ -607,7 +608,7 @@ float *computeCorrelation (float *bridgeCorrelation, bool **bridgeStatus, int nT
 						stat1 = 0;
 					}
 
-					if (bridgeStatus[j + k][i] == 1)
+					if (bridgeStatus[j + k][i] == true)
 					{
 						stat2 = 1;
 					}
@@ -742,17 +743,60 @@ int main(int argc, char const *argv[])
 	nDanglesToDangles_stable, nDanglesToDangles_unstable;
 
 */
-		fprintf(outputFree, "nFree, nFreeToDangles, nFreeToLoop, nFreeToFree\n");
-		fprintf(outputDangles, "nDangles, nDanglesToBridges, nDanglesToLoops, nDanglesToFree, nDanglesToDangles, nDanglesToDangles_stable, nDanglesToDangles_unstable\n");
-		fprintf(outputBridges, "nBridges, \n");
-		fprintf(outputLoops, "nLoops, \n");
+		fprintf(outputFree, "nFree, nFreeToDangles, nFreeToLoop, nFreeToBridges, nFreeToFree, nBridgesToFree, nDanglesToFree, nLoopsToFree\n");
+		fprintf(outputDangles, "nDangles, nBridgesToDangles, nFreeToDangles, nLoopsToDangles, nDanglesToDangles, nDanglesToDangles_stable, nDanglesToDangles_unstable, nDanglesToBridges, nDanglesToLoops, nDanglesToFree\n");
+		fprintf(outputBridges, "nBridges, nDanglesToBridges, nLoopsToBridges, nFreeToBridges, nBridgesToBridges, nBridgesToBridges_stable, nBridgesToBridges_unstable, nBridgesToDangles, nBridgesToLoops, nBridgesToFree\n");
+		fprintf(outputLoops, "nLoops, nLoopsToBridges, nLoopsToDangles, nLoopsToFree, nLoopsToLoops, nLoopsToLoops_stable, nLoopsToLoops_unstable, nBridgesToLoops, nDanglesToLoops, nFreeToLoop\n");
 
 		if (i > 0)
 		{
 			nTransitions = countTransitions (nTransitions, dataBonds, dataBonds_previous, datafile);
 
-			//fprintf(outputFree, "%d %d %d\n", currentStates.nFree, nTransitions.nFreeToDangles, nTransitions.nFreeToLoop, nTransitions.nFreeToFree);
-			//fprintf(outputDangles, "%s\n", );
+			fprintf(outputFree, "%d %d %d %d %d %d %d %d\n", 
+				currentStates.nFree, 
+				nTransitions.nFreeToDangles, 
+				nTransitions.nFreeToLoop, 
+				nTransitions.nFreeToBridges, 
+				nTransitions.nFreeToFree, 
+				nTransitions.nBridgesToFree, 
+				nTransitions.nDanglesToFree, 
+				nTransitions.nLoopsToFree);
+
+			fprintf(outputDangles, "%d %d %d %d %d %d %d %d %d %d\n", 
+				currentStates.nDangles, 
+				nTransitions.nBridgesToDangles, 
+				nTransitions.nFreeToDangles, 
+				nTransitions.nLoopsToDangles, 
+				nTransitions.nDanglesToDangles, 
+				nTransitions.nDanglesToDangles_stable, 
+				nTransitions.nDanglesToDangles_unstable, 
+				nTransitions.nDanglesToBridges, 
+				nTransitions.nDanglesToLoops, 
+				nTransitions.nDanglesToFree);
+
+			fprintf(outputBridges, "%d %d %d %d %d %d %d %d %d %d\n", 
+				currentStates.nBridges, 
+				nTransitions.nDanglesToBridges, 
+				nTransitions.nLoopsToBridges, 
+				nTransitions.nFreeToBridges, 
+				nTransitions.nBridgesToBridges, 
+				nTransitions.nBridgesToBridges_stable, 
+				nTransitions.nBridgesToBridges_unstable, 
+				nTransitions.nBridgesToDangles, 
+				nTransitions.nBridgesToLoops, 
+				nTransitions.nBridgesToFree);
+
+			fprintf(outputLoops, "%d %d %d %d %d %d %d %d %d %d\n", 
+				currentStates.nLoops, 
+				nTransitions.nLoopsToBridges, 
+				nTransitions.nLoopsToDangles, 
+				nTransitions.nLoopsToFree, 
+				nTransitions.nLoopsToLoops, 
+				nTransitions.nLoopsToLoops_stable, 
+				nTransitions.nLoopsToLoops_unstable, 
+				nTransitions.nBridgesToLoops, 
+				nTransitions.nDanglesToLoops, 
+				nTransitions.nFreeToLoop);
 
 			// printf("%d + %d + %d --> %d --> %d + %d + %d\n", nTransitions.nDanglesToBridges, nTransitions.nFreeToBridges, nTransitions.nLoopsToBridges, currentStates.nBridges, nTransitions.nBridgesToDangles, nTransitions.nBridgesToFree, nTransitions.nBridgesToLoops);
 
