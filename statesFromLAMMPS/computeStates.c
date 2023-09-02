@@ -115,6 +115,8 @@ int countNTimesteps (int nTimesteps_cluster, const char filename[])
 
 	pipeString = (char *) malloc (1000 * sizeof (char));
 
+	printf("Counting the number of timesteps in cluster file...\n");
+
 	if (strstr (filename, ".xz")) {
 		snprintf (pipeString, 1000, "xzcat %s | grep \"ITEM: TIMESTEP\" | wc -l", filename);
 		inputCluster = popen (pipeString, "r"); }
@@ -716,6 +718,11 @@ int main(int argc, char const *argv[])
 
 	bridgeStatus = initBridgeStatus (bridgeStatus, datafile, nTimesteps_toRead);
 
+	fprintf(outputFree, "nFree, nFreeToDangles, nFreeToLoop, nFreeToBridges, nFreeToFree, nBridgesToFree, nDanglesToFree, nLoopsToFree\n");
+	fprintf(outputDangles, "nDangles, nBridgesToDangles, nFreeToDangles, nLoopsToDangles, nDanglesToDangles, nDanglesToDangles_stable, nDanglesToDangles_unstable, nDanglesToBridges, nDanglesToLoops, nDanglesToFree\n");
+	fprintf(outputBridges, "nBridges, nDanglesToBridges, nLoopsToBridges, nFreeToBridges, nBridgesToBridges, nBridgesToBridges_stable, nBridgesToBridges_unstable, nBridgesToDangles, nBridgesToLoops, nBridgesToFree\n");
+	fprintf(outputLoops, "nLoops, nLoopsToBridges, nLoopsToDangles, nLoopsToFree, nLoopsToLoops, nLoopsToLoops_stable, nLoopsToLoops_unstable, nBridgesToLoops, nDanglesToLoops, nFreeToLoop\n");
+
 	for (int i = 0; i < (nTimesteps_cluster - 1); ++i)
 	{
 		if ((i%100) != 1)
@@ -743,11 +750,6 @@ int main(int argc, char const *argv[])
 	nDanglesToDangles_stable, nDanglesToDangles_unstable;
 
 */
-		fprintf(outputFree, "nFree, nFreeToDangles, nFreeToLoop, nFreeToBridges, nFreeToFree, nBridgesToFree, nDanglesToFree, nLoopsToFree\n");
-		fprintf(outputDangles, "nDangles, nBridgesToDangles, nFreeToDangles, nLoopsToDangles, nDanglesToDangles, nDanglesToDangles_stable, nDanglesToDangles_unstable, nDanglesToBridges, nDanglesToLoops, nDanglesToFree\n");
-		fprintf(outputBridges, "nBridges, nDanglesToBridges, nLoopsToBridges, nFreeToBridges, nBridgesToBridges, nBridgesToBridges_stable, nBridgesToBridges_unstable, nBridgesToDangles, nBridgesToLoops, nBridgesToFree\n");
-		fprintf(outputLoops, "nLoops, nLoopsToBridges, nLoopsToDangles, nLoopsToFree, nLoopsToLoops, nLoopsToLoops_stable, nLoopsToLoops_unstable, nBridgesToLoops, nDanglesToLoops, nFreeToLoop\n");
-
 		if (i > 0)
 		{
 			nTransitions = countTransitions (nTransitions, dataBonds, dataBonds_previous, datafile);
@@ -819,6 +821,12 @@ int main(int argc, char const *argv[])
 
 		cluster_previous = cluster;
 		dataBonds_previous = copyDataBonds (dataBonds, dataBonds_previous, datafile);
+
+		if (i > 2000)
+		{
+			break;
+		}
+
 	}
 
 	float *bridgeCorrelation;
