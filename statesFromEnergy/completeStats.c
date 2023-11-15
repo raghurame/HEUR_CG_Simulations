@@ -10,7 +10,7 @@
 #define NPOLYMERS 10
 #define NBEADS 2
 #define COORDINATION_NUMBER 20
-#define N_TIMEFRAMES_TO_SKIP 20000
+#define N_TIMEFRAMES_TO_CONSIDER 20000
 
 typedef struct blocks
 {
