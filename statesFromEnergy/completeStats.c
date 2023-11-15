@@ -520,6 +520,7 @@ STATES countStates (STATES polymerStates, BOND_STATUS **polymerBondStatus, DATAF
 void printStates (STATES polymerStates, FILE *outputStates, DATAFILE_INFO datafile)
 {
 	fprintf(outputStates, "%d %d %d %d\n", polymerStates.nBridges, polymerStates.nLoops, polymerStates.nDangles, datafile.nBonds - polymerStates.nBridges - polymerStates.nLoops - polymerStates.nDangles);
+	fflush (outputStates);
 }
 
 float *initializeBlockValues (float *blocks, int nLines)
@@ -676,7 +677,8 @@ int main(int argc, char const *argv[])
 	char lineString[3000];
 
 	DUMP_ENERGY *energyEntries;
-	int nDumpEntries = countDumpEntries (inputDump, nDumpEntries);
+	int nDumpEntries;
+	nDumpEntries = countDumpEntries (inputDump, nDumpEntries);
 	energyEntries = (DUMP_ENERGY *) malloc (nDumpEntries * 2 * sizeof (DUMP_ENERGY));
 	int currentTimeframe = 0;
 
@@ -684,7 +686,7 @@ int main(int argc, char const *argv[])
 
 	while (file_status > 0)
 	{
-		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes, file_status);
+		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes);
 		fflush (stdout);
 
 		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
