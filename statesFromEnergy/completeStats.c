@@ -10,6 +10,7 @@
 #define NPOLYMERS 10
 #define NBEADS 2
 #define COORDINATION_NUMBER 20
+#define N_TIMEFRAMES_TO_SKIP 20000
 
 typedef struct blocks
 {
@@ -686,15 +687,15 @@ int main(int argc, char const *argv[])
 
 	int timeframesToSkip = 0;
 
-	if (nTimeframes > 50000) {
-		timeframesToSkip = nTimeframes - 50000; }
+	if (nTimeframes > N_TIMEFRAMES_TO_SKIP) {
+		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_SKIP; }
 
 	while (file_status > 0)
 	{
 		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes);
 		fflush (stdout);
 
-		if (timeframesToSkip > currentTimeframe)
+		if (timeframesToSkip < (currentTimeframe + 1))
 		{
 			energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
 			energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
@@ -707,9 +708,15 @@ int main(int argc, char const *argv[])
 				printStates (polymerStates, outputStates, datafile); }
 		}
 
+		if (currentTimeframe > nTimeframes) {
+			goto leaveThisLoop; }
+
+
 		file_status = fgetc (inputDump);
 		currentTimeframe++;
 	}
+
+	leaveThisLoop:;
 
 	fclose (inputDump);
 	fclose (outputStates);
