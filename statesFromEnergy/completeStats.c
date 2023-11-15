@@ -338,13 +338,17 @@ int countDumpEntries (FILE *inputDump, int nDumpEntries)
 DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries, int nDumpEntries)
 {
 	char lineString[3000];
+	int nDumpEntries_current;
 
 	for (int i = 0; i < 9; ++i)
 	{
 		fgets (lineString, 3000, inputDump);
+
+		if (i == 3) {
+			sscanf (lineString, "%d\n", &nDumpEntries_current); }
 	}
 
-	for (int i = 0; i < nDumpEntries; ++i)
+	for (int i = 0; i < nDumpEntries_current; ++i)
 	{
 		fgets (lineString, 3000, inputDump);
 		sscanf (lineString, "%d %d %f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].distance, &energyEntries[i].energy);
@@ -680,7 +684,7 @@ int main(int argc, char const *argv[])
 
 	while (file_status > 0)
 	{
-		printf("Scanning timeframe: %d                  \r", currentTimeframe + 1, file_status);
+		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes, file_status);
 		fflush (stdout);
 
 		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
@@ -689,7 +693,11 @@ int main(int argc, char const *argv[])
 		polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, nTimeframes, currentTimeframe, sortedAtoms);
 
 		polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe);
-		printStates (polymerStates, outputStates, datafile);
+
+		if ((currentTimeframe + 1) < nTimeframes)
+		{
+			printStates (polymerStates, outputStates, datafile);
+		}
 
 		file_status = fgetc (inputDump);
 		currentTimeframe++;
