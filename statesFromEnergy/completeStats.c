@@ -684,21 +684,27 @@ int main(int argc, char const *argv[])
 
 	STATES polymerStates;
 
+	int timeframesToSkip = 0;
+
+	if (nTimeframes > 50000) {
+		timeframesToSkip = nTimeframes - 50000; }
+
 	while (file_status > 0)
 	{
 		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes);
 		fflush (stdout);
 
-		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
-		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
-
-		polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, nTimeframes, currentTimeframe, sortedAtoms);
-
-		polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe);
-
-		if ((currentTimeframe + 1) < nTimeframes)
+		if (timeframesToSkip > currentTimeframe)
 		{
-			printStates (polymerStates, outputStates, datafile);
+			energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
+			energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
+
+			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, nTimeframes, currentTimeframe, sortedAtoms);
+
+			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe);
+
+			if ((currentTimeframe + 1) < nTimeframes) {
+				printStates (polymerStates, outputStates, datafile); }
 		}
 
 		file_status = fgetc (inputDump);
