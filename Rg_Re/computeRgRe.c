@@ -8,7 +8,19 @@
 int countNTimeframes (int nTimeframes, const char *filename)
 {
 	FILE *input;
-	input = fopen (filename, "r");
+
+	char *pipeString;
+	pipeString = (char *) malloc (500 * sizeof (char));
+	snprintf (pipeString, 500, "zcat %s", filename);
+
+	if (strstr (filename, "gz"))
+	{
+		input = popen (pipeString, "r");
+	}
+	else
+	{
+		input = fopen (filename, "r");
+	}
 
 	char lineString[3000];
 	nTimeframes = 0;
@@ -29,7 +41,19 @@ int countNTimeframes (int nTimeframes, const char *filename)
 int countNBonds (int nBonds, const char *filename)
 {
 	FILE *input;
-	input = fopen (filename, "r");
+
+	char *pipeString;
+	pipeString = (char *) malloc (500 * sizeof (char));
+	snprintf (pipeString, 500, "zcat %s", filename);
+
+	if (strstr (filename, "gz"))
+	{
+		input = popen (pipeString, "r");
+	}
+	else
+	{
+		input = fopen (filename, "r");
+	}
 
 	char lineString[3000];
 
@@ -157,7 +181,19 @@ float computeStandardDeviation (float deviationBondDistance, float averageBondDi
 int main(int argc, char const *argv[])
 {
 	FILE *input;
-	input = fopen (argv[1], "r");
+
+	char *pipeString;
+	pipeString = (char *) malloc (500 * sizeof (char));
+	snprintf (pipeString, 500, "zcat %s", argv[1]);
+
+	if (strstr (argv[1], "gz"))
+	{
+		input = popen (pipeString, "r");
+	}
+	else
+	{
+		input = fopen (argv[1], "r");
+	}
 
 	int nTimeframes = countNTimeframes (nTimeframes, argv[1]), nBonds = countNBonds (nBonds, argv[1]);
 
@@ -177,7 +213,16 @@ int main(int argc, char const *argv[])
 
 	int file_status, currentTimeframe = 0;
 
-	rewind (input);
+	if (strstr (argv[1], "gz"))
+	{
+		pclose (input);
+		input = popen (pipeString, "r");
+	}
+	else
+	{
+		rewind (input);
+	}
+
 	file_status = fgetc (input);
 
 	float averageBondDistance = 0;
@@ -199,7 +244,16 @@ int main(int argc, char const *argv[])
 
 	averageBondDistance = averageBondDistance / (nBonds * currentTimeframe);
 
-	rewind (input);
+	if (strstr (argv[1], "gz"))
+	{
+		pclose (input);
+		input = popen (pipeString, "r");
+	}
+	else
+	{
+		rewind (input);
+	}
+
 	file_status = fgetc (input);
 	currentTimeframe = 0;
 
@@ -231,6 +285,13 @@ int main(int argc, char const *argv[])
 	maxHistoCount = findMaxHistoCount (maxHistoCount, bondDistancesHistogram, binInfo);
 	printNormalizedHistogram (maxHistoCount, binInfo, bondDistancesHistogram);
 
-	fclose (input);
+	if (strstr (argv[1], "gz"))
+	{
+		pclose (input);
+	}
+	else
+	{
+		fclose (input);
+	}
 	return 0;
 }
