@@ -637,6 +637,122 @@ void printBlockAverageStats (FILE *file_output, BLOCKS *blockAverages, int nLine
 	}
 }
 
+BOND_STATUS checkingBackwards (BOND_STATUS backwardStatus, BOND_STATUS **polymerBondStatus, int currentBondIndex, int currentTimeframe, DATAFILE_INFO datafile)
+{
+	printf("checking backwardStatus\n");
+
+	for (int i = currentTimeframe; i > 0; --i)
+	{
+		if (polymerBondStatus[currentBondIndex][i].isItLoop == true)
+		{
+			backwardStatus.id = i;
+			backwardStatus.isItLoop = polymerBondStatus[currentBondIndex][i].isItLoop; 
+			backwardStatus.isItBridge = polymerBondStatus[currentBondIndex][i].isItBridge; 
+			backwardStatus.isItDangle = polymerBondStatus[currentBondIndex][i].isItDangle; 
+			backwardStatus.isItFree = polymerBondStatus[currentBondIndex][i].isItFree; 
+			backwardStatus.loop_corrected = polymerBondStatus[currentBondIndex][i].loop_corrected; 
+			backwardStatus.bridge_corrected = polymerBondStatus[currentBondIndex][i].bridge_corrected;
+
+			break;
+		}
+
+		if (polymerBondStatus[currentBondIndex][i].isItBridge == true)
+		{
+			backwardStatus.id = i;
+			backwardStatus.isItLoop = polymerBondStatus[currentBondIndex][i].isItLoop; 
+			backwardStatus.isItBridge = polymerBondStatus[currentBondIndex][i].isItBridge; 
+			backwardStatus.isItDangle = polymerBondStatus[currentBondIndex][i].isItDangle; 
+			backwardStatus.isItFree = polymerBondStatus[currentBondIndex][i].isItFree; 
+			backwardStatus.loop_corrected = polymerBondStatus[currentBondIndex][i].loop_corrected; 
+			backwardStatus.bridge_corrected = polymerBondStatus[currentBondIndex][i].bridge_corrected;
+
+			break;
+		}
+	}
+
+	return backwardStatus;
+}
+
+BOND_STATUS checkingForwards (BOND_STATUS forwardStatus, BOND_STATUS **polymerBondStatus, int currentBondIndex, int currentTimeframe, DATAFILE_INFO datafile, int maxTimeframes)
+{
+	printf("checking forwardStatus\n");
+
+	for (int i = currentTimeframe; i < maxTimeframes; ++i)
+	{
+		if (polymerBondStatus[currentBondIndex][i].isItLoop == true)
+		{
+			forwardStatus.id = i;
+			forwardStatus.isItLoop = polymerBondStatus[currentBondIndex][i].isItLoop; 
+			forwardStatus.isItBridge = polymerBondStatus[currentBondIndex][i].isItBridge; 
+			forwardStatus.isItDangle = polymerBondStatus[currentBondIndex][i].isItDangle; 
+			forwardStatus.isItFree = polymerBondStatus[currentBondIndex][i].isItFree; 
+			forwardStatus.loop_corrected = polymerBondStatus[currentBondIndex][i].loop_corrected; 
+			forwardStatus.bridge_corrected = polymerBondStatus[currentBondIndex][i].bridge_corrected;
+
+			break;
+		}
+
+		if (polymerBondStatus[currentBondIndex][i].isItBridge == true)
+		{
+			forwardStatus.id = i;
+			forwardStatus.isItLoop = polymerBondStatus[currentBondIndex][i].isItLoop; 
+			forwardStatus.isItBridge = polymerBondStatus[currentBondIndex][i].isItBridge; 
+			forwardStatus.isItDangle = polymerBondStatus[currentBondIndex][i].isItDangle; 
+			forwardStatus.isItFree = polymerBondStatus[currentBondIndex][i].isItFree; 
+			forwardStatus.loop_corrected = polymerBondStatus[currentBondIndex][i].loop_corrected; 
+			forwardStatus.bridge_corrected = polymerBondStatus[currentBondIndex][i].bridge_corrected;
+
+			break;
+		}
+	}
+
+	return forwardStatus;
+}
+
+BOND_STATUS **modifyDangles (BOND_STATUS **polymerBondStatus, BOND_STATUS forwardStatus, BOND_STATUS backwardStatus, DATAFILE_INFO datafile, int nTimeframes)
+{
+	return polymerBondStatus;
+}
+
+BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO datafile, int nTimeframes)
+{
+	BOND_STATUS forwardStatus, backwardStatus;
+
+	forwardStatus.id = 0; forwardStatus.isItLoop = 0; forwardStatus.isItBridge = 0; forwardStatus.isItDangle = 0; forwardStatus.isItFree = 0; forwardStatus.loop_corrected = 0; forwardStatus.bridge_corrected = 0;
+
+	backwardStatus.id = 0; backwardStatus.isItLoop = 0; backwardStatus.isItBridge = 0; backwardStatus.isItDangle = 0; backwardStatus.isItFree = 0; backwardStatus.loop_corrected = 0; backwardStatus.bridge_corrected = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			// scroll through the time for every bond
+			// once a dangle is found, go backward and go forward in time
+			// while going backwards and forwards: store the index of the first instance of a bridge/loop
+			printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
+			usleep (100000);
+
+			if (polymerBondStatus[i][j].isItDangle == true)
+			{
+				printf("dangle found...\n");
+				// go backward in time
+				backwardStatus = checkingBackwards (backwardStatus, polymerBondStatus, i, j, datafile);
+
+				// go forward in time
+				forwardStatus = checkingForwards (forwardStatus, polymerBondStatus, i, j, datafile, nTimeframes);
+
+				printf("status => from %d, through %d, to %d\n", backwardStatus.id, j, forwardStatus.id);
+
+				polymerBondStatus = modifyDangles (polymerBondStatus, forwardStatus, backwardStatus, datafile, nTimeframes);
+			}
+			// if the state of the bond in forward/backward instances are the same, then convert dangles
+			// if the states are different, then keep the dangles.
+		}
+	}
+
+	return polymerBondStatus;
+}
+
 int main(int argc, char const *argv[])
 {
 	FILE *inputDump, *outputStates;
@@ -687,8 +803,8 @@ int main(int argc, char const *argv[])
 
 	int timeframesToSkip = 0;
 
-	if (nTimeframes > N_TIMEFRAMES_TO_SKIP) {
-		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_SKIP; }
+	if (nTimeframes > N_TIMEFRAMES_TO_CONSIDER) {
+		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_CONSIDER; }
 
 	while (file_status > 0)
 	{
@@ -711,12 +827,14 @@ int main(int argc, char const *argv[])
 		if (currentTimeframe > nTimeframes) {
 			goto leaveThisLoop; }
 
-
 		file_status = fgetc (inputDump);
 		currentTimeframe++;
 	}
 
 	leaveThisLoop:;
+
+	// computing transitions
+	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, nTimeframes);
 
 	fclose (inputDump);
 	fclose (outputStates);
