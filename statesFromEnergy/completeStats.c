@@ -639,7 +639,7 @@ void printBlockAverageStats (FILE *file_output, BLOCKS *blockAverages, int nLine
 
 BOND_STATUS checkingBackwards (BOND_STATUS backwardStatus, BOND_STATUS **polymerBondStatus, int currentBondIndex, int currentTimeframe, DATAFILE_INFO datafile)
 {
-	printf("checking backwardStatus\n");
+	// printf("checking backwardStatus\n");
 
 	for (int i = currentTimeframe; i > 0; --i)
 	{
@@ -675,7 +675,7 @@ BOND_STATUS checkingBackwards (BOND_STATUS backwardStatus, BOND_STATUS **polymer
 
 BOND_STATUS checkingForwards (BOND_STATUS forwardStatus, BOND_STATUS **polymerBondStatus, int currentBondIndex, int currentTimeframe, DATAFILE_INFO datafile, int maxTimeframes)
 {
-	printf("checking forwardStatus\n");
+	// printf("checking forwardStatus\n");
 
 	for (int i = currentTimeframe; i < maxTimeframes; ++i)
 	{
@@ -709,8 +709,49 @@ BOND_STATUS checkingForwards (BOND_STATUS forwardStatus, BOND_STATUS **polymerBo
 	return forwardStatus;
 }
 
-BOND_STATUS **modifyDangles (BOND_STATUS **polymerBondStatus, BOND_STATUS forwardStatus, BOND_STATUS backwardStatus, DATAFILE_INFO datafile, int nTimeframes)
+BOND_STATUS **modifyDangles (BOND_STATUS **polymerBondStatus, BOND_STATUS forwardStatus, BOND_STATUS backwardStatus, DATAFILE_INFO datafile, int nTimeframes, int i)
 {
+	// If both the forward state and backward state are same
+	if (forwardStatus.isItLoop == backwardStatus.isItLoop && forwardStatus.isItBridge == backwardStatus.isItBridge && forwardStatus.isItDangle == backwardStatus.isItDangle && forwardStatus.isItFree == backwardStatus.isItFree)
+	{
+		for (int j = backwardStatus.id; j < forwardStatus.id; ++j)
+		{
+			polymerBondStatus[i][j].isItLoop = forwardStatus.isItLoop;
+			polymerBondStatus[i][j].isItBridge = forwardStatus.isItBridge;
+			polymerBondStatus[i][j].isItDangle = forwardStatus.isItDangle;
+			polymerBondStatus[i][j].isItFree = forwardStatus.isItFree;
+			polymerBondStatus[i][j].loop_corrected = forwardStatus.loop_corrected;
+			polymerBondStatus[i][j].bridge_corrected = forwardStatus.bridge_corrected;
+		}
+	}
+
+	// If both the forward state and backward state are different
+	if (forwardStatus.isItLoop != backwardStatus.isItLoop || forwardStatus.isItBridge != backwardStatus.isItBridge || forwardStatus.isItDangle != backwardStatus.isItDangle || forwardStatus.isItFree != backwardStatus.isItFree)
+	{
+		// if the forward state is zero (meaning, it is the last timeframe)
+		// We don't have to worry about this condition, because these timeframes
+		// will not count towards transition times
+
+		// if the backward state is zero (meaning, it is the first timeframe)
+		// Similar to the previous condition, this condition is not useful
+		// to consider for transitions
+
+		// if one state is bridge, while the other state is loop
+		if ((forwardStatus.isItLoop == 1 && backwardStatus.isItBridge == 1) || 
+			(forwardStatus.isItBridge == 1 && backwardStatus.isItLoop == 1))
+		{
+			for (int j = backwardStatus.id; j < forwardStatus.id; ++j)
+			{
+				polymerBondStatus[i][j].isItLoop = backwardStatus.isItLoop;
+				polymerBondStatus[i][j].isItBridge = backwardStatus.isItBridge;
+				polymerBondStatus[i][j].isItFree = backwardStatus.isItFree;
+				polymerBondStatus[i][j].isItDangle = backwardStatus.isItDangle;
+				polymerBondStatus[i][j].loop_corrected = backwardStatus.loop_corrected;
+				polymerBondStatus[i][j].bridge_corrected = backwardStatus.bridge_corrected;
+			}
+		}
+	}
+
 	return polymerBondStatus;
 }
 
@@ -729,28 +770,140 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 			// scroll through the time for every bond
 			// once a dangle is found, go backward and go forward in time
 			// while going backwards and forwards: store the index of the first instance of a bridge/loop
-			printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
-			usleep (100000);
+			// printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
 
 			if (polymerBondStatus[i][j].isItDangle == true)
 			{
-				printf("dangle found...\n");
+				// reset the status
+				// in case a forward/backward loop/bridge is not found, then the status will be '0'
+				// if the status is '0', then don't switch the dangles to any other state
+				forwardStatus.id = 0; forwardStatus.isItLoop = 0; forwardStatus.isItBridge = 0; forwardStatus.isItDangle = 0; forwardStatus.isItFree = 0; forwardStatus.loop_corrected = 0; forwardStatus.bridge_corrected = 0;
+
+				backwardStatus.id = 0; backwardStatus.isItLoop = 0; backwardStatus.isItBridge = 0; backwardStatus.isItDangle = 0; backwardStatus.isItFree = 0; backwardStatus.loop_corrected = 0; backwardStatus.bridge_corrected = 0;
+
+				// printf("dangle found...\n");
 				// go backward in time
 				backwardStatus = checkingBackwards (backwardStatus, polymerBondStatus, i, j, datafile);
 
 				// go forward in time
 				forwardStatus = checkingForwards (forwardStatus, polymerBondStatus, i, j, datafile, nTimeframes);
 
-				printf("status => from %d, through %d, to %d\n", backwardStatus.id, j, forwardStatus.id);
+				// printf("status => from %d (%d %d %d %d) to %d (%d %d %d %d)\n", backwardStatus.id, backwardStatus.isItLoop, backwardStatus.isItBridge, backwardStatus.isItDangle, backwardStatus.isItFree, forwardStatus.id, forwardStatus.isItLoop, forwardStatus.isItBridge, forwardStatus.isItDangle, forwardStatus.isItBridge);
 
-				polymerBondStatus = modifyDangles (polymerBondStatus, forwardStatus, backwardStatus, datafile, nTimeframes);
+				polymerBondStatus = modifyDangles (polymerBondStatus, forwardStatus, backwardStatus, datafile, nTimeframes, i);
 			}
+
+			// printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
+			// usleep (100000);
 			// if the state of the bond in forward/backward instances are the same, then convert dangles
 			// if the states are different, then keep the dangles.
 		}
 	}
 
 	return polymerBondStatus;
+}
+
+int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nBL = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItLoop == 1)
+			{
+				nBL++;
+			}
+		}
+	}
+
+	return nBL;
+}
+
+int countLBtransitions (int nLB, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nLB = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItLoop == 1 && polymerBondStatus[i][j].isItBridge == 1)
+			{
+				nLB++;
+			}
+		}
+	}
+
+	return nLB;
+}
+
+float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	int currentTransition = 0, currentTau = 0;
+
+	// printf("%d\n", datafile.nBonds);
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		currentTau = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			// printf("[%d, %d] %d %d ", i, j, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItLoop);
+			// fflush (stdout);
+
+			if (polymerBondStatus[i][j].isItBridge == 1)
+			{
+				currentTau++;
+				// printf("tau++ %d", currentTau);
+			}
+			else if (j > 0 && polymerBondStatus[i][j].isItLoop == 1)
+			{
+				if (polymerBondStatus[i][j - 1].isItBridge == 1)
+				{
+					// printf("tau = %d", currentTau);
+					tauBL[currentTransition] = (float)currentTau;
+					currentTransition++;
+					currentTau = 0;
+				}
+			}
+
+			// printf("\n");
+			// usleep (100000);
+		}
+	}
+
+	return tauBL;
+}
+
+float *countTauLB (float *tauLB, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	int currentTransition = 0, currentTau = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		currentTau = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j].isItLoop == 1)
+			{
+				currentTau++;
+			}
+			else if (j > 0 && polymerBondStatus[i][j].isItBridge == 1)
+			{
+				if (polymerBondStatus[i][j - 1].isItLoop == 1)
+				{
+					tauLB[currentTransition] = (float)currentTau;
+					currentTransition++;
+					currentTau = 0;
+				}
+			}
+		}
+	}
+
+	return tauLB;
 }
 
 int main(int argc, char const *argv[])
@@ -811,11 +964,11 @@ int main(int argc, char const *argv[])
 		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes);
 		fflush (stdout);
 
-		if (timeframesToSkip < (currentTimeframe + 1))
-		{
-			energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
-			energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
+		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
+		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
 
+		if ((currentTimeframe + 1) > timeframesToSkip)
+		{
 			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, nTimeframes, currentTimeframe, sortedAtoms);
 
 			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe);
@@ -833,13 +986,43 @@ int main(int argc, char const *argv[])
 
 	leaveThisLoop:;
 
-	// computing transitions
-	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, nTimeframes);
-
 	fclose (inputDump);
 	fclose (outputStates);
 
-	// block averaging
+	// computing transitions
+	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, nTimeframes);
+
+	float *tauBL, *tauLB;
+	int nBL = countBLtransitions (nBL, polymerBondStatus, nTimeframes, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, nTimeframes, datafile);
+	tauBL = (float *) malloc (nBL * sizeof (float));
+	tauLB = (float *) malloc (nLB * sizeof (float));
+
+	tauBL = countTauBL (tauBL, polymerBondStatus, nTimeframes, datafile);
+	tauLB = countTauLB (tauLB, polymerBondStatus, nTimeframes, datafile);
+
+	// block averaging of transitions
+	BLOCKS *blockAverages_tauBL, *blockAverages_tauLB;
+	blockAverages_tauBL = (BLOCKS *) malloc (nBL * sizeof (BLOCKS));
+	blockAverages_tauLB = (BLOCKS *) malloc (nLB * sizeof (BLOCKS));
+
+	blockAverages_tauBL = initializeBlocks (blockAverages_tauBL, nBL);
+	blockAverages_tauLB = initializeBlocks (blockAverages_tauLB, nLB);
+
+	blockAverages_tauBL = computeBlockAverages (blockAverages_tauBL, nBL, tauBL);
+	blockAverages_tauLB = computeBlockAverages (blockAverages_tauLB, nLB, tauLB);
+
+	// printing block averages of transitions
+	FILE *file_block_BL, *file_block_LB;
+	file_block_BL = fopen ("bridgeToLoop.block", "w");
+	file_block_LB = fopen ("loopToBridge.block", "w");
+
+	printBlockAverageStats (file_block_BL, blockAverages_tauBL, nBL);
+	printBlockAverageStats (file_block_LB, blockAverages_tauLB, nLB);
+
+	fclose (file_block_BL);
+	fclose (file_block_LB);
+
+	// block averaging of microstates
 	FILE *file_data, *file_block_nBridges, *file_block_nLoops, *file_block_nDangles, *file_block_nFree;
 	file_data = fopen ("polymerStates.timeseries", "r");
 	file_block_nBridges = fopen ("bridges.average.block", "w");
@@ -873,6 +1056,7 @@ int main(int argc, char const *argv[])
 	blockAverages_nDangles = computeBlockAverages (blockAverages_nDangles, nLines, inputData_nDangles);
 	blockAverages_nFree = computeBlockAverages (blockAverages_nFree, nLines, inputData_nFree);
 
+	// printing the results from block averaging of microstates
 	printBlockAverageStats (file_block_nBridges, blockAverages_nBridges, nLines);
 	printBlockAverageStats (file_block_nLoops, blockAverages_nLoops, nLines);
 	printBlockAverageStats (file_block_nDangles, blockAverages_nDangles, nLines);

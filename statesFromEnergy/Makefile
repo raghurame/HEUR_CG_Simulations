@@ -1,3 +1,3 @@
 all:
 	gcc -o completeStats completeStats.c -lm -Wall
-	./completeStats ../dump.stat shear.data
+	./completeStats dump.stat.first restart.data

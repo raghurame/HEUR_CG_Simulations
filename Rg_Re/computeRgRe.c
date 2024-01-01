@@ -172,7 +172,7 @@ float computeStandardDeviation (float deviationBondDistance, float averageBondDi
 {
 	for (int i = 0; i < nBonds; ++i)
 	{
-		deviationBondDistance += (bondDistances[i] - averageBondDistance);
+		deviationBondDistance += (bondDistances[i] - averageBondDistance) * (bondDistances[i] - averageBondDistance);
 	}
 
 	return deviationBondDistance;
@@ -295,3 +295,5 @@ int main(int argc, char const *argv[])
 	}
 	return 0;
 }
+
+// 9V^fRZGYn4A7Lc4FA4ATfzZBdHtkorbDw4%69oA$3Hhtb
