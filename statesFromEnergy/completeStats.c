@@ -6,10 +6,10 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NPARTICLES 961
-#define NPOLYMERS 10
+#define NPARTICLES 100
+#define NPOLYMERS 4000
 #define NBEADS 2
-#define COORDINATION_NUMBER 20
+#define COORDINATION_NUMBER 80
 #define N_TIMEFRAMES_TO_CONSIDER 20000
 
 typedef struct blocks
@@ -391,7 +391,8 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 
 			if (sortedAtoms[energyEntries[i].atom1 - 1].atomType == 2 && sortedAtoms[energyEntries[i].atom2 - 1].atomType == 1)
 			{
-				bondNumber = (energyEntries[i].atom2 - (energyEntries[i].atom2 / COORDINATION_NUMBER) - 1) / NBEADS;
+				// bondNumber = (energyEntries[i].atom2 - (energyEntries[i].atom2 / COORDINATION_NUMBER) - 1) / NBEADS;
+				bondNumber = floor ((energyEntries[i].atom2 - (int)floor (energyEntries[i].atom2 / (COORDINATION_NUMBER + 1)) - 1) / 2);
 
 				if (boundParticleID[bondNumber] == 0)
 				{
@@ -411,7 +412,8 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 			}
 			else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 2 && sortedAtoms[energyEntries[i].atom1 - 1].atomType == 1)
 			{
-				bondNumber = (energyEntries[i].atom1 - (energyEntries[i].atom1 / COORDINATION_NUMBER) - 1) / NBEADS;
+				// bondNumber = (energyEntries[i].atom1 - (energyEntries[i].atom1 / COORDINATION_NUMBER) - 1) / NBEADS;
+				bondNumber = floor ((energyEntries[i].atom1 - (int)floor (energyEntries[i].atom1 / (COORDINATION_NUMBER + 1)) - 1) / 2);
 
 				if (boundParticleID[bondNumber] == 0)
 				{
@@ -763,13 +765,19 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 
 	backwardStatus.id = 0; backwardStatus.isItLoop = 0; backwardStatus.isItBridge = 0; backwardStatus.isItDangle = 0; backwardStatus.isItFree = 0; backwardStatus.loop_corrected = 0; backwardStatus.bridge_corrected = 0;
 
+	printf("\nCorrecting dangles...\n");
+
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
+		printf("%d/%d                                        \r", i, datafile.nBonds);
+		fflush (stdout);
+
 		for (int j = 0; j < nTimeframes; ++j)
 		{
 			// scroll through the time for every bond
 			// once a dangle is found, go backward and go forward in time
 			// while going backwards and forwards: store the index of the first instance of a bridge/loop
+
 			// printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
 
 			if (polymerBondStatus[i][j].isItDangle == true)
@@ -795,30 +803,13 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 
 			// printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
 			// usleep (100000);
+
 			// if the state of the bond in forward/backward instances are the same, then convert dangles
 			// if the states are different, then keep the dangles.
 		}
 	}
 
 	return polymerBondStatus;
-}
-
-int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
-{
-	nBL = 0;
-
-	for (int i = 0; i < datafile.nBonds; ++i)
-	{
-		for (int j = 1; j < nTimeframes; ++j)
-		{
-			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItLoop == 1)
-			{
-				nBL++;
-			}
-		}
-	}
-
-	return nBL;
 }
 
 int countLBtransitions (int nLB, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
@@ -839,38 +830,49 @@ int countLBtransitions (int nLB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nLB;
 }
 
+int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nBL = 0;
+	printf("\nCounting bridge to loop transitions...\n");
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItLoop == 1)
+			{
+				nBL++;
+			}
+		}
+	}
+
+	return nBL;
+}
+
 float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
 {
 	int currentTransition = 0, currentTau = 0;
+	printf("\nCalculating transition time from bridge to loop...\n");
 
-	// printf("%d\n", datafile.nBonds);
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		currentTau = 0;
 
 		for (int j = 0; j < nTimeframes; ++j)
 		{
-			// printf("[%d, %d] %d %d ", i, j, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItLoop);
-			// fflush (stdout);
-
 			if (polymerBondStatus[i][j].isItBridge == 1)
 			{
 				currentTau++;
-				// printf("tau++ %d", currentTau);
 			}
-			else if (j > 0 && polymerBondStatus[i][j].isItLoop == 1)
+			else if (j > 0)
 			{
-				if (polymerBondStatus[i][j - 1].isItBridge == 1)
+				if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItLoop == 1)
 				{
-					// printf("tau = %d", currentTau);
 					tauBL[currentTransition] = (float)currentTau;
 					currentTransition++;
 					currentTau = 0;
 				}
 			}
-
-			// printf("\n");
-			// usleep (100000);
 		}
 	}
 
@@ -906,6 +908,32 @@ float *countTauLB (float *tauLB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return tauLB;
 }
 
+void printTauBL (float *tauBL, int nBL)
+{
+	FILE *tauBL_file;
+	tauBL_file = fopen ("tauBL.output", "w");
+
+	for (int i = 0; i < nBL; ++i)
+	{
+		fprintf(tauBL_file, "%f\n", tauBL[i]);
+	}
+
+	fclose (tauBL_file);
+}
+
+void printTauLB (float *tauLB, int nLB)
+{
+	FILE *tauLB_file;
+	tauLB_file = fopen ("tauLB.output", "w");
+
+	for (int i = 0; i < nLB; ++i)
+	{
+		fprintf(tauLB_file, "%f\n", tauLB[i]);
+	}
+
+	fclose (tauLB_file);
+}
+
 int main(int argc, char const *argv[])
 {
 	FILE *inputDump, *outputStates;
@@ -931,17 +959,22 @@ int main(int argc, char const *argv[])
 	sortedAtoms = (DATA_ATOMS *) malloc (datafile.nAtoms * sizeof (DATA_ATOMS));
 	sortedAtoms = sortAtoms (sortedAtoms, dataAtoms, datafile.nAtoms);
 
-	int nTimeframes = countNTimeframes (argv[1]);
+	int nTimeframes = countNTimeframes (argv[1]), N_TIMEFRAMES_TO_CONSIDER2;
 
 	BOND_STATUS **polymerBondStatus;
 	polymerBondStatus = (BOND_STATUS **) malloc (datafile.nBonds * sizeof (BOND_STATUS *));
 
-	for (int i = 0; i < datafile.nBonds; ++i)
+	if (N_TIMEFRAMES_TO_CONSIDER >= nTimeframes)
 	{
-		polymerBondStatus[i] = (BOND_STATUS *) malloc ((nTimeframes + 1) * sizeof (BOND_STATUS));
+		N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
 	}
 
-	polymerBondStatus = initBondStatus (polymerBondStatus, datafile.nBonds, nTimeframes);
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		polymerBondStatus[i] = (BOND_STATUS *) malloc ((N_TIMEFRAMES_TO_CONSIDER2 + 1) * sizeof (BOND_STATUS));
+	}
+
+	polymerBondStatus = initBondStatus (polymerBondStatus, datafile.nBonds, N_TIMEFRAMES_TO_CONSIDER2);
 
 	int file_status = fgetc (inputDump);
 	char lineString[3000];
@@ -956,8 +989,8 @@ int main(int argc, char const *argv[])
 
 	int timeframesToSkip = 0;
 
-	if (nTimeframes > N_TIMEFRAMES_TO_CONSIDER) {
-		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_CONSIDER; }
+	if (nTimeframes > N_TIMEFRAMES_TO_CONSIDER2) {
+		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_CONSIDER2; }
 
 	while (file_status > 0)
 	{
@@ -969,7 +1002,7 @@ int main(int argc, char const *argv[])
 
 		if ((currentTimeframe + 1) > timeframesToSkip)
 		{
-			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, nTimeframes, currentTimeframe, sortedAtoms);
+			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, currentTimeframe, sortedAtoms);
 
 			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe);
 
@@ -986,19 +1019,24 @@ int main(int argc, char const *argv[])
 
 	leaveThisLoop:;
 
+	free (energyEntries);
 	fclose (inputDump);
 	fclose (outputStates);
 
 	// computing transitions
-	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, nTimeframes);
+	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
 
 	float *tauBL, *tauLB;
-	int nBL = countBLtransitions (nBL, polymerBondStatus, nTimeframes, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, nTimeframes, datafile);
+	int nBL = countBLtransitions (nBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+
 	tauBL = (float *) malloc (nBL * sizeof (float));
 	tauLB = (float *) malloc (nLB * sizeof (float));
 
-	tauBL = countTauBL (tauBL, polymerBondStatus, nTimeframes, datafile);
-	tauLB = countTauLB (tauLB, polymerBondStatus, nTimeframes, datafile);
+	tauBL = countTauBL (tauBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+	tauLB = countTauLB (tauLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+
+	printTauBL (tauBL, nBL);
+	printTauLB (tauLB, nLB);
 
 	// block averaging of transitions
 	BLOCKS *blockAverages_tauBL, *blockAverages_tauLB;
@@ -1008,6 +1046,7 @@ int main(int argc, char const *argv[])
 	blockAverages_tauBL = initializeBlocks (blockAverages_tauBL, nBL);
 	blockAverages_tauLB = initializeBlocks (blockAverages_tauLB, nLB);
 
+	printf("\nComputing block averages on transitions...\n");
 	blockAverages_tauBL = computeBlockAverages (blockAverages_tauBL, nBL, tauBL);
 	blockAverages_tauLB = computeBlockAverages (blockAverages_tauLB, nLB, tauLB);
 
@@ -1016,11 +1055,17 @@ int main(int argc, char const *argv[])
 	file_block_BL = fopen ("bridgeToLoop.block", "w");
 	file_block_LB = fopen ("loopToBridge.block", "w");
 
+	printf("Printing block averages of transitions...\n");
 	printBlockAverageStats (file_block_BL, blockAverages_tauBL, nBL);
 	printBlockAverageStats (file_block_LB, blockAverages_tauLB, nLB);
 
 	fclose (file_block_BL);
 	fclose (file_block_LB);
+	free (blockAverages_tauBL);
+	free (blockAverages_tauLB);
+	free (tauBL);
+	free (tauLB);
+	free (polymerBondStatus);
 
 	// block averaging of microstates
 	FILE *file_data, *file_block_nBridges, *file_block_nLoops, *file_block_nDangles, *file_block_nFree;
@@ -1038,6 +1083,7 @@ int main(int argc, char const *argv[])
 	inputData_nDangles = (float *) malloc (nLines * sizeof (float));
 	inputData_nFree = (float *) malloc (nLines * sizeof (float));
 
+	printf("Reading bridges/loops/dangles/free from saved file...\n");
 	saveInputData (&inputData_nBridges, &inputData_nLoops, &inputData_nDangles, &inputData_nFree, nLines, file_data);
 
 	BLOCKS *blockAverages_nBridges, *blockAverages_nLoops, *blockAverages_nDangles, *blockAverages_nFree;
@@ -1051,16 +1097,26 @@ int main(int argc, char const *argv[])
 	blockAverages_nDangles = initializeBlocks (blockAverages_nDangles, nLines);
 	blockAverages_nFree = initializeBlocks (blockAverages_nFree, nLines);
 
+	printf("Computing bridges...\n");
 	blockAverages_nBridges = computeBlockAverages (blockAverages_nBridges, nLines, inputData_nBridges);
+	printf("Computing loops...\n");
 	blockAverages_nLoops = computeBlockAverages (blockAverages_nLoops, nLines, inputData_nLoops);
+	printf("Computing dangles...\n");
 	blockAverages_nDangles = computeBlockAverages (blockAverages_nDangles, nLines, inputData_nDangles);
+	printf("Computing free...\n");
 	blockAverages_nFree = computeBlockAverages (blockAverages_nFree, nLines, inputData_nFree);
 
 	// printing the results from block averaging of microstates
+	printf("Printing block averages of bridges/loops/dangles/free...\n");
 	printBlockAverageStats (file_block_nBridges, blockAverages_nBridges, nLines);
 	printBlockAverageStats (file_block_nLoops, blockAverages_nLoops, nLines);
 	printBlockAverageStats (file_block_nDangles, blockAverages_nDangles, nLines);
 	printBlockAverageStats (file_block_nFree, blockAverages_nFree, nLines);
+
+	free (blockAverages_nBridges);
+	free (blockAverages_nLoops);
+	free (blockAverages_nDangles);
+	free (blockAverages_nFree);
 
 	fclose (file_data);
 	fclose (file_block_nBridges);
