@@ -6,11 +6,11 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NPARTICLES 100
-#define NPOLYMERS 4000
+#define NPARTICLES 8
+#define NPOLYMERS 320
 #define NBEADS 2
 #define COORDINATION_NUMBER 80
-#define N_TIMEFRAMES_TO_CONSIDER 20000
+#define N_TIMEFRAMES_TO_CONSIDER 200
 
 typedef struct blocks
 {
@@ -374,6 +374,7 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 
 	int *boundParticleID;
 	boundParticleID = (int *) malloc (datafile.nBonds * sizeof (int));
+
 
 	boundParticleID = initBoundParticleIDs (boundParticleID, datafile.nBonds);
 
@@ -934,6 +935,29 @@ void printTauLB (float *tauLB, int nLB)
 	fclose (tauLB_file);
 }
 
+void computeStats (float *average, float *stdev, float *stderr, float *inputData, int nLines)
+{
+	(*average) = 0;
+	(*stderr) = 0;
+	(*stdev) = 0;
+
+	for (int i = 0; i < nLines; ++i)
+	{
+		(*average) += inputData[i];
+	}
+
+	(*average) /= nLines;
+
+	for (int i = 0; i < nLines; ++i)
+	{
+		(*stdev) += ((inputData[i] - (*average)) * (inputData[i] - (*average)));
+	}
+
+	(*stdev) /= nLines;
+	(*stdev) = sqrt ((*stdev));
+	(*stdev) /= sqrt (nLines);
+}
+
 int main(int argc, char const *argv[])
 {
 	FILE *inputDump, *outputStates;
@@ -961,13 +985,17 @@ int main(int argc, char const *argv[])
 
 	int nTimeframes = countNTimeframes (argv[1]), N_TIMEFRAMES_TO_CONSIDER2;
 
-	BOND_STATUS **polymerBondStatus;
-	polymerBondStatus = (BOND_STATUS **) malloc (datafile.nBonds * sizeof (BOND_STATUS *));
-
 	if (N_TIMEFRAMES_TO_CONSIDER >= nTimeframes)
 	{
 		N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
 	}
+	else
+	{
+		N_TIMEFRAMES_TO_CONSIDER2 = N_TIMEFRAMES_TO_CONSIDER;
+	}
+
+	BOND_STATUS **polymerBondStatus;
+	polymerBondStatus = (BOND_STATUS **) malloc (datafile.nBonds * sizeof (BOND_STATUS *));
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -992,6 +1020,9 @@ int main(int argc, char const *argv[])
 	if (nTimeframes > N_TIMEFRAMES_TO_CONSIDER2) {
 		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_CONSIDER2; }
 
+	printf("Skipping %d timeframes initially...\n", timeframesToSkip);
+	printf("To consider: %d\n", N_TIMEFRAMES_TO_CONSIDER2);
+
 	while (file_status > 0)
 	{
 		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes);
@@ -1002,9 +1033,9 @@ int main(int argc, char const *argv[])
 
 		if ((currentTimeframe + 1) > timeframesToSkip)
 		{
-			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, currentTimeframe, sortedAtoms);
+			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, currentTimeframe - timeframesToSkip, sortedAtoms);
 
-			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe);
+			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe - timeframesToSkip);
 
 			if ((currentTimeframe + 1) < nTimeframes) {
 				printStates (polymerStates, outputStates, datafile); }
@@ -1038,31 +1069,41 @@ int main(int argc, char const *argv[])
 	printTauBL (tauBL, nBL);
 	printTauLB (tauLB, nLB);
 
+	float averageLB, stdevLB, stderrLB;
+	float averageBL, stdevBL, stderrBL;
+	computeStats (&averageLB, &stdevLB, &stderrLB, tauLB, nLB);
+	computeStats (&averageBL, &stdevBL, &stderrBL, tauBL, nBL);
+
+	FILE *transitionStats;
+	transitionStats = fopen ("transitions.stats", "w");
+	fprintf(transitionStats, "Bridge to loop:\n\naverage: %f\nstdev: %f\nstderr: %f\n\nLoop to bridge:\n\naverage: %f\nstdev: %f\nstderr: %f\n", averageBL, stdevBL, stderrBL, averageLB, stdevLB, stderrLB);
+	fclose (transitionStats);
+
 	// block averaging of transitions
-	BLOCKS *blockAverages_tauBL, *blockAverages_tauLB;
-	blockAverages_tauBL = (BLOCKS *) malloc (nBL * sizeof (BLOCKS));
-	blockAverages_tauLB = (BLOCKS *) malloc (nLB * sizeof (BLOCKS));
+	// BLOCKS *blockAverages_tauBL, *blockAverages_tauLB;
+	// blockAverages_tauBL = (BLOCKS *) malloc (nBL * sizeof (BLOCKS));
+	// blockAverages_tauLB = (BLOCKS *) malloc (nLB * sizeof (BLOCKS));
 
-	blockAverages_tauBL = initializeBlocks (blockAverages_tauBL, nBL);
-	blockAverages_tauLB = initializeBlocks (blockAverages_tauLB, nLB);
+	// blockAverages_tauBL = initializeBlocks (blockAverages_tauBL, nBL);
+	// blockAverages_tauLB = initializeBlocks (blockAverages_tauLB, nLB);
 
-	printf("\nComputing block averages on transitions...\n");
-	blockAverages_tauBL = computeBlockAverages (blockAverages_tauBL, nBL, tauBL);
-	blockAverages_tauLB = computeBlockAverages (blockAverages_tauLB, nLB, tauLB);
+	// printf("\nComputing block averages on transitions...\n");
+	// blockAverages_tauBL = computeBlockAverages (blockAverages_tauBL, nBL, tauBL);
+	// blockAverages_tauLB = computeBlockAverages (blockAverages_tauLB, nLB, tauLB);
 
 	// printing block averages of transitions
-	FILE *file_block_BL, *file_block_LB;
-	file_block_BL = fopen ("bridgeToLoop.block", "w");
-	file_block_LB = fopen ("loopToBridge.block", "w");
+	// FILE *file_block_BL, *file_block_LB;
+	// file_block_BL = fopen ("bridgeToLoop.block", "w");
+	// file_block_LB = fopen ("loopToBridge.block", "w");
 
-	printf("Printing block averages of transitions...\n");
-	printBlockAverageStats (file_block_BL, blockAverages_tauBL, nBL);
-	printBlockAverageStats (file_block_LB, blockAverages_tauLB, nLB);
+	// printf("Printing block averages of transitions...\n");
+	// printBlockAverageStats (file_block_BL, blockAverages_tauBL, nBL);
+	// printBlockAverageStats (file_block_LB, blockAverages_tauLB, nLB);
 
-	fclose (file_block_BL);
-	fclose (file_block_LB);
-	free (blockAverages_tauBL);
-	free (blockAverages_tauLB);
+	// fclose (file_block_BL);
+	// fclose (file_block_LB);
+	// free (blockAverages_tauBL);
+	// free (blockAverages_tauLB);
 	free (tauBL);
 	free (tauLB);
 	free (polymerBondStatus);
@@ -1075,7 +1116,7 @@ int main(int argc, char const *argv[])
 	file_block_nDangles = fopen ("dangles.average.block", "w");
 	file_block_nFree = fopen ("free.average.block", "w");
 
-	int nLines = nTimeframes;
+	int nLines = N_TIMEFRAMES_TO_CONSIDER2;
 	float *inputData_nBridges, *inputData_nLoops, *inputData_nDangles, *inputData_nFree;
 
 	inputData_nBridges = (float *) malloc (nLines * sizeof (float));
