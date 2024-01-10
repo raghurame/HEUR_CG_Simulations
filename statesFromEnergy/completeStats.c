@@ -6,8 +6,8 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NPARTICLES 8
-#define NPOLYMERS 320
+#define NPARTICLES 100
+#define NPOLYMERS 4000
 #define NBEADS 2
 #define COORDINATION_NUMBER 80
 #define N_TIMEFRAMES_TO_CONSIDER 200
@@ -817,8 +817,9 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 /*	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		printStateNumber (polymerBondStatus[i][0].isItFree, polymerBondStatus[i][0].isItDangle, polymerBondStatus[i][0].isItLoop, polymerBondStatus[i][0].isItBridge);
-		usleep (100000);
+		usleep (10000);
 	}
+	sleep (1000);
 */
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -919,9 +920,14 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 
 		for (int j = 0; j < nTimeframes; ++j)
 		{
+
+			// printStateNumber (polymerBondStatus[i][j].isItFree, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge);
+
 			if (polymerBondStatus[i][j].isItBridge == 1)
 			{
 				currentTau++;
+				// printf("(%d) ", currentTau);
+				// usleep (10000);
 			}
 			else if (j > 0)
 			{
@@ -930,9 +936,13 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 					tauBL[currentTransition] = (float)currentTau;
 					currentTransition++;
 					currentTau = 0;
+					// printf("--> %d\n", currentTransition);
+					// sleep (1);
 				}
 			}
 		}
+
+		// printf("\n");
 	}
 
 	return tauBL;
@@ -1115,14 +1125,6 @@ int main(int argc, char const *argv[])
 	// computing transitions
 	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
 
-	//0-free, 1-dangle, 2-Loop, 3-Bridge
-/*	for (int i = 0; i < N_TIMEFRAMES_TO_CONSIDER2; ++i)
-	{
-		printStateNumber (polymerBondStatus[i][0].isItFree, polymerBondStatus[i][0].isItDangle, polymerBondStatus[i][0].isItLoop, polymerBondStatus[i][0].isItBridge);
-		printf("\n");
-		usleep (100000);
-	}
-*/
 	float *tauBL, *tauLB;
 	int nBL = countBLtransitions (nBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
