@@ -78,6 +78,28 @@ typedef struct states
 	int nLoops, nBridges, nFree, nDangles;
 } STATES;
 
+void printStateNumber (bool isItFree, bool isItDangle, bool isItLoop, bool isItBridge)
+{
+	if (isItFree == 1)
+	{
+		fprintf(stdout, "0 ");
+	}
+	if (isItDangle == 1)
+	{
+		fprintf(stdout, "1 ");
+	}
+	if (isItLoop == 1)
+	{
+		fprintf(stdout, "2 ");
+	}
+	if (isItBridge == 1)
+	{
+		fprintf(stdout, "3 ");
+	}
+
+	fflush (stdout);
+}
+
 int *storeParticleIDs (int *particleIDs)
 {
 	for (int i = 0; i < NPARTICLES; ++i)
@@ -375,11 +397,13 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 	int *boundParticleID;
 	boundParticleID = (int *) malloc (datafile.nBonds * sizeof (int));
 
-
 	boundParticleID = initBoundParticleIDs (boundParticleID, datafile.nBonds);
 
 	for (int i = 0; i < nDumpEntries; ++i)
 	{
+		// usleep (100000);
+		// fprintf(stdout, "%d %d %f ", energyEntries[i].atom1, energyEntries[i].atom2, energyEntries[i].energy);
+
 		if (energyEntries[i].energy < -1 && energyEntries[i].atom1 > 0 && energyEntries[i].atom2 > 0)
 		{
 			// check if one of the two atoms belongs to ghost particle and the another one belongs to polymer bead
@@ -394,6 +418,7 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 			{
 				// bondNumber = (energyEntries[i].atom2 - (energyEntries[i].atom2 / COORDINATION_NUMBER) - 1) / NBEADS;
 				bondNumber = floor ((energyEntries[i].atom2 - (int)floor (energyEntries[i].atom2 / (COORDINATION_NUMBER + 1)) - 1) / 2);
+				// printf("(%d) ", bondNumber);
 
 				if (boundParticleID[bondNumber] == 0)
 				{
@@ -410,11 +435,17 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 					polymerBondStatus[bondNumber][currentTimeframe].isItBridge = true;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = false;
 				}
+
+				// printf("(%d) --> ", boundParticleID[bondNumber]);
+
+				// printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
+				// printf("\n");
 			}
 			else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 2 && sortedAtoms[energyEntries[i].atom1 - 1].atomType == 1)
 			{
 				// bondNumber = (energyEntries[i].atom1 - (energyEntries[i].atom1 / COORDINATION_NUMBER) - 1) / NBEADS;
 				bondNumber = floor ((energyEntries[i].atom1 - (int)floor (energyEntries[i].atom1 / (COORDINATION_NUMBER + 1)) - 1) / 2);
+				// printf("(%d) ", bondNumber);
 
 				if (boundParticleID[bondNumber] == 0)
 				{
@@ -431,17 +462,32 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 					polymerBondStatus[bondNumber][currentTimeframe].isItBridge = true;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = false;
 				}
+
+				// printf("(%d) --> ", boundParticleID[bondNumber]);
+
+				// printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
+				// printf("\n");
 			}
+		}
+	}
+
+	// Assigning 'free' for bonds which are not dangles/bridges/loops
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		if (polymerBondStatus[i][currentTimeframe].isItFree + polymerBondStatus[i][currentTimeframe].isItDangle + polymerBondStatus[i][currentTimeframe].isItLoop + polymerBondStatus[i][currentTimeframe].isItBridge == 0)
+		{
+			polymerBondStatus[i][currentTimeframe].isItFree = 1;
 		}
 	}
 
 /*	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		if (boundParticleID[i] == 0)
-		{
-			polymerBondStatus[i][currentTimeframe].isItFree = true;
-		}
+		printf("%d -> ", i);
+		printStateNumber (polymerBondStatus[i][currentTimeframe].isItFree, polymerBondStatus[i][currentTimeframe].isItDangle, polymerBondStatus[i][currentTimeframe].isItLoop, polymerBondStatus[i][currentTimeframe].isItBridge);
+		printf("\n");
 	}
+
+	sleep (100);
 */
 	return polymerBondStatus;
 }
@@ -768,6 +814,12 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 
 	printf("\nCorrecting dangles...\n");
 
+/*	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		printStateNumber (polymerBondStatus[i][0].isItFree, polymerBondStatus[i][0].isItDangle, polymerBondStatus[i][0].isItLoop, polymerBondStatus[i][0].isItBridge);
+		usleep (100000);
+	}
+*/
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		printf("%d/%d                                        \r", i, datafile.nBonds);
@@ -780,6 +832,8 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 			// while going backwards and forwards: store the index of the first instance of a bridge/loop
 
 			// printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
+
+			// printStateNumber (polymerBondStatus[i][j].isItFree, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge);
 
 			if (polymerBondStatus[i][j].isItDangle == true)
 			{
@@ -801,6 +855,10 @@ BOND_STATUS **correctingDangles (BOND_STATUS **polymerBondStatus, DATAFILE_INFO 
 
 				polymerBondStatus = modifyDangles (polymerBondStatus, forwardStatus, backwardStatus, datafile, nTimeframes, i);
 			}
+
+			// printStateNumber (polymerBondStatus[i][j].isItFree, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge);
+			// printf("\n");
+			// usleep (100000);
 
 			// printf("%d => %d %d %d %d\n", j, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItFree);
 			// usleep (100000);
@@ -1057,6 +1115,14 @@ int main(int argc, char const *argv[])
 	// computing transitions
 	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
 
+	//0-free, 1-dangle, 2-Loop, 3-Bridge
+/*	for (int i = 0; i < N_TIMEFRAMES_TO_CONSIDER2; ++i)
+	{
+		printStateNumber (polymerBondStatus[i][0].isItFree, polymerBondStatus[i][0].isItDangle, polymerBondStatus[i][0].isItLoop, polymerBondStatus[i][0].isItBridge);
+		printf("\n");
+		usleep (100000);
+	}
+*/
 	float *tauBL, *tauLB;
 	int nBL = countBLtransitions (nBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
