@@ -1,11 +1,11 @@
 Bridge to loop:
 
-average: 4.523282
-stdev: 0.103396
+average: -nan
+stdev: -nan
 stderr: 0.000000
 
 Loop to bridge:
 
-average: 5.109049
-stdev: 0.105406
+average: -nan
+stdev: -nan
 stderr: 0.000000

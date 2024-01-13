@@ -354,7 +354,6 @@ int countDumpEntries (FILE *inputDump, int nDumpEntries)
 
 	sscanf (lineString, "%d", &nDumpEntries);
 
-	rewind (inputDump);
 	return nDumpEntries;
 }
 
@@ -1028,8 +1027,26 @@ void computeStats (float *average, float *stdev, float *stderr, float *inputData
 
 int main(int argc, char const *argv[])
 {
+	if (argc != 3)
+	{
+		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n\n");
+		exit (1);
+	}
+
 	FILE *inputDump, *outputStates;
-	inputDump = fopen (argv[1], "r");
+	char *pipeString;
+	pipeString = (char *) malloc (500 * sizeof (char));
+	snprintf (pipeString, 500, "zcat %s", argv[1]);
+
+	if (strstr (argv[1], ".gz"))
+	{
+		inputDump = popen (pipeString, "r");
+	}
+	else
+	{
+		inputDump = fopen (argv[1], "r");
+	}
+
 	outputStates = fopen ("polymerStates.timeseries", "w");
 
 	int nChains = NPARTICLES * NPOLYMERS, *particleIDs, nAtoms = NPARTICLES + (NPARTICLES * NPOLYMERS * NBEADS);
@@ -1078,6 +1095,18 @@ int main(int argc, char const *argv[])
 	DUMP_ENERGY *energyEntries;
 	int nDumpEntries;
 	nDumpEntries = countDumpEntries (inputDump, nDumpEntries);
+
+	if (strstr (argv[1], ".gz"))
+	{
+		pclose (inputDump);
+		FILE *inputDump;
+		inputDump = popen (pipeString, "r");
+	}
+	else
+	{
+		rewind (inputDump);
+	}
+
 	energyEntries = (DUMP_ENERGY *) malloc (nDumpEntries * 2 * sizeof (DUMP_ENERGY));
 	int currentTimeframe = 0;
 
@@ -1119,7 +1148,16 @@ int main(int argc, char const *argv[])
 	leaveThisLoop:;
 
 	free (energyEntries);
-	fclose (inputDump);
+
+	if (strstr (argv[1], ".gz"))
+	{
+		pclose (inputDump);
+	}
+	else
+	{
+		fclose (inputDump);
+	}
+
 	fclose (outputStates);
 
 	// computing transitions
