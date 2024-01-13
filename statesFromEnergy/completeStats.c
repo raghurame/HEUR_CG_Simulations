@@ -306,11 +306,20 @@ int countNTimeframes (const char *filename)
 	int nTimeframes = 0;
 	char *pipeString, lineString[300];
 	pipeString = (char *) malloc (1000 * sizeof (char));
-	snprintf (pipeString, 1000, "cat %s | grep \"ITEM: TIMESTEP\" | wc -l", filename);
+
+	if (strstr (filename, ".gz"))
+	{
+		snprintf (pipeString, 1000, "zcat %s | grep \"ITEM: TIMESTEP\" | wc -l", filename);
+	}
+	else
+	{
+		snprintf (pipeString, 1000, "cat %s | grep \"ITEM: TIMESTEP\" | wc -l", filename);
+	}
+
 	FILE *lineCount;
 	lineCount = popen (pipeString, "r");
 
-	fgets (lineString, 300, lineCount);
+	fgets (lineString, 500, lineCount);
 	sscanf (lineString, "%d", &nTimeframes);
 	printf("Number of timeframes: %d\n", nTimeframes);
 
@@ -1027,9 +1036,9 @@ void computeStats (float *average, float *stdev, float *stderr, float *inputData
 
 int main(int argc, char const *argv[])
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
-		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n\n");
+		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n{~} argv[3] = dt for calculations.\n\n");
 		exit (1);
 	}
 
@@ -1046,6 +1055,8 @@ int main(int argc, char const *argv[])
 	{
 		inputDump = fopen (argv[1], "r");
 	}
+
+	int dt = atoi (argv[3]);
 
 	outputStates = fopen ("polymerStates.timeseries", "w");
 
@@ -1128,7 +1139,7 @@ int main(int argc, char const *argv[])
 		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
 		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
 
-		if ((currentTimeframe + 1) > timeframesToSkip)
+		if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
 		{
 			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, currentTimeframe - timeframesToSkip, sortedAtoms);
 

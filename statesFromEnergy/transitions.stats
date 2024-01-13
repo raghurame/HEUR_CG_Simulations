@@ -1,11 +1,11 @@
 Bridge to loop:
 
-average: -nan
-stdev: -nan
+average: 5.357143
+stdev: 0.104311
 stderr: 0.000000
 
 Loop to bridge:
 
-average: -nan
-stdev: -nan
+average: 5.400000
+stdev: 0.090554
 stderr: 0.000000
