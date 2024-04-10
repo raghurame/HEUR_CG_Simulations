@@ -10,7 +10,7 @@
 #define NPOLYMERS 4000
 #define NBEADS 2
 #define COORDINATION_NUMBER 80
-#define N_TIMEFRAMES_TO_CONSIDER 200
+#define N_TIMEFRAMES_TO_CONSIDER 20
 
 typedef struct blocks
 {
@@ -304,7 +304,7 @@ DATAFILE_INFO readData (const char *dataFileName, DATA_ATOMS **atoms, DATA_BONDS
 int countNTimeframes (const char *filename)
 {
 	int nTimeframes = 0;
-	char *pipeString, lineString[300];
+	char *pipeString, lineString[500];
 	pipeString = (char *) malloc (1000 * sizeof (char));
 
 	if (strstr (filename, ".gz"))
@@ -490,11 +490,10 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 
 /*	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		printf("%d -> ", i);
+		// printf("%d -> ", i);
 		printStateNumber (polymerBondStatus[i][currentTimeframe].isItFree, polymerBondStatus[i][currentTimeframe].isItDangle, polymerBondStatus[i][currentTimeframe].isItLoop, polymerBondStatus[i][currentTimeframe].isItBridge);
-		printf("\n");
 	}
-
+	printf("\n");
 	sleep (100);
 */
 	return polymerBondStatus;
@@ -898,6 +897,89 @@ int countLBtransitions (int nLB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nLB;
 }
 
+int countBBtransitions (int nBB, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nBB = 0;
+
+	bool newDangle = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		newDangle = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			// bridge becomes a dangle
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1) {
+				newDangle = 1; }
+			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItLoop == true) {
+				newDangle = 0; }
+			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItFree == true) {
+				newDangle = 0; }
+
+			// dangle becomes a bridge again
+			if (polymerBondStatus[i][j].isItBridge == 1 && newDangle == 1) {
+				newDangle = 0;
+				nBB++; }
+
+			// dangle becomes a loop or free chain
+			if ((polymerBondStatus[i][j].isItFree == true || polymerBondStatus[i][j].isItLoop == true) && newDangle == 1) {
+				newDangle = 0; }
+		}
+	}
+
+	return nBB;
+}
+
+float *initTauBB (float *tauBB, int nBB)
+{
+	for (int i = 0; i < nBB; ++i)
+	{
+		tauBB[i] = 0;
+	}
+
+	return tauBB;
+}
+
+float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nBB)
+{
+	bool newDangle = 0;
+	int currentBridge = 0;
+
+	// initialize tauBB
+	tauBB = initTauBB (tauBB, nBB);
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		newDangle = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			// bridge becomes a dangle
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1) {
+				newDangle = 1; }
+			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItLoop == true) {
+				newDangle = 0; }
+			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItFree == true) {
+				newDangle = 0; }
+
+			if (newDangle == 1) {
+				tauBB[currentBridge]++; }
+
+			// dangle becomes a bridge again
+			if (polymerBondStatus[i][j].isItBridge == 1 && newDangle == 1) {
+				currentBridge++;
+				newDangle = 0; }
+
+			// dangle becomes a loop or free chain
+			if ((polymerBondStatus[i][j].isItFree == true || polymerBondStatus[i][j].isItLoop == true) && newDangle == 1) {
+				newDangle = 0; }
+		}
+	}
+
+	return tauBB;
+}
+
 int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
 {
 	nBL = 0;
@@ -1011,6 +1093,71 @@ void printTauLB (float *tauLB, int nLB)
 	fclose (tauLB_file);
 }
 
+void printTauBB (float *tauBB, int nBB)
+{
+	FILE *tauBB_file;
+	tauBB_file = fopen ("tauBB.output", "w");
+
+	for (int i = 0; i < nBB; ++i)
+	{
+		fprintf(tauBB_file, "%f\n", tauBB[i]);
+	}
+
+	// fclose (tauBB_file);
+}
+
+void printTauE (float *tauLB, int nLB)
+{
+	FILE *tauLB_file;
+	tauLB_file = fopen ("tauE.output", "w");
+
+	for (int i = 0; i < nLB; ++i)
+	{
+		fprintf(tauLB_file, "%f\n", tauLB[i]);
+	}
+
+	fclose (tauLB_file);
+}
+
+void printTauEm (float *tauLB, int nLB)
+{
+	FILE *tauLB_file;
+	tauLB_file = fopen ("tauEm.output", "w");
+
+	for (int i = 0; i < nLB; ++i)
+	{
+		fprintf(tauLB_file, "%f\n", tauLB[i]);
+	}
+
+	fclose (tauLB_file);
+}
+
+void printTauS (float *tauLB, int nLB)
+{
+	FILE *tauLB_file;
+	tauLB_file = fopen ("tauS.output", "w");
+
+	for (int i = 0; i < nLB; ++i)
+	{
+		fprintf(tauLB_file, "%f\n", tauLB[i]);
+	}
+
+	fclose (tauLB_file);
+}
+
+void printTauSm (float *tauLB, int nLB)
+{
+	FILE *tauLB_file;
+	tauLB_file = fopen ("tauSm.output", "w");
+
+	for (int i = 0; i < nLB; ++i)
+	{
+		fprintf(tauLB_file, "%f\n", tauLB[i]);
+	}
+
+	fclose (tauLB_file);
+}
+
 void computeStats (float *average, float *stdev, float *stderr, float *inputData, int nLines)
 {
 	(*average) = 0;
@@ -1032,6 +1179,215 @@ void computeStats (float *average, float *stdev, float *stderr, float *inputData
 	(*stdev) /= nLines;
 	(*stdev) = sqrt ((*stdev));
 	(*stdev) /= sqrt (nLines);
+}
+
+// tauE is the time it takes for a bridge to eject
+// tauEm is the time it takes for a bridge/loop to eject
+// tauS is the time the bead spends in the solvent as a dangle before returning to bridge
+// tauSm is the time the bead spends in the solvent as a dangle before returning to bridge/loop
+
+float *countTauE (float *tauE, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nE)
+{
+	int currentIndex = 0, counter = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j].isItBridge == 1) {
+				counter++; }
+
+			if (polymerBondStatus[i][j].isItDangle == 1 && polymerBondStatus[i][j - 1].isItBridge == 1) {
+					tauE[currentIndex] = counter;
+					counter = 0;
+					currentIndex++; }
+		}
+	}
+
+	return tauE;
+}
+
+int countEtransitions (int nE, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nE = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1)
+			{
+				nE++;
+			}
+		}
+	}
+
+	return nE;
+}
+
+float *countTauEm (float *tauEm, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nEm)
+{
+	int currentIndex = 0, counter = 0;
+	bool currentlyAttached = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			// if it is not free, then it is either bridge or a loop or a dangle
+			// so the counter stars
+			if (polymerBondStatus[i][j].isItFree == 0) {
+				counter++; }
+
+			if (j > 0)
+			{
+				if (polymerBondStatus[i][j].isItDangle == 1)
+				{
+					if (polymerBondStatus[i][j - 1].isItBridge == 1 || polymerBondStatus[i][j - 1].isItLoop == 1)
+					{
+						tauEm[currentIndex] = counter;
+						counter = 0;
+						currentIndex++;
+					}
+				}
+				else if (polymerBondStatus[i][j].isItFree == 1)
+				{
+					if (polymerBondStatus[i][j - 1].isItDangle == 1)
+					{
+						tauEm[currentIndex] = counter;
+						counter = 0;
+						currentIndex++;
+					}
+				}
+			}
+		}
+	}
+
+	return tauEm;
+}
+
+int countEmtransitions (int nEm, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nEm = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1)
+			{
+				nEm++;
+			}
+			else if (polymerBondStatus[i][j - 1].isItDangle == 1 && polymerBondStatus[i][j].isItFree == 1)
+			{
+				nEm++;
+			}
+			else if (polymerBondStatus[i][j - 1].isItLoop == 1 && polymerBondStatus[i][j].isItDangle == 1)
+			{
+				nEm++;
+			}
+		}
+	}
+
+	return nEm;
+}
+
+float *countTauS (float *tauS, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nS)
+{
+	int currentIndex = 0, counter = 0;
+	bool currentlyDangle = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j].isItDangle == 1) {
+				counter++; }
+
+			if (polymerBondStatus[i][j].isItBridge == 1 && polymerBondStatus[i][j - 1].isItDangle == 1) {
+					tauS[currentIndex] = counter;
+					currentlyDangle = 0;
+					counter = 0;
+					currentIndex++; }
+
+			if (polymerBondStatus[i][j].isItLoop == 1 && polymerBondStatus[i][j - 1].isItDangle == 1) {
+					currentlyDangle = 0;
+					counter = 0; }
+		}
+	}
+
+	return tauS;
+}
+
+int countStransitions (int nS, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nS = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItDangle == 1 && polymerBondStatus[i][j].isItBridge == 1)
+			{
+				nS++;
+			}
+		}
+	}
+
+	return nS;
+}
+
+float *countTauSm (float *tauSm, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nSm)
+{
+	int currentIndex = 0, counter = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j].isItDangle == 1) {
+				counter++; }
+
+			if (polymerBondStatus[i][j].isItLoop == 1 || polymerBondStatus[i][j].isItBridge == 1) {
+				if (polymerBondStatus[i][j - 1].isItDangle == 1) {
+					tauSm[currentIndex] = counter;
+					counter = 0;
+					currentIndex++; }
+			}
+		}
+	}
+
+	return tauSm;
+}
+
+int countSmtransitions (int nSm, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	nSm = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (polymerBondStatus[i][j - 1].isItDangle == 1 && polymerBondStatus[i][j].isItLoop == 1)
+			{
+				nSm++;
+			}
+			else if (polymerBondStatus[i][j - 1].isItDangle == 1 && polymerBondStatus[i][j].isItBridge == 1)
+			{
+				nSm++;
+			}
+		}
+	}
+
+	return nSm;
 }
 
 int main(int argc, char const *argv[])
@@ -1131,6 +1487,8 @@ int main(int argc, char const *argv[])
 	printf("Skipping %d timeframes initially...\n", timeframesToSkip);
 	printf("To consider: %d\n", N_TIMEFRAMES_TO_CONSIDER2);
 
+	int effectiveCurrentTimeframe = 0;
+
 	while (file_status > 0)
 	{
 		printf("Scanning timeframe: %d / %d                  \r", currentTimeframe + 1, nTimeframes);
@@ -1141,12 +1499,14 @@ int main(int argc, char const *argv[])
 
 		if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
 		{
-			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, currentTimeframe - timeframesToSkip, sortedAtoms);
+			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
 
-			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, currentTimeframe - timeframesToSkip);
+			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, effectiveCurrentTimeframe);
 
 			if ((currentTimeframe + 1) < nTimeframes) {
 				printStates (polymerStates, outputStates, datafile); }
+
+			effectiveCurrentTimeframe += 1;
 		}
 
 		if (currentTimeframe > nTimeframes) {
@@ -1171,6 +1531,38 @@ int main(int argc, char const *argv[])
 
 	fclose (outputStates);
 
+	int nBB = countBBtransitions (nBB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+	float *tauBB;
+
+	tauBB = (float *) malloc (nBB * sizeof (float));
+	tauBB = countTauBB (tauBB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nBB);
+	printTauBB (tauBB, nBB);
+
+	// computing tauE, tauEm, tauS and tauSm
+	// tauE is the time it takes for a bridge to eject
+	// tauEm is the time it takes for a bridge/loop to eject
+	// tauS is the time the bead spends in the solvent as a dangle before returning to bridge
+	// tauSm is the time the bead spends in the solvent as a dangle before returning to bridge/loop
+	int nE = countEtransitions (nE, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nEm = countEmtransitions (nEm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nS = countStransitions (nS, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nSm = countSmtransitions (nSm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+
+	float *tauE, *tauEm, *tauS, *tauSm;
+
+	tauE = (float *) malloc (nE * sizeof (float));
+	tauE = countTauE (tauE, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nE);
+	printTauE (tauE, nE);
+
+	tauEm = (float *) malloc (nEm * sizeof (float));
+	tauEm = countTauEm (tauEm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nEm);
+	printTauEm (tauEm, nEm);
+
+	tauS = (float *) malloc (nS * sizeof (float));
+	tauS = countTauS (tauS, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nS);
+	printTauS (tauS, nS);
+
+	tauSm = (float *) malloc (nSm * sizeof (float));
+	tauSm = countTauSm (tauSm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nSm);
+	printTauSm (tauSm, nSm);
+
 	// computing transitions
 	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
 
@@ -1178,18 +1570,20 @@ int main(int argc, char const *argv[])
 	int nBL = countBLtransitions (nBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
 	tauBL = (float *) malloc (nBL * sizeof (float));
-	tauLB = (float *) malloc (nLB * sizeof (float));
-
 	tauBL = countTauBL (tauBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
-	tauLB = countTauLB (tauLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
-
 	printTauBL (tauBL, nBL);
+	
+	tauLB = (float *) malloc (nLB * sizeof (float));
+	tauLB = countTauLB (tauLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 	printTauLB (tauLB, nLB);
 
 	float averageLB, stdevLB, stderrLB;
 	float averageBL, stdevBL, stderrBL;
+	float averageBB, stdevBB, stderrBB;
+
 	computeStats (&averageLB, &stdevLB, &stderrLB, tauLB, nLB);
 	computeStats (&averageBL, &stdevBL, &stderrBL, tauBL, nBL);
+	computeStats (&averageBB, &stdevBB, &stderrBB, tauBB, nBB);
 
 	FILE *transitionStats;
 	transitionStats = fopen ("transitions.stats", "w");
@@ -1281,5 +1675,14 @@ int main(int argc, char const *argv[])
 	fclose (file_block_nLoops);
 	fclose (file_block_nDangles);
 	fclose (file_block_nFree);
+
+	/*
+	To do:
+
+		calculate coordination number
+		calculate lifetime of loops/bridges/free/dangles
+		calculate bridge to bridge transition time
+	*/
+
 	return 0;
 }
