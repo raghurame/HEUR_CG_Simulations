@@ -1067,10 +1067,14 @@ float *countTauLB (float *tauLB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return tauLB;
 }
 
-void printTauBL (float *tauBL, int nBL)
+void printTauBL (float *tauBL, int nBL, const char *folderName)
 {
+	char *tauBL_file_filename;
+	tauBL_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauBL_file_filename, 500, "%s/tauBL.output", folderName);
+
 	FILE *tauBL_file;
-	tauBL_file = fopen ("tauBL.output", "w");
+	tauBL_file = fopen (tauBL_file_filename, "w");
 
 	for (int i = 0; i < nBL; ++i)
 	{
@@ -1080,10 +1084,14 @@ void printTauBL (float *tauBL, int nBL)
 	fclose (tauBL_file);
 }
 
-void printTauLB (float *tauLB, int nLB)
+void printTauLB (float *tauLB, int nLB, const char *folderName)
 {
+	char *tauLB_file_filename;
+	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLB_file_filename, 500, "%s/tauLB.output", folderName);
+
 	FILE *tauLB_file;
-	tauLB_file = fopen ("tauLB.output", "w");
+	tauLB_file = fopen (tauLB_file_filename, "w");
 
 	for (int i = 0; i < nLB; ++i)
 	{
@@ -1093,23 +1101,31 @@ void printTauLB (float *tauLB, int nLB)
 	fclose (tauLB_file);
 }
 
-void printTauBB (float *tauBB, int nBB)
+void printTauBB (float *tauBB, int nBB, const char *folderName)
 {
+	char *tauBB_file_filename;
+	tauBB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauBB_file_filename, 500, "%s/tauBB.output", folderName);
+
 	FILE *tauBB_file;
-	tauBB_file = fopen ("tauBB.output", "w");
+	tauBB_file = fopen (tauBB_file_filename, "w");
 
 	for (int i = 0; i < nBB; ++i)
 	{
 		fprintf(tauBB_file, "%f\n", tauBB[i]);
 	}
 
-	// fclose (tauBB_file);
+	fclose (tauBB_file);
 }
 
-void printTauE (float *tauLB, int nLB)
+void printTauE (float *tauLB, int nLB, const char *folderName)
 {
+	char *tauLB_file_filename;
+	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLB_file_filename, 500, "%s/tauE.output", folderName);
+
 	FILE *tauLB_file;
-	tauLB_file = fopen ("tauE.output", "w");
+	tauLB_file = fopen (tauLB_file_filename, "w");
 
 	for (int i = 0; i < nLB; ++i)
 	{
@@ -1119,10 +1135,14 @@ void printTauE (float *tauLB, int nLB)
 	fclose (tauLB_file);
 }
 
-void printTauEm (float *tauLB, int nLB)
+void printTauEm (float *tauLB, int nLB, const char *folderName)
 {
+	char *tauLB_file_filename;
+	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLB_file_filename, 500, "%s/tauEm.output", folderName);
+
 	FILE *tauLB_file;
-	tauLB_file = fopen ("tauEm.output", "w");
+	tauLB_file = fopen (tauLB_file_filename, "w");
 
 	for (int i = 0; i < nLB; ++i)
 	{
@@ -1132,10 +1152,14 @@ void printTauEm (float *tauLB, int nLB)
 	fclose (tauLB_file);
 }
 
-void printTauS (float *tauLB, int nLB)
+void printTauS (float *tauLB, int nLB, const char *folderName)
 {
+	char *tauLB_file_filename;
+	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLB_file_filename, 500, "%s/tauS.output", folderName);
+
 	FILE *tauLB_file;
-	tauLB_file = fopen ("tauS.output", "w");
+	tauLB_file = fopen (tauLB_file_filename, "w");
 
 	for (int i = 0; i < nLB; ++i)
 	{
@@ -1145,10 +1169,14 @@ void printTauS (float *tauLB, int nLB)
 	fclose (tauLB_file);
 }
 
-void printTauSm (float *tauLB, int nLB)
+void printTauSm (float *tauLB, int nLB, const char *folderName)
 {
+	char *tauLB_file_filename;
+	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLB_file_filename, 500, "%s/tauSm.output", folderName);
+
 	FILE *tauLB_file;
-	tauLB_file = fopen ("tauSm.output", "w");
+	tauLB_file = fopen (tauLB_file_filename, "w");
 
 	for (int i = 0; i < nLB; ++i)
 	{
@@ -1399,9 +1427,16 @@ int main(int argc, char const *argv[])
 	}
 
 	FILE *inputDump, *outputStates;
-	char *pipeString;
+	char *pipeString, *folderName;
 	pipeString = (char *) malloc (500 * sizeof (char));
+	folderName = (char *) malloc (500 * sizeof (char));
 	snprintf (pipeString, 500, "zcat %s", argv[1]);
+	snprintf (folderName, 500, "stats_%s_%s_%d", argv[1], argv[2], atoi (argv[3]));
+
+	char *createFolder_command;
+	createFolder_command = (char *) malloc (500 * sizeof (char));
+	snprintf (createFolder_command, 500, "mkdir %s", folderName);
+	system (createFolder_command);
 
 	if (strstr (argv[1], ".gz"))
 	{
@@ -1414,7 +1449,10 @@ int main(int argc, char const *argv[])
 
 	int dt = atoi (argv[3]);
 
-	outputStates = fopen ("polymerStates.timeseries", "w");
+	char *outputStates_filename;
+	outputStates_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (outputStates_filename, 500, "%s/polymerStates.timeseries", folderName);
+	outputStates = fopen (outputStates_filename, "w");
 
 	int nChains = NPARTICLES * NPOLYMERS, *particleIDs, nAtoms = NPARTICLES + (NPARTICLES * NPOLYMERS * NBEADS);
 	particleIDs = (int *) malloc (NPARTICLES * sizeof (int));
@@ -1536,7 +1574,7 @@ int main(int argc, char const *argv[])
 
 	tauBB = (float *) malloc (nBB * sizeof (float));
 	tauBB = countTauBB (tauBB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nBB);
-	printTauBB (tauBB, nBB);
+	printTauBB (tauBB, nBB, folderName);
 
 	// computing tauE, tauEm, tauS and tauSm
 	// tauE is the time it takes for a bridge to eject
@@ -1549,19 +1587,19 @@ int main(int argc, char const *argv[])
 
 	tauE = (float *) malloc (nE * sizeof (float));
 	tauE = countTauE (tauE, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nE);
-	printTauE (tauE, nE);
+	printTauE (tauE, nE, folderName);
 
 	tauEm = (float *) malloc (nEm * sizeof (float));
 	tauEm = countTauEm (tauEm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nEm);
-	printTauEm (tauEm, nEm);
+	printTauEm (tauEm, nEm, folderName);
 
 	tauS = (float *) malloc (nS * sizeof (float));
 	tauS = countTauS (tauS, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nS);
-	printTauS (tauS, nS);
+	printTauS (tauS, nS, folderName);
 
 	tauSm = (float *) malloc (nSm * sizeof (float));
 	tauSm = countTauSm (tauSm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nSm);
-	printTauSm (tauSm, nSm);
+	printTauSm (tauSm, nSm, folderName);
 
 	// computing transitions
 	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
@@ -1571,11 +1609,11 @@ int main(int argc, char const *argv[])
 
 	tauBL = (float *) malloc (nBL * sizeof (float));
 	tauBL = countTauBL (tauBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
-	printTauBL (tauBL, nBL);
+	printTauBL (tauBL, nBL, folderName);
 	
 	tauLB = (float *) malloc (nLB * sizeof (float));
 	tauLB = countTauLB (tauLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
-	printTauLB (tauLB, nLB);
+	printTauLB (tauLB, nLB, folderName);
 
 	float averageLB, stdevLB, stderrLB;
 	float averageBL, stdevBL, stderrBL;
@@ -1585,8 +1623,12 @@ int main(int argc, char const *argv[])
 	computeStats (&averageBL, &stdevBL, &stderrBL, tauBL, nBL);
 	computeStats (&averageBB, &stdevBB, &stderrBB, tauBB, nBB);
 
+	char *transitionStats_filename;
+	transitionStats_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (transitionStats_filename, 500, "%s/transitions.stats", folderName);
+
 	FILE *transitionStats;
-	transitionStats = fopen ("transitions.stats", "w");
+	transitionStats = fopen (transitionStats_filename, "w");
 	fprintf(transitionStats, "Bridge to loop:\n\naverage: %f\nstdev: %f\nstderr: %f\n\nLoop to bridge:\n\naverage: %f\nstdev: %f\nstderr: %f\n", averageBL, stdevBL, stderrBL, averageLB, stdevLB, stderrLB);
 	fclose (transitionStats);
 
@@ -1621,11 +1663,31 @@ int main(int argc, char const *argv[])
 
 	// block averaging of microstates
 	FILE *file_data, *file_block_nBridges, *file_block_nLoops, *file_block_nDangles, *file_block_nFree;
-	file_data = fopen ("polymerStates.timeseries", "r");
-	file_block_nBridges = fopen ("bridges.average.block", "w");
-	file_block_nLoops = fopen ("loops.average.block", "w");
-	file_block_nDangles = fopen ("dangles.average.block", "w");
-	file_block_nFree = fopen ("free.average.block", "w");
+
+	char *file_data_filename;
+	file_data_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (file_data_filename, 500, "%s/polymerStates.timeseries", folderName);
+	file_data = fopen (file_data_filename, "r");
+
+	char *file_block_nBridges_filename;
+	file_block_nBridges_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (file_block_nBridges_filename, 500, "%s/bridges.average.block", folderName);
+	file_block_nBridges = fopen (file_block_nBridges_filename, "w");
+
+	char *file_block_nLoops_filename;
+	file_block_nLoops_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (file_block_nLoops_filename, 500, "%s/loops.average.block", folderName);
+	file_block_nLoops = fopen (file_block_nLoops_filename, "w");
+
+	char *file_block_nDangles_filename;
+	file_block_nDangles_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (file_block_nDangles_filename, 500, "%s/dangles.average.block", folderName);
+	file_block_nDangles = fopen (file_block_nDangles_filename, "w");
+
+	char *file_block_nFree_filename;
+	file_block_nFree_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (file_block_nFree_filename, 500, "%s/free.average.block", folderName);
+	file_block_nFree = fopen (file_block_nFree_filename, "w");
 
 	int nLines = N_TIMEFRAMES_TO_CONSIDER2;
 	float *inputData_nBridges, *inputData_nLoops, *inputData_nDangles, *inputData_nFree;
