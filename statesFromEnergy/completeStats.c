@@ -62,7 +62,7 @@ typedef struct simulationBoundary
 
 typedef struct bondStatus
 {
-	int id;
+	int id1, id2, id;
 	bool isItLoop, isItBridge, isItDangle, isItFree;
 	bool loop_corrected, bridge_corrected;
 } BOND_STATUS;
@@ -321,6 +321,7 @@ int countNTimeframes (const char *filename)
 
 	fgets (lineString, 500, lineCount);
 	sscanf (lineString, "%d", &nTimeframes);
+	printf("Number of lines: %s\n", lineString);
 	printf("Number of timeframes: %d\n", nTimeframes);
 
 	return nTimeframes;
@@ -432,16 +433,20 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 				{
 					boundParticleID[bondNumber] = energyEntries[i].atom1;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = true;
+					polymerBondStatus[bondNumber][currentTimeframe].id1 = energyEntries[i].atom1;
+					polymerBondStatus[bondNumber][currentTimeframe].id2 = 0;
 				}
 				else if (boundParticleID[bondNumber] == energyEntries[i].atom1)
 				{
 					polymerBondStatus[bondNumber][currentTimeframe].isItLoop = true;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = false;
+					polymerBondStatus[bondNumber][currentTimeframe].id2 = energyEntries[i].atom1;
 				}
 				else if (boundParticleID[bondNumber] != energyEntries[i].atom1)
 				{
 					polymerBondStatus[bondNumber][currentTimeframe].isItBridge = true;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = false;
+					polymerBondStatus[bondNumber][currentTimeframe].id2 = energyEntries[i].atom1;
 				}
 
 				// printf("(%d) --> ", boundParticleID[bondNumber]);
@@ -459,16 +464,20 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 				{
 					boundParticleID[bondNumber] = energyEntries[i].atom2;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = true;
+					polymerBondStatus[bondNumber][currentTimeframe].id1 = energyEntries[i].atom2;
+					polymerBondStatus[bondNumber][currentTimeframe].id2 = 0;
 				}
 				else if (boundParticleID[bondNumber] == energyEntries[i].atom2)
 				{
 					polymerBondStatus[bondNumber][currentTimeframe].isItLoop = true;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = false;
+					polymerBondStatus[bondNumber][currentTimeframe].id2 = energyEntries[i].atom2;
 				}
 				else if (boundParticleID[bondNumber] != energyEntries[i].atom2)
 				{
 					polymerBondStatus[bondNumber][currentTimeframe].isItBridge = true;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = false;
+					polymerBondStatus[bondNumber][currentTimeframe].id2 = energyEntries[i].atom2;
 				}
 
 				// printf("(%d) --> ", boundParticleID[bondNumber]);
@@ -902,6 +911,7 @@ int countBBtransitions (int nBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	nBB = 0;
 
 	bool newDangle = 0;
+	int boundParticleID1 = 0, boundParticleID2 = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -911,6 +921,8 @@ int countBBtransitions (int nBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 		{
 			// bridge becomes a dangle
 			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1) {
+				boundParticleID1 = polymerBondStatus[i][j - 1].id1;
+				boundParticleID2 = polymerBondStatus[i][j - 1].id2;
 				newDangle = 1; }
 			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItLoop == true) {
 				newDangle = 0; }
@@ -918,9 +930,17 @@ int countBBtransitions (int nBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 				newDangle = 0; }
 
 			// dangle becomes a bridge again
-			if (polymerBondStatus[i][j].isItBridge == 1 && newDangle == 1) {
+			// it is counted as a bridge to bridge transition only if the 
+			// bridge is formed between two different set of micelles
+			if (polymerBondStatus[i][j].isItBridge == 1 && newDangle == 1) 
+			{
 				newDangle = 0;
-				nBB++; }
+
+				if ((boundParticleID1 != polymerBondStatus[i][j].id1) || (boundParticleID2 != polymerBondStatus[i][j].id2))
+				{
+					nBB++; 
+				}
+			}
 
 			// dangle becomes a loop or free chain
 			if ((polymerBondStatus[i][j].isItFree == true || polymerBondStatus[i][j].isItLoop == true) && newDangle == 1) {
@@ -946,6 +966,8 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	bool newDangle = 0;
 	int currentBridge = 0;
 
+	int boundParticleID1 = 0, boundParticleID2 = 0;
+
 	// initialize tauBB
 	tauBB = initTauBB (tauBB, nBB);
 
@@ -957,6 +979,8 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 		{
 			// bridge becomes a dangle
 			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1) {
+				boundParticleID1 = polymerBondStatus[i][j - 1].id1;
+				boundParticleID2 = polymerBondStatus[i][j - 1].id2;
 				newDangle = 1; }
 			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItLoop == true) {
 				newDangle = 0; }
@@ -967,9 +991,15 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 				tauBB[currentBridge]++; }
 
 			// dangle becomes a bridge again
-			if (polymerBondStatus[i][j].isItBridge == 1 && newDangle == 1) {
-				currentBridge++;
-				newDangle = 0; }
+			if (polymerBondStatus[i][j].isItBridge == 1 && newDangle == 1) 
+			{
+				newDangle = 0; 
+
+				if ((boundParticleID1 != polymerBondStatus[i][j].id1) || (boundParticleID2 != polymerBondStatus[i][j].id2)) {
+					currentBridge++; }
+				else {
+					tauBB[currentBridge] = 0; }
+			}
 
 			// dangle becomes a loop or free chain
 			if ((polymerBondStatus[i][j].isItFree == true || polymerBondStatus[i][j].isItLoop == true) && newDangle == 1) {
@@ -1214,23 +1244,72 @@ void computeStats (float *average, float *stdev, float *stderr, float *inputData
 // tauS is the time the bead spends in the solvent as a dangle before returning to bridge
 // tauSm is the time the bead spends in the solvent as a dangle before returning to bridge/loop
 
+float *initTauE (float *tauE, int nE)
+{
+	for (int i = 0; i < nE; ++i)
+	{
+		tauE[i] = 0;
+	}
+
+	return tauE;
+}
+
 float *countTauE (float *tauE, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nE)
 {
 	int currentIndex = 0, counter = 0;
+	int justEjected = 0;
+	int boundParticleID1, boundParticleID2;
+
+	tauE = initTauE (tauE, nE);
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		counter = 0;
+		justEjected = 0;
 
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			if (polymerBondStatus[i][j].isItBridge == 1) {
-				counter++; }
+			// this loop checks if the bead has just recently ejected from a micelle core
+			// in addition, the first 'if' loop checks if the transtion is from bridge to dangle
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1)
+			{
+				if ((polymerBondStatus[i][j - 1].id1 > polymerBondStatus[i][j].id1) || (polymerBondStatus[i][j - 1].id2 > polymerBondStatus[i][j].id2))
+				{
+					if ((polymerBondStatus[i][j - 1].id1*polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j - 1].id2*polymerBondStatus[i][j].id2 == 0))
+					{
+						justEjected = 1;
+						boundParticleID1 = polymerBondStatus[i][j].id1;
+						boundParticleID2 = polymerBondStatus[i][j].id2;
+					}
+				}
+			}
 
-			if (polymerBondStatus[i][j].isItDangle == 1 && polymerBondStatus[i][j - 1].isItBridge == 1) {
-					tauE[currentIndex] = counter;
-					counter = 0;
-					currentIndex++; }
+			if (justEjected == 1)
+			{
+				counter++;
+			}
+
+			// this loop checks if the bead gets re-attaches to some other micelle core
+			// the 'if' loop checks if the transition is from dangle to bridge
+			if (justEjected == 1 && polymerBondStatus[i][j - 1].isItDangle && polymerBondStatus[i][j].isItBridge)
+			{
+				if ((polymerBondStatus[i][j - 1].id1 < polymerBondStatus[i][j].id1) || (polymerBondStatus[i][j - 1].id2 < polymerBondStatus[i][j].id2))
+				{
+					if ((polymerBondStatus[i][j - 1].id1*polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j - 1].id2*polymerBondStatus[i][j].id2 == 0))
+					{
+						justEjected = 0;
+						
+						// if the bead is getting attached to a different micelle core, then the counter is stored
+						// if it re-attaches to the same micelle core, then the counter is rejected
+						if (boundParticleID1 != polymerBondStatus[i][j].id1 || boundParticleID2 != polymerBondStatus[i][j].id2)
+						{
+							tauE[currentIndex] = counter;
+							counter = 0;
+							currentIndex++;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -1255,40 +1334,64 @@ int countEtransitions (int nE, BOND_STATUS **polymerBondStatus, int nTimeframes,
 	return nE;
 }
 
+float *initTauEm (float *tauEm, int nEm)
+{
+	for (int i = 0; i < nEm; ++i)
+	{
+		tauEm[i] = 0;
+	}
+
+	return tauEm;
+}
+
 float *countTauEm (float *tauEm, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nEm)
 {
 	int currentIndex = 0, counter = 0;
-	bool currentlyAttached = 0;
+	int justEjected = 0;
+	int boundParticleID1, boundParticleID2;
+
+	tauEm = initTauEm (tauEm, nEm);
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		counter = 0;
+		justEjected = 0;
 
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			// if it is not free, then it is either bridge or a loop or a dangle
-			// so the counter stars
-			if (polymerBondStatus[i][j].isItFree == 0) {
-				counter++; }
-
-			if (j > 0)
+			// this loop checks if the bead has just recently ejected from a micelle core
+			if ((polymerBondStatus[i][j - 1].id1 > polymerBondStatus[i][j].id1) || (polymerBondStatus[i][j - 1].id2 > polymerBondStatus[i][j].id2))
 			{
-				if (polymerBondStatus[i][j].isItDangle == 1)
+				if ((polymerBondStatus[i][j - 1].id1*polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j - 1].id2*polymerBondStatus[i][j].id2 == 0))
 				{
-					if (polymerBondStatus[i][j - 1].isItBridge == 1 || polymerBondStatus[i][j - 1].isItLoop == 1)
-					{
-						tauEm[currentIndex] = counter;
-						counter = 0;
-						currentIndex++;
-					}
+					justEjected = 1;
+					boundParticleID1 = polymerBondStatus[i][j].id1;
+					boundParticleID2 = polymerBondStatus[i][j].id2;
 				}
-				else if (polymerBondStatus[i][j].isItFree == 1)
+			}
+
+			if (justEjected == 1)
+			{
+				counter++;
+			}
+
+			// this loop checks if the bead gets re-attaches to some other micelle core
+			if (justEjected == 1)
+			{
+				if ((polymerBondStatus[i][j - 1].id1 < polymerBondStatus[i][j].id1) || (polymerBondStatus[i][j - 1].id2 < polymerBondStatus[i][j].id2))
 				{
-					if (polymerBondStatus[i][j - 1].isItDangle == 1)
+					if ((polymerBondStatus[i][j - 1].id1*polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j - 1].id2*polymerBondStatus[i][j].id2 == 0))
 					{
-						tauEm[currentIndex] = counter;
-						counter = 0;
-						currentIndex++;
+						justEjected = 0;
+						
+						// if the bead is getting attached to a different micelle core, then the counter is stored
+						// if it re-attaches to the same micelle core, then the counter is rejected
+						if (boundParticleID1 != polymerBondStatus[i][j].id1 || boundParticleID2 != polymerBondStatus[i][j].id2)
+						{
+							tauEm[currentIndex] = counter;
+							counter = 0;
+							currentIndex++;
+						}
 					}
 				}
 			}
@@ -1306,17 +1409,12 @@ int countEmtransitions (int nEm, BOND_STATUS **polymerBondStatus, int nTimeframe
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1)
+			if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || (polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
 			{
-				nEm++;
-			}
-			else if (polymerBondStatus[i][j - 1].isItDangle == 1 && polymerBondStatus[i][j].isItFree == 1)
-			{
-				nEm++;
-			}
-			else if (polymerBondStatus[i][j - 1].isItLoop == 1 && polymerBondStatus[i][j].isItDangle == 1)
-			{
-				nEm++;
+				if (polymerBondStatus[i][j].id1 == 0 || polymerBondStatus[i][j].id2 == 0)
+				{
+					nEm++;
+				}
 			}
 		}
 	}
@@ -1327,7 +1425,6 @@ int countEmtransitions (int nEm, BOND_STATUS **polymerBondStatus, int nTimeframe
 float *countTauS (float *tauS, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nS)
 {
 	int currentIndex = 0, counter = 0;
-	bool currentlyDangle = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -1340,12 +1437,10 @@ float *countTauS (float *tauS, BOND_STATUS **polymerBondStatus, int nTimeframes,
 
 			if (polymerBondStatus[i][j].isItBridge == 1 && polymerBondStatus[i][j - 1].isItDangle == 1) {
 					tauS[currentIndex] = counter;
-					currentlyDangle = 0;
 					counter = 0;
 					currentIndex++; }
 
 			if (polymerBondStatus[i][j].isItLoop == 1 && polymerBondStatus[i][j - 1].isItDangle == 1) {
-					currentlyDangle = 0;
 					counter = 0; }
 		}
 	}
@@ -1498,7 +1593,7 @@ int main(int argc, char const *argv[])
 	char lineString[3000];
 
 	DUMP_ENERGY *energyEntries;
-	int nDumpEntries;
+	int nDumpEntries = 0;
 	nDumpEntries = countDumpEntries (inputDump, nDumpEntries);
 
 	if (strstr (argv[1], ".gz"))
