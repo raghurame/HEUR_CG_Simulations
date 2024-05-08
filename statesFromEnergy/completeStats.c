@@ -6,10 +6,10 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NPARTICLES 100
-#define NPOLYMERS 4000
+#define NPARTICLES 300
+#define NPOLYMERS 3000
 #define NBEADS 2
-#define COORDINATION_NUMBER 80
+#define COORDINATION_NUMBER 20
 #define N_TIMEFRAMES_TO_CONSIDER 20
 
 typedef struct blocks
@@ -1032,11 +1032,16 @@ int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
 {
 	int currentTransition = 0, currentTau = 0;
+	int boundParticleID1 = 0, boundParticleID2 = 0;
+
 	printf("\nCalculating transition time from bridge to loop...\n");
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		currentTau = 0;
+
+		boundParticleID1 = 0;
+		boundParticleID2 = 0;
 
 		for (int j = 0; j < nTimeframes; ++j)
 		{
@@ -1048,6 +1053,17 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				currentTau++;
 				// printf("(%d) ", currentTau);
 				// usleep (10000);
+
+				if (boundParticleID1 != 0 && boundParticleID2 != 0)
+				{
+					if (boundParticleID1 != polymerBondStatus[i][j].id1 || boundParticleID2 != polymerBondStatus[i][j].id2)
+					{
+						currentTau = 0;
+					}
+				}
+
+				boundParticleID1 = polymerBondStatus[i][j].id1;
+				boundParticleID2 = polymerBondStatus[i][j].id2;
 			}
 			else if (j > 0)
 			{
@@ -1653,14 +1669,10 @@ int main(int argc, char const *argv[])
 
 	free (energyEntries);
 
-	if (strstr (argv[1], ".gz"))
-	{
-		pclose (inputDump);
-	}
-	else
-	{
-		fclose (inputDump);
-	}
+	if (strstr (argv[1], ".gz")) {
+		pclose (inputDump); }
+	else {
+		fclose (inputDump); }
 
 	fclose (outputStates);
 
@@ -1676,6 +1688,8 @@ int main(int argc, char const *argv[])
 	// tauEm is the time it takes for a bridge/loop to eject
 	// tauS is the time the bead spends in the solvent as a dangle before returning to bridge
 	// tauSm is the time the bead spends in the solvent as a dangle before returning to bridge/loop
+	// TO DO: Correct the dangles for tauE/tauS/tauEm/tauSm calculations.
+	// Dangles must be converted into bridges/loops if the particle detaches and re-attaches to the same micelle core
 	int nE = countEtransitions (nE, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nEm = countEmtransitions (nEm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nS = countStransitions (nS, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nSm = countSmtransitions (nSm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
 	float *tauE, *tauEm, *tauS, *tauSm;
