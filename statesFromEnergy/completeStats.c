@@ -1809,6 +1809,7 @@ int main(int argc, char const *argv[])
 	printf("Reading bridges/loops/dangles/free from saved file...\n");
 	saveInputData (&inputData_nBridges, &inputData_nLoops, &inputData_nDangles, &inputData_nFree, nLines, file_data);
 
+	/*	
 	BLOCKS *blockAverages_nBridges, *blockAverages_nLoops, *blockAverages_nDangles, *blockAverages_nFree;
 	blockAverages_nBridges = (BLOCKS *) malloc (nLines * sizeof (BLOCKS));
 	blockAverages_nLoops = (BLOCKS *) malloc (nLines * sizeof (BLOCKS));
@@ -1840,6 +1841,7 @@ int main(int argc, char const *argv[])
 	free (blockAverages_nLoops);
 	free (blockAverages_nDangles);
 	free (blockAverages_nFree);
+	*/
 
 	fclose (file_data);
 	fclose (file_block_nBridges);
