@@ -6,8 +6,10 @@
 #include <time.h>
 #include <stdbool.h>
 
-#define NPARTICLES 300
-#define NPOLYMERS 3000
+// These global variables are no longer needed
+// I am taking these values from data file
+#define NPARTICLES 100
+#define NPOLYMERS 4000
 #define NBEADS 2
 #define COORDINATION_NUMBER 20
 #define N_TIMEFRAMES_TO_CONSIDER 20
@@ -100,7 +102,7 @@ void printStateNumber (bool isItFree, bool isItDangle, bool isItLoop, bool isItB
 	fflush (stdout);
 }
 
-int *storeParticleIDs (int *particleIDs)
+/*int *storeParticleIDs (int *particleIDs)
 {
 	for (int i = 0; i < NPARTICLES; ++i)
 	{
@@ -109,6 +111,7 @@ int *storeParticleIDs (int *particleIDs)
 
 	return particleIDs;
 }
+*/
 
 DATAFILE_INFO readData (const char *dataFileName, DATA_ATOMS **atoms, DATA_BONDS **bonds, DATA_ANGLES **angles, DATA_DIHEDRALS **dihedrals, DATA_IMPROPERS **impropers)
 {
@@ -384,7 +387,16 @@ DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries,
 	{
 		fgets (lineString, 3000, inputDump);
 		sscanf (lineString, "%d %d %f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].distance, &energyEntries[i].energy);
+
+/*		if (i < 5 || i > (nDumpEntries_current - 5))
+		{
+			printf("%d %d %f %f\n", energyEntries[i].atom1, energyEntries[i].atom2, energyEntries[i].distance, energyEntries[i].energy);
+			fflush (stdout);
+		}
+*/
 	}
+
+	// sleep (1);
 
 	return energyEntries;
 }
@@ -399,19 +411,39 @@ int *initBoundParticleIDs (int *boundParticleID, int nBonds)
 	return boundParticleID;
 }
 
+BOND_STATUS **initPolymerBondStatus (BOND_STATUS **polymerBondStatus, int currentTimeframe, DATAFILE_INFO datafile)
+{
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		polymerBondStatus[i][currentTimeframe].isItFree = true;
+		polymerBondStatus[i][currentTimeframe].isItDangle = false;
+		polymerBondStatus[i][currentTimeframe].isItBridge = false;
+		polymerBondStatus[i][currentTimeframe].isItLoop = false;
+	}
+
+	return polymerBondStatus;
+}
+
 BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, int nDumpEntries, DATAFILE_INFO datafile, int nTimeframes, int currentTimeframe, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0;
 	int bondNumber = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
 
 	int *boundParticleID;
 	boundParticleID = (int *) malloc (datafile.nBonds * sizeof (int));
 
 	boundParticleID = initBoundParticleIDs (boundParticleID, datafile.nBonds);
+	polymerBondStatus = initPolymerBondStatus (polymerBondStatus, currentTimeframe, datafile);
 
 	for (int i = 0; i < nDumpEntries; ++i)
 	{
-		// usleep (100000);
-		// fprintf(stdout, "%d %d %f ", energyEntries[i].atom1, energyEntries[i].atom2, energyEntries[i].energy);
+		if (debugg == 1)
+		{
+			usleep (100000);
+			fprintf(stdout, "%d [%d] %d [%d] %f ", energyEntries[i].atom1, sortedAtoms[energyEntries[i].atom1 - 1].atomType, energyEntries[i].atom2, sortedAtoms[energyEntries[i].atom2 - 1].atomType, energyEntries[i].energy);
+		}
 
 		if (energyEntries[i].energy < -1 && energyEntries[i].atom1 > 0 && energyEntries[i].atom2 > 0)
 		{
@@ -425,12 +457,19 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 
 			if (sortedAtoms[energyEntries[i].atom1 - 1].atomType == 2 && sortedAtoms[energyEntries[i].atom2 - 1].atomType == 1)
 			{
-				// bondNumber = (energyEntries[i].atom2 - (energyEntries[i].atom2 / COORDINATION_NUMBER) - 1) / NBEADS;
-				bondNumber = floor ((energyEntries[i].atom2 - (int)floor (energyEntries[i].atom2 / (COORDINATION_NUMBER + 1)) - 1) / 2);
-				// printf("(%d) ", bondNumber);
+				// bondNumber = (energyEntries[i].atom2 - (energyEntries[i].atom2 / coordinationNumber) - 1) / NBEADS;
+				bondNumber = floor ((energyEntries[i].atom2 - (int)floor (energyEntries[i].atom2 / (coordinationNumber + 1)) - 1) / 2);
+
+				if (debugg == 1)
+				{
+					printf("(%d) ", bondNumber);
+					printf("(%d) ", boundParticleID[bondNumber]);
+					printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
+				}
 
 				if (boundParticleID[bondNumber] == 0)
 				{
+					polymerBondStatus[bondNumber][currentTimeframe].isItFree = false;
 					boundParticleID[bondNumber] = energyEntries[i].atom1;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = true;
 					polymerBondStatus[bondNumber][currentTimeframe].id1 = energyEntries[i].atom1;
@@ -449,19 +488,28 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 					polymerBondStatus[bondNumber][currentTimeframe].id2 = energyEntries[i].atom1;
 				}
 
-				// printf("(%d) --> ", boundParticleID[bondNumber]);
-
-				// printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
-				// printf("\n");
+				if (debugg == 1)
+				{
+					printf("--> ", boundParticleID[bondNumber]);
+					printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
+					printf("\n");
+				}
 			}
 			else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 2 && sortedAtoms[energyEntries[i].atom1 - 1].atomType == 1)
 			{
-				// bondNumber = (energyEntries[i].atom1 - (energyEntries[i].atom1 / COORDINATION_NUMBER) - 1) / NBEADS;
-				bondNumber = floor ((energyEntries[i].atom1 - (int)floor (energyEntries[i].atom1 / (COORDINATION_NUMBER + 1)) - 1) / 2);
-				// printf("(%d) ", bondNumber);
+				// bondNumber = (energyEntries[i].atom1 - (energyEntries[i].atom1 / coordinationNumber) - 1) / NBEADS;
+				bondNumber = floor ((energyEntries[i].atom1 - (int)floor (energyEntries[i].atom1 / (coordinationNumber + 1)) - 1) / 2);
+
+				if (debugg == 1)
+				{
+					printf("(%d) ", bondNumber);
+					printf("(%d) ", boundParticleID[bondNumber]);
+					printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
+				}
 
 				if (boundParticleID[bondNumber] == 0)
 				{
+					polymerBondStatus[bondNumber][currentTimeframe].isItFree = false;
 					boundParticleID[bondNumber] = energyEntries[i].atom2;
 					polymerBondStatus[bondNumber][currentTimeframe].isItDangle = true;
 					polymerBondStatus[bondNumber][currentTimeframe].id1 = energyEntries[i].atom2;
@@ -480,10 +528,12 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 					polymerBondStatus[bondNumber][currentTimeframe].id2 = energyEntries[i].atom2;
 				}
 
-				// printf("(%d) --> ", boundParticleID[bondNumber]);
-
-				// printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
-				// printf("\n");
+				if (debugg == 1)
+				{
+					printf("--> ", boundParticleID[bondNumber]);
+					printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
+					printf("\n");
+				}
 			}
 		}
 	}
@@ -1565,9 +1615,10 @@ int main(int argc, char const *argv[])
 	snprintf (outputStates_filename, 500, "%s/polymerStates.timeseries", folderName);
 	outputStates = fopen (outputStates_filename, "w");
 
-	int nChains = NPARTICLES * NPOLYMERS, *particleIDs, nAtoms = NPARTICLES + (NPARTICLES * NPOLYMERS * NBEADS);
+/*	int nChains = NPARTICLES * NPOLYMERS, *particleIDs, nAtoms = NPARTICLES + (NPARTICLES * NPOLYMERS * NBEADS);
 	particleIDs = (int *) malloc (NPARTICLES * sizeof (int));
 	particleIDs = storeParticleIDs (particleIDs);
+*/
 
 	DATA_ATOMS *dataAtoms, *sortedAtoms;
 	DATA_BONDS *dataBonds, *sortedBonds;
