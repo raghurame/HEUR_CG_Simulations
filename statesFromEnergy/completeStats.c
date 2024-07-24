@@ -69,6 +69,11 @@ typedef struct bondStatus
 	bool loop_corrected, bridge_corrected;
 } BOND_STATUS;
 
+typedef struct boundStatus
+{
+	bool isItBound;
+} BOUND_STATUS;
+
 typedef struct dumpEnergy
 {
 	int atom1, atom2;
@@ -386,7 +391,7 @@ DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries,
 	for (int i = 0; i < nDumpEntries_current; ++i)
 	{
 		fgets (lineString, 3000, inputDump);
-		sscanf (lineString, "%d %d %f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].distance, &energyEntries[i].energy);
+		sscanf (lineString, "%d %d %*f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].energy);
 
 /*		if (i < 5 || i > (nDumpEntries_current - 5))
 		{
@@ -422,6 +427,72 @@ BOND_STATUS **initPolymerBondStatus (BOND_STATUS **polymerBondStatus, int curren
 	}
 
 	return polymerBondStatus;
+}
+
+BOUND_STATUS **initBeadBoundStatus (BOUND_STATUS **beadBoundStatus, int currentTimeframe, DATAFILE_INFO datafile)
+{
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		beadBoundStatus[i][currentTimeframe].isItBound = 0;
+	}
+
+	return beadBoundStatus;
+}
+
+BOUND_STATUS **findBoundStates (BOUND_STATUS **beadBoundStatus, DUMP_ENERGY *energyEntries, int nDumpEntries, DATAFILE_INFO datafile, int nTimeframes, int currentTimeframe, DATA_ATOMS *sortedAtoms)
+{
+	beadBoundStatus = initBeadBoundStatus (beadBoundStatus, currentTimeframe, datafile);
+
+	for (int i = 0; i < nDumpEntries; ++i)
+	{
+		if (currentTimeframe == 0)
+		{
+			if (energyEntries[i].energy < -1 && energyEntries[i].atom1 > 0 && energyEntries[i].atom2 > 0)
+			{
+				if (sortedAtoms[energyEntries[i].atom1 - 1].atomType == 1)
+				{
+					beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe].isItBound = 1;
+				}
+				else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 1)
+				{
+					beadBoundStatus[energyEntries[i].atom2 - 1][currentTimeframe].isItBound = 1;
+				}
+			}
+		}
+		else
+		{
+			if (energyEntries[i].energy < -1 && energyEntries[i].atom1 > 0 && energyEntries[i].atom2 > 0)
+			{
+				if (sortedAtoms[energyEntries[i].atom1 - 1].atomType == 1)
+				{
+					beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe].isItBound = 1;
+				}
+				else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 1)
+				{
+					beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe].isItBound = 1;
+				}
+			}
+			else if (energyEntries[i].energy < 0 && energyEntries[i].energy > -1 && energyEntries[i].atom1 > 0 && energyEntries[i].atom2 > 0)
+			{
+				if (sortedAtoms[energyEntries[i].atom1 - 1].atomType == 1)
+				{
+					if (beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe - 1].isItBound == 1)
+					{
+						beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe].isItBound = 1;
+					}
+				}
+				else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 1)
+				{
+					if (beadBoundStatus[energyEntries[i].atom2 - 1][currentTimeframe - 1].isItBound == 1)
+					{
+						beadBoundStatus[energyEntries[i].atom2 - 1][currentTimeframe].isItBound = 1;
+					}
+				}
+			}
+		}
+	}
+
+	return beadBoundStatus;
 }
 
 BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, int nDumpEntries, DATAFILE_INFO datafile, int nTimeframes, int currentTimeframe, DATA_ATOMS *sortedAtoms)
@@ -1579,6 +1650,160 @@ int countSmtransitions (int nSm, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nSm;
 }
 
+/*	
+nE_at = countE_at_tansitions (nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+nS_at = countS_at_transitions (nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+*/
+
+int countE_at_tansitions (int nE_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes)
+{
+	nE_at = 0;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0)
+			{
+				nE_at++;
+			}
+		}
+	}
+
+	return nE_at;
+}
+
+int countS_at_transitions (int nS_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes)
+{
+	nS_at = 0;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (beadBoundStatus[i][j - 1].isItBound == 0 && beadBoundStatus[i][j].isItBound == 1)
+			{
+				nS_at++;
+			}
+		}
+	}
+
+	return nS_at;
+}
+
+/*	
+tauE_at = countTauE_at (tauE_at, nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+tauS_at = countTauS_at (tauS_at, nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+*/
+
+float *countTauE_at (float *tauE_at, int nE_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes)
+{
+	int counter = 0, currentIndex = 0;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (beadBoundStatus[i][j - 1].isItBound == 0 && beadBoundStatus[i][j].isItBound == 1)
+			{
+				counter++;
+			}
+
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0)
+			{
+				tauE_at[currentIndex] = counter;
+				counter = 0;
+				currentIndex++;
+			}
+		}
+	}
+
+	return tauE_at;
+}
+
+float *countTauS_at (float *tauS_at, int nS_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes)
+{
+	int counter = 0, currentIndex = 0;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0)
+			{
+				counter++;
+			}
+
+			if (beadBoundStatus[i][j - 1].isItBound == 0 && beadBoundStatus[i][j].isItBound == 1)
+			{
+				tauS_at[currentIndex] = counter;
+				counter = 0;
+				currentIndex++;
+			}
+		}
+	}
+
+	return tauS_at;
+}
+
+/*
+printTauE_at (tauE_at, nE_at, folderName);
+printTauS_at (tauS_at, nS_at, folderName);
+*/
+
+/*
+void printTauSm (float *tauLB, int nLB, const char *folderName)
+{
+	char *tauLB_file_filename;
+	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLB_file_filename, 500, "%s/tauSm.output", folderName);
+
+	FILE *tauLB_file;
+	tauLB_file = fopen (tauLB_file_filename, "w");
+
+	for (int i = 0; i < nLB; ++i)
+	{
+		fprintf(tauLB_file, "%f\n", tauLB[i]);
+	}
+
+	fclose (tauLB_file);
+}
+*/
+
+void printTauE_at (float *tauE_at, int nE_at, const char *folderName)
+{
+	char *tauE_at_file_filename;
+	tauE_at_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauE_at_file_filename, 500, "%s/tauE_at.output", folderName);
+
+	FILE *tauE_at_file;
+	tauE_at_file = fopen (tauE_at_file_filename, "w");
+
+	for (int i = 0; i < nE_at; ++i)
+	{
+		fprintf(tauE_at_file, "%f\n", tauE_at[i]);
+	}
+
+	fclose (tauE_at_file);
+}
+
+void printTauS_at (float *tauS_at, int nS_at, const char *folderName)
+{
+	char *tauS_at_file_filename;
+	tauS_at_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauS_at_file_filename, 500, "%s/tauE_at.output", folderName);
+
+	FILE *tauS_at_file;
+	tauS_at_file = fopen (tauS_at_file_filename, "w");
+
+	for (int i = 0; i < nS_at; ++i)
+	{
+		fprintf(tauS_at_file, "%f\n", tauS_at[i]);
+	}
+
+	fclose (tauS_at_file);
+}
+
 int main(int argc, char const *argv[])
 {
 	if (argc != 4)
@@ -1649,9 +1874,17 @@ int main(int argc, char const *argv[])
 	BOND_STATUS **polymerBondStatus;
 	polymerBondStatus = (BOND_STATUS **) malloc (datafile.nBonds * sizeof (BOND_STATUS *));
 
+	BOUND_STATUS **beadBoundStatus;
+	beadBoundStatus = (BOUND_STATUS **) malloc (datafile.nAtoms * sizeof (BOUND_STATUS *));
+
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		polymerBondStatus[i] = (BOND_STATUS *) malloc ((N_TIMEFRAMES_TO_CONSIDER2 + 1) * sizeof (BOND_STATUS));
+	}
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		beadBoundStatus[i]= (BOUND_STATUS *) malloc ((N_TIMEFRAMES_TO_CONSIDER2 + 1) * sizeof (BOUND_STATUS));
 	}
 
 	polymerBondStatus = initBondStatus (polymerBondStatus, datafile.nBonds, N_TIMEFRAMES_TO_CONSIDER2);
@@ -1700,6 +1933,8 @@ int main(int argc, char const *argv[])
 		if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
 		{
 			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
+
+			beadBoundStatus = findBoundStates (beadBoundStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
 
 			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, effectiveCurrentTimeframe);
 
@@ -1760,6 +1995,26 @@ int main(int argc, char const *argv[])
 	tauSm = (float *) malloc (nSm * sizeof (float));
 	tauSm = countTauSm (tauSm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nSm);
 	printTauSm (tauSm, nSm, folderName);
+
+	// Calculating tauE and tauS using a third route.
+	// Here, the ejection is calculated as mentioned in Alyssa Travitz' paper. 
+	// If the energy becomes less than -1, then it is considered as bound,
+	// but the bead is considered unbound only if the energy is greater than 0.
+	// This is another way of preventing quick transitions because BD simulations can lead
+	// to very quick movements, which can be mis-read as very short ejection time.
+
+	int nE_at, nS_at;
+	nE_at = countE_at_tansitions (nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+	nS_at = countS_at_transitions (nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+
+	float tauE_at, tauS_at;
+	tauE_at = (float *) malloc (nE_at * sizeof (float));
+	tauE_at = countTauE_at (tauE_at, nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+	printTauE_at (tauE_at, nE_at, folderName);
+
+	tauS_at = (float *) malloc (nS_at * sizeof (float));
+	tauS_at = countTauS_at (tauS_at, nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+	printTauS_at (tauS_at, nS_at, folderName);
 
 	// computing transitions
 	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
@@ -1902,7 +2157,6 @@ int main(int argc, char const *argv[])
 
 	/*
 	To do:
-
 		calculate coordination number
 		calculate lifetime of loops/bridges/free/dangles
 		calculate bridge to bridge transition time
