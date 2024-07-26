@@ -1733,7 +1733,7 @@ float *countTauE_at (float *tauE_at, int nE_at, BOUND_STATUS **beadBoundStatus, 
 				counter++;
 			}
 
-			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0)
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && counter > 0)
 			{
 				tauE_at[currentIndex] = counter;
 				counter = 0;
@@ -1758,7 +1758,7 @@ float *countTauS_at (float *tauS_at, int nS_at, BOUND_STATUS **beadBoundStatus, 
 				counter++;
 			}
 
-			if (beadBoundStatus[i][j - 1].isItBound == 0 && beadBoundStatus[i][j].isItBound == 1)
+			if (beadBoundStatus[i][j - 1].isItBound == 0 && beadBoundStatus[i][j].isItBound == 1 && counter > 0)
 			{
 				tauS_at[currentIndex] = counter;
 				counter = 0;
