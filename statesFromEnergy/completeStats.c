@@ -12,6 +12,9 @@
 #define NPOLYMERS 4000
 #define NBEADS 2
 #define COORDINATION_NUMBER 20
+
+// This is important. Set this to high number
+// Too big number requires high memory
 #define N_TIMEFRAMES_TO_CONSIDER 20
 
 typedef struct blocks
@@ -375,7 +378,7 @@ int countDumpEntries (FILE *inputDump, int nDumpEntries)
 	return nDumpEntries;
 }
 
-DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries, int nDumpEntries)
+DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries, int nDumpEntries, int energyColumn)
 {
 	char lineString[3000];
 	int nDumpEntries_current;
@@ -391,7 +394,15 @@ DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries,
 	for (int i = 0; i < nDumpEntries_current; ++i)
 	{
 		fgets (lineString, 3000, inputDump);
-		sscanf (lineString, "%d %d %*f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].energy);
+
+		if (energyColumn == 4)
+		{
+			sscanf (lineString, "%d %d %*f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].energy);
+		}
+		else if (energyColumn == 3)
+		{
+			sscanf (lineString, "%d %d %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].energy);
+		}
 
 /*		if (i < 5 || i > (nDumpEntries_current - 5))
 		{
@@ -1728,7 +1739,7 @@ float *countTauE_at (float *tauE_at, int nE_at, BOUND_STATUS **beadBoundStatus, 
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			if (beadBoundStatus[i][j - 1].isItBound == 0 && beadBoundStatus[i][j].isItBound == 1)
+			if (beadBoundStatus[i][j].isItBound == 1)
 			{
 				counter++;
 			}
@@ -1753,7 +1764,7 @@ float *countTauS_at (float *tauS_at, int nS_at, BOUND_STATUS **beadBoundStatus, 
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0)
+			if (beadBoundStatus[i][j].isItBound == 0)
 			{
 				counter++;
 			}
@@ -1806,9 +1817,9 @@ void printTauS_at (float *tauS_at, int nS_at, const char *folderName)
 
 int main(int argc, char const *argv[])
 {
-	if (argc != 4)
+	if (argc != 5)
 	{
-		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n{~} argv[3] = dt for calculations.\n\n");
+		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n{~} argv[3] = dt for calculations.\n{~} argv[4] = Column number for energy entries\n\n");
 		exit (1);
 	}
 
@@ -1817,7 +1828,9 @@ int main(int argc, char const *argv[])
 	pipeString = (char *) malloc (500 * sizeof (char));
 	folderName = (char *) malloc (500 * sizeof (char));
 	snprintf (pipeString, 500, "zcat %s", argv[1]);
-	snprintf (folderName, 500, "stats_%s_%s_%d", argv[1], argv[2], atoi (argv[3]));
+	snprintf (folderName, 500, "stats_%s_%s_%d_%d", argv[1], argv[2], atoi (argv[3]), atoi (argv[4]));
+
+	int energyColumn = atoi (argv[4]);
 
 	char *createFolder_command;
 	createFolder_command = (char *) malloc (500 * sizeof (char));
@@ -1928,7 +1941,7 @@ int main(int argc, char const *argv[])
 		fflush (stdout);
 
 		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
-		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries);
+		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries, energyColumn);
 
 		if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
 		{
@@ -2166,3 +2179,13 @@ int main(int argc, char const *argv[])
 
 	return 0;
 }
+
+/*
+for dirname, dirpath, files in os.walk ("."):
+    for file in files:
+            if ("stat" in file and "dump" in file):
+                    os.chdir (dirname)
+                    os.system ("cp {}/completeStats.sh .".format (pd))
+                    os.chdir (pd)
+                    print (dirname)
+*/
