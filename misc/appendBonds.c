@@ -49,11 +49,17 @@ int main(int argc, char const *argv[])
 			inputDataInformation = (DATAFILE *) malloc (nAtoms * sizeof (DATAFILE));
 		}
 
+		if (strstr (lineString, "Bonds"))
+		{
+			atomsSection = false;
+		}
+
 		if (atomsSection)
 		{
-			sscanf (lineString, "%d", &atomID);
+			sscanf (lineString, "%d\n", &atomID);
 			if (atomID <= nAtoms) {
-				sscanf (lineString, "%d %d %d %f %f %f\n", &inputDataInformation[atomID - 1].sino, &inputDataInformation[atomID - 1].atomType, &inputDataInformation[atomID - 1].molType, &inputDataInformation[atomID - 1].x, &inputDataInformation[atomID - 1].y, &inputDataInformation[atomID - 1].z); }
+				sscanf (lineString, "%d %d %d %f %f %f\n", &inputDataInformation[atomID - 1].sino, &inputDataInformation[atomID - 1].atomType, &inputDataInformation[atomID - 1].molType, &inputDataInformation[atomID - 1].x, &inputDataInformation[atomID - 1].y, &inputDataInformation[atomID - 1].z); 
+			}
 		}
 	}
 
@@ -63,6 +69,7 @@ int main(int argc, char const *argv[])
 
 	while (currentAtom1 <= nAtoms && currentAtom2 <= nAtoms)
 	{
+
 		if (inputDataInformation[currentAtom1 - 1].molType == inputDataInformation[currentAtom2 - 1].molType) {
 			bondID++;
 			fprintf(writeDatafile, "%d %d %d %d\n", bondID, 1, currentAtom1, currentAtom2);
