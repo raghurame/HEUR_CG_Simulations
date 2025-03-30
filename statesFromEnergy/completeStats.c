@@ -15,7 +15,7 @@
 
 // This is important. Set this to high number
 // Too big number requires high memory
-#define N_TIMEFRAMES_TO_CONSIDER 20
+#define N_TIMEFRAMES_TO_CONSIDER 2490
 
 typedef struct blocks
 {
@@ -1597,6 +1597,7 @@ int countEmtransitions (int nEm, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nEm;
 }
 
+// countTauS (tauS, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nS);
 float *countTauS (float *tauS, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int nS)
 {
 	int currentIndex = 0, counter = 0;
@@ -1605,7 +1606,7 @@ float *countTauS (float *tauS, BOND_STATUS **polymerBondStatus, int nTimeframes,
 	{
 		counter = 0;
 
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
 			if (polymerBondStatus[i][j].isItDangle == 1) {
 				counter++; }
@@ -1649,7 +1650,7 @@ float *countTauSm (float *tauSm, BOND_STATUS **polymerBondStatus, int nTimeframe
 	{
 		counter = 0;
 
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
 			if (polymerBondStatus[i][j].isItDangle == 1) {
 				counter++; }
@@ -1672,7 +1673,7 @@ int countSmtransitions (int nSm, BOND_STATUS **polymerBondStatus, int nTimeframe
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
 			if (polymerBondStatus[i][j - 1].isItDangle == 1 && polymerBondStatus[i][j].isItLoop == 1)
 			{
