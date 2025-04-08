@@ -493,10 +493,10 @@ BOUND_STATUS **findBoundStates (BOUND_STATUS **beadBoundStatus, DUMP_ENERGY *ene
 				}
 				else if (sortedAtoms[energyEntries[i].atom2 - 1].atomType == 1)
 				{
-					beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe].isItBound = 1;
+					beadBoundStatus[energyEntries[i].atom2 - 1][currentTimeframe].isItBound = 1;
 
 					if (debugg == 1) {
-						printf("%d ", beadBoundStatus[energyEntries[i].atom1 - 1][currentTimeframe].isItBound); }
+						printf("%d ", beadBoundStatus[energyEntries[i].atom2 - 1][currentTimeframe].isItBound); }
 				}
 			}
 			else if (energyEntries[i].energy < 0 && energyEntries[i].energy > -1 && energyEntries[i].atom1 > 0 && energyEntries[i].atom2 > 0)
@@ -1694,7 +1694,7 @@ int countSmtransitions (int nSm, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nSm;
 }
 
-int countE_at_tansitions (int nE_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes)
+int countE_at_tansitions (int nE_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, int nDumpEntries, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms)
 {
 	nE_at = 0;
 
@@ -1712,7 +1712,75 @@ int countE_at_tansitions (int nE_at, BOUND_STATUS **beadBoundStatus, DATAFILE_IN
 	return nE_at;
 }
 
-int countS_at_transitions (int nS_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes)
+int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+{
+	nE_at_bridge = 0;
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+
+	// sortedAtoms[energyEntries[i].atom1 - 1].atomType
+	// bondNumber = floor ((energyEntries[i].atom2 - (int)floor (energyEntries[i].atom2 / (coordinationNumber + 1)) - 1) / 2);
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			// If the type of atom equals the type corresponding to the polymer bead
+			// then convert the atom ID to bondNumber, using the sortedAtoms array
+			// then check if the previous state corresponds to a bridge and the current state corresponds to a dangle
+			// or check if the previous state corresponds to a bridge and the current state corresponds to a bridge with a different ghost particle
+			if (sortedAtoms[i].atomType == 1)
+			{
+				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
+			}
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItBridge == 1 && polymerBondStatus[][j].isItDangle == 1)
+			{
+				nE_at_bridge++;
+			}
+		}
+	}
+
+	return nE_at_bridge;
+}
+
+int countE_at_dangle_transitions (int nE_at_dangle, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+{
+	nE_at_dangle = 0;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItDangle == 1 && polymerBondStatus[][j].isItFree == 1)
+			{
+				nE_at_dangle++;
+			}
+		}
+	}
+
+	return nE_at_dangle;
+}
+
+int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+{
+	nE_at_loop = 0;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItLoop == 1 && polymerBondStatus[][j].isItDangle == 1)
+			{
+				nE_at_loop++;
+			}
+		}
+	}
+
+	return nE_at_loop;
+}
+
+int countS_at_transitions (int nS_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, int nDumpEntries, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms)
 {
 	int debugg = 0;
 	nS_at = 0;
@@ -1988,13 +2056,6 @@ int main(int argc, char const *argv[])
 	tauBB = countTauBB (tauBB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, nBB);
 	printTauBB (tauBB, nBB, folderName);
 
-	// computing tauE, tauEm, tauS and tauSm
-	// tauE is the time it takes for a bridge to eject
-	// tauEm is the time it takes for a bridge/loop to eject
-	// tauS is the time the bead spends in the solvent as a dangle before returning to bridge
-	// tauSm is the time the bead spends in the solvent as a dangle before returning to bridge/loop
-	// TO DO: Correct the dangles for tauE/tauS/tauEm/tauSm calculations.
-	// Dangles must be converted into bridges/loops if the particle detaches and re-attaches to the same micelle core
 	int nE = countEtransitions (nE, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nEm = countEmtransitions (nEm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nS = countStransitions (nS, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nSm = countSmtransitions (nSm, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
 	float *tauE, *tauEm, *tauS, *tauSm;
@@ -2022,9 +2083,12 @@ int main(int argc, char const *argv[])
 	// This is another way of preventing quick transitions because BD simulations can lead
 	// to very quick movements, which can be mis-read as very short ejection time.
 
-	int nE_at, nS_at;
-	nE_at = countE_at_tansitions (nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
-	nS_at = countS_at_transitions (nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+	int nE_at, nS_at, nE_at_bridge, nE_at_loop, nE_at_dangle;
+	nE_at = countE_at_tansitions (nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, nDumpEntries, polymerBondStatus, energyEntries, sortedAtoms);
+	nS_at = countS_at_transitions (nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, nDumpEntries, polymerBondStatus, energyEntries, sortedAtoms);
+	nE_at_bridge = countE_at_bridge_transitions (nE_at_bridge, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+	nE_at_loop = countE_at_loop_transitions (nE_at_loop, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+	nE_at_dangle = countE_at_dangle_transitions (nE_at_dangle, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
 
 	printf("Number of nE_at: %d; nS_at: %d\n", nE_at, nS_at);
 
