@@ -435,6 +435,8 @@ BOND_STATUS **initPolymerBondStatus (BOND_STATUS **polymerBondStatus, int curren
 		polymerBondStatus[i][currentTimeframe].isItDangle = false;
 		polymerBondStatus[i][currentTimeframe].isItBridge = false;
 		polymerBondStatus[i][currentTimeframe].isItLoop = false;
+		polymerBondStatus[i][currentTimeframe].id1 = 0;
+		polymerBondStatus[i][currentTimeframe].id2 = 0;
 	}
 
 	return polymerBondStatus;
@@ -1719,24 +1721,26 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 
-	// sortedAtoms[energyEntries[i].atom1 - 1].atomType
-	// bondNumber = floor ((energyEntries[i].atom2 - (int)floor (energyEntries[i].atom2 / (coordinationNumber + 1)) - 1) / 2);
-
 	for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			// If the type of atom equals the type corresponding to the polymer bead
-			// then convert the atom ID to bondNumber, using the sortedAtoms array
-			// then check if the previous state corresponds to a bridge and the current state corresponds to a dangle
-			// or check if the previous state corresponds to a bridge and the current state corresponds to a bridge with a different ghost particle
 			if (sortedAtoms[i].atomType == 1)
 			{
 				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
-			}
-			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItBridge == 1 && polymerBondStatus[][j].isItDangle == 1)
-			{
-				nE_at_bridge++;
+
+				// if (beadBoundStatus[sortedAtoms[i].id - 1][j - 1].isItBound == 1 && beadBoundStatus[sortedAtoms[i].id - 1][j].isItBound == 0 && polymerBondStatus[bondNumber][j - 1].isItBridge == 1 && polymerBondStatus[bondNumber][j].isItDangle == 1)
+				// {
+				// 	nE_at_bridge++;
+				// }
+
+				if (polymerBondStatus[bondNumber][j - 1].isItBridge == 1)
+				{
+					if ((polymerBondStatus[bondNumber][j - 1].id1 != polymerBondStatus[bondNumber][j].id1) || (polymerBondStatus[bondNumber][j - 1].id2 != polymerBondStatus[bondNumber][j].id2))
+					{
+						nE_at_bridge++;
+					}
+				}
 			}
 		}
 	}
@@ -1744,22 +1748,133 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 	return nE_at_bridge;
 }
 
-int countE_at_dangle_transitions (int nE_at_dangle, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
 {
-	nE_at_dangle = 0;
+	int counter = 0, currentIndex = 0;
+
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
 
 	for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItDangle == 1 && polymerBondStatus[][j].isItFree == 1)
+			if (sortedAtoms[i].atomType == 1)
 			{
-				nE_at_dangle++;
+				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
+
+				// if (beadBoundStatus[sortedAtoms[i].id - 1][j - 1].isItBound == 1 && beadBoundStatus[sortedAtoms[i].id - 1][j].isItBound == 0 && polymerBondStatus[bondNumber][j - 1].isItBridge == 1 && polymerBondStatus[bondNumber][j].isItDangle == 1)
+				// {
+				// 	nE_at_bridge++;
+				// }
+
+				if (polymerBondStatus[bondNumber][j].isItBridge == 1)
+				{
+					counter++;
+				}
+
+				if (polymerBondStatus[bondNumber][j - 1].isItBridge == 1)
+				{
+					if ((polymerBondStatus[bondNumber][j - 1].id1 != polymerBondStatus[bondNumber][j].id1) || (polymerBondStatus[bondNumber][j - 1].id2 != polymerBondStatus[bondNumber][j].id2))
+					{
+						tauE_at_bridge[currentIndex] = counter;
+						counter = 0;
+						currentIndex++;
+					}
+				}
+			}
+		}
+	}
+
+	return tauE_at_bridge;
+}
+
+int countE_at_dangle_transitions (int nE_at_dangle, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+{
+	nE_at_dangle = 0;
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (sortedAtoms[i].atomType == 1)
+			{
+				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
+
+				// if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItDangle == 1 && polymerBondStatus[][j].isItFree == 1)
+				// {
+				// 	nE_at_dangle++;
+				// }
+
+				if (polymerBondStatus[bondNumber][j - 1].isItDangle == 1 && polymerBondStatus[bondNumber][j].isItDangle == 1)
+				{
+					if ((polymerBondStatus[bondNumber][j - 1].id1 != polymerBondStatus[bondNumber][j].id1) || (polymerBondStatus[bondNumber][j - 1].id2 != polymerBondStatus[bondNumber][j].id2))
+					{
+						nE_at_dangle++;
+					}
+				}
+				else if (polymerBondStatus[bondNumber][j - 1].isItDangle == 1 && polymerBondStatus[bondNumber][j].isItFree == 1)
+				{
+					nE_at_dangle++;
+				}
 			}
 		}
 	}
 
 	return nE_at_dangle;
+}
+
+float *countTauE_at_dangle (float *tauE_at_dangle, int nE_at_dangle, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+{
+	int counter = 0, currentIndex = 0;
+
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (sortedAtoms[i].atomType == 1)
+			{
+				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
+
+				// if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItDangle == 1 && polymerBondStatus[][j].isItFree == 1)
+				// {
+				// 	nE_at_dangle++;
+				// }
+
+				if (polymerBondStatus[bondNumber][j].isItDangle == 1)
+				{
+					counter++;
+				}
+
+				if (polymerBondStatus[bondNumber][j - 1].isItDangle == 1 && polymerBondStatus[bondNumber][j].isItDangle == 1)
+				{
+					if ((polymerBondStatus[bondNumber][j - 1].id1 != polymerBondStatus[bondNumber][j].id1) || (polymerBondStatus[bondNumber][j - 1].id2 != polymerBondStatus[bondNumber][j].id2))
+					{
+						tauE_at_dangle[currentIndex] = counter;
+						counter = 0;
+						currentIndex++;
+					}
+				}
+				else if (polymerBondStatus[bondNumber][j - 1].isItDangle == 1 && polymerBondStatus[bondNumber][j].isItFree == 1)
+				{
+					tauE_at_dangle[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+				}
+			}
+		}
+	}
+
+	return tauE_at_dangle;
+
 }
 
 int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
@@ -1770,14 +1885,63 @@ int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, 
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItLoop == 1 && polymerBondStatus[][j].isItDangle == 1)
+			if (sortedAtoms[i].atomType == 1)
 			{
-				nE_at_loop++;
+				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
+
+				// if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItLoop == 1 && polymerBondStatus[][j].isItDangle == 1)
+				// {
+				// 	nE_at_loop++;
+				// }
+
+				if (polymerBondStatus[bondNumber][j - 1].isItLoop == 1 && (polymerBondStatus[bondNumber][j].isItDangle == 1 || polymerBondStatus[bondNumber][j].isItFree == 1))
+				{
+					nE_at_loop++;
+				}
 			}
 		}
 	}
 
 	return nE_at_loop;
+}
+
+float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
+{
+	int counter = 0, currentIndex = 0;
+
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+
+	for (int i = 0; i < datafile.nAtoms; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			if (sortedAtoms[i].atomType == 1)
+			{
+				bondNumber = floor ((sortedAtoms[i].id - (int)floor (sortedAtoms[i].id / (coordinationNumber + 1)) - 1) / 2);
+
+				// if (beadBoundStatus[i][j - 1].isItBound == 1 && beadBoundStatus[i][j].isItBound == 0 && polymerBondStatus[][j - 1].isItLoop == 1 && polymerBondStatus[][j].isItDangle == 1)
+				// {
+				// 	nE_at_loop++;
+				// }
+
+				if (polymerBondStatus[bondNumber][j].isItLoop == 1)
+				{
+					counter++;
+				}
+
+				if (polymerBondStatus[bondNumber][j - 1].isItLoop == 1 && (polymerBondStatus[bondNumber][j].isItDangle == 1 || polymerBondStatus[bondNumber][j].isItFree == 1))
+				{
+					tauE_at_loop[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+				}
+			}
+		}
+	}
+
+	return tauE_at_loop;
 }
 
 int countS_at_transitions (int nS_at, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, int nDumpEntries, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms)
@@ -1870,6 +2034,57 @@ void printTauE_at (float *tauE_at, int nE_at, const char *folderName)
 	}
 
 	fclose (tauE_at_file);
+}
+
+void printTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, const char *folderName)
+{
+	char *tauE_at_file_filename;
+	tauE_at_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauE_at_file_filename, 500, "%s/tauE_at_bridge.output", folderName);
+
+	FILE *tauE_at_bridge_file;
+	tauE_at_bridge_file = fopen (tauE_at_file_filename, "w");
+
+	for (int i = 0; i < nE_at_bridge; ++i)
+	{
+		fprintf(tauE_at_bridge_file, "%f\n", tauE_at_bridge[i]);
+	}
+
+	fclose (tauE_at_bridge_file);
+}
+
+void printTauE_at_loop (float *tauE_at_loop, int nE_at_loop, const char *folderName)
+{
+	char *tauE_at_file_filename;
+	tauE_at_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauE_at_file_filename, 500, "%s/tauE_at_loop.output", folderName);
+
+	FILE *tauE_at_loop_file;
+	tauE_at_loop_file = fopen (tauE_at_file_filename, "w");
+
+	for (int i = 0; i < nE_at_loop; ++i)
+	{
+		fprintf(tauE_at_loop_file, "%f\n", tauE_at_loop[i]);
+	}
+
+	fclose (tauE_at_loop_file);
+}
+
+void printTauE_at_dangle (float *tauE_at_dangle, int nE_at_dangle, const char *folderName)
+{
+	char *tauE_at_file_filename;
+	tauE_at_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauE_at_file_filename, 500, "%s/tauE_at_dangle.output", folderName);
+
+	FILE *tauE_at_dangle_file;
+	tauE_at_dangle_file = fopen (tauE_at_file_filename, "w");
+
+	for (int i = 0; i < nE_at_dangle; ++i)
+	{
+		fprintf(tauE_at_dangle_file, "%f\n", tauE_at_dangle[i]);
+	}
+
+	fclose (tauE_at_dangle_file);
 }
 
 void printTauS_at (float *tauS_at, int nS_at, const char *folderName)
@@ -2091,11 +2306,25 @@ int main(int argc, char const *argv[])
 	nE_at_dangle = countE_at_dangle_transitions (nE_at_dangle, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
 
 	printf("Number of nE_at: %d; nS_at: %d\n", nE_at, nS_at);
+	printf("nE_at_bridge: %d\nnE_at_loop: %d\nnE_at_dangle: %d\n", nE_at_bridge, nE_at_loop, nE_at_dangle);
 
-	float *tauE_at, *tauS_at;
+	float *tauE_at, *tauS_at, *tauE_at_bridge, *tauE_at_loop, *tauE_at_dangle;
 	tauE_at = (float *) malloc (nE_at * sizeof (float));
 	tauE_at = countTauE_at (tauE_at, nE_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
+
+	tauE_at_bridge = (float *) malloc (nE_at_bridge * sizeof (float));
+	tauE_at_bridge = countTauE_at_bridge (tauE_at_bridge, nE_at_bridge, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+
+	tauE_at_loop = (float *) malloc (nE_at_loop * sizeof (float));
+	tauE_at_loop = countTauE_at_loop (tauE_at_loop, nE_at_loop, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+
+	tauE_at_dangle = (float *) malloc (nE_at_dangle * sizeof (float));
+	tauE_at_dangle = countTauE_at_dangle (tauE_at_dangle, nE_at_dangle, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+
 	printTauE_at (tauE_at, nE_at, folderName);
+	printTauE_at_bridge (tauE_at_bridge, nE_at_bridge, folderName);
+	printTauE_at_loop (tauE_at_loop, nE_at_loop, folderName);
+	printTauE_at_dangle (tauE_at_dangle, nE_at_dangle, folderName);
 
 	tauS_at = (float *) malloc (nS_at * sizeof (float));
 	tauS_at = countTauS_at (tauS_at, nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
