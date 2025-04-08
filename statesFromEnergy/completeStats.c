@@ -1136,7 +1136,8 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			// bridge becomes a dangle
+			// Bridge becomes a dangle, I am storing the IDs of bound core/ghost particles
+			// And the variable 'newDangle' is activated
 			if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItDangle == 1) {
 				boundParticleID1 = polymerBondStatus[i][j - 1].id1;
 				boundParticleID2 = polymerBondStatus[i][j - 1].id2;
@@ -1145,8 +1146,12 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 				newDangle = 0; }
 			else if (polymerBondStatus[i][j - 1].isItBridge == true && polymerBondStatus[i][j].isItFree == true) {
 				newDangle = 0; }
+			else if (polymerBondStatus[i][j].isItLoop == 1) {
+				newDangle = 0; }
+			else if (polymerBondStatus[i][j].isItFree == 1) {
+				newDangle = 0; }
 
-			if (newDangle == 1) {
+			if (newDangle == 1 || polymerBondStatus[i][j].isItBridge == 1) {
 				tauBB[currentBridge]++; }
 
 			// dangle becomes a bridge again
@@ -1162,7 +1167,7 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 
 			// dangle becomes a loop or free chain
 			if ((polymerBondStatus[i][j].isItFree == true || polymerBondStatus[i][j].isItLoop == true) && newDangle == 1) {
-				newDangle = 0; }
+				tauBB[currentBridge] = 0; newDangle = 0; }
 		}
 	}
 
