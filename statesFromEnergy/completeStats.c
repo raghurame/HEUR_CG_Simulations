@@ -320,7 +320,7 @@ int countNTimeframes (const char *filename)
 
 	if (strstr (filename, ".gz"))
 	{
-		snprintf (pipeString, 1000, "zcat %s | grep \"ITEM: TIMESTEP\" | wc -l", filename);
+		snprintf (pipeString, 1000, "gzcat %s | grep \"ITEM: TIMESTEP\" | wc -l", filename);
 	}
 	else
 	{
@@ -1758,6 +1758,8 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 
 	for (int i = 0; i < datafile.nAtoms; ++i)
 	{
+		counter = 0;
+
 		for (int j = 1; j < nTimeframes; ++j)
 		{
 			if (sortedAtoms[i].atomType == 1)
@@ -1880,6 +1882,10 @@ float *countTauE_at_dangle (float *tauE_at_dangle, int nE_at_dangle, BOUND_STATU
 int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, DATAFILE_INFO datafile, int nTimeframes, BOND_STATUS **polymerBondStatus, DUMP_ENERGY *energyEntries, DATA_ATOMS *sortedAtoms, int nDumpEntries)
 {
 	nE_at_loop = 0;
+
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
 
 	for (int i = 0; i < datafile.nAtoms; ++i)
 	{
@@ -2116,7 +2122,7 @@ int main(int argc, char const *argv[])
 	char *pipeString, *folderName;
 	pipeString = (char *) malloc (500 * sizeof (char));
 	folderName = (char *) malloc (500 * sizeof (char));
-	snprintf (pipeString, 500, "zcat %s", argv[1]);
+	snprintf (pipeString, 500, "gzcat %s", argv[1]);
 	snprintf (folderName, 500, "stats_%s_%s_%d_%d", argv[1], argv[2], atoi (argv[3]), atoi (argv[4]));
 
 	int energyColumn = atoi (argv[4]);
