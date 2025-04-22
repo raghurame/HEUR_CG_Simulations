@@ -15,7 +15,7 @@
 
 // This is important. Set this to high number
 // Too big number requires high memory
-#define N_TIMEFRAMES_TO_CONSIDER 2490
+#define N_TIMEFRAMES_TO_CONSIDER 100000
 
 typedef struct blocks
 {
@@ -75,6 +75,7 @@ typedef struct bondStatus
 typedef struct boundStatus
 {
 	bool isItBound;
+	int bondNumber;
 } BOUND_STATUS;
 
 typedef struct dumpEnergy
@@ -601,7 +602,7 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 
 				if (debugg == 1)
 				{
-					printf("--> ", boundParticleID[bondNumber]);
+					printf("--> %d", boundParticleID[bondNumber]);
 					printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
 					printf("\n");
 				}
@@ -641,7 +642,7 @@ BOND_STATUS **checkBondStatus (BOND_STATUS **polymerBondStatus, DUMP_ENERGY *ene
 
 				if (debugg == 1)
 				{
-					printf("--> ", boundParticleID[bondNumber]);
+					printf("--> %d", boundParticleID[bondNumber]);
 					printStateNumber (polymerBondStatus[bondNumber][currentTimeframe].isItFree, polymerBondStatus[bondNumber][currentTimeframe].isItDangle, polymerBondStatus[bondNumber][currentTimeframe].isItLoop, polymerBondStatus[bondNumber][currentTimeframe].isItBridge);
 					printf("\n");
 				}
@@ -1176,6 +1177,104 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return tauBB;
 }
 
+int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, BOUND_STATUS **beadBoundStatus, DATA_ATOMS *sortedAtoms)
+{
+	nLL = 0;
+	int counter = 0, currentIndex = 0;
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int atomNumber1, atomNumber2;
+
+	printf("\nCounting loop to loop transitions...\n");
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{		
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && polymerBondStatus[i][j - 1].isItLoop == 1)
+			{
+				if (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 || beadBoundStatus[atomNumber2 - 1][j].isItBound == 0)
+				{
+					counter = 1; // here, counter is only to identify the state. In the next connected function, counter will be used to measure the transition time.
+				}
+			}
+
+			if ((counter == 1) && 
+				(polymerBondStatus[i][j].isItLoop == 1) && 
+				(beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) || 
+				(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1))
+			{
+				counter = 0;
+				nLL++;
+			}
+		}
+	}
+
+	return nLL;
+}
+
+float *countTauLL (float *tauLL, int nLL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, BOUND_STATUS **beadBoundStatus, DATA_ATOMS *sortedAtoms)
+{
+	int counter = 0, currentIndex = 0;
+	int bondNumber;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int atomNumber1, atomNumber2;
+
+	int transitionToDangle = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+		transitionToDangle = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1 && polymerBondStatus[i][j].isItLoop == 1)
+			{
+				counter++;
+
+/*				if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				{
+					counter++; // here, counter is only to identify the state. In the next connected function, counter will be used to measure the transition time.
+				}*/
+			}
+
+			if (counter > 0)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) || 
+					(beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				{
+					transitionToDangle = 1;
+					counter++;
+				}
+			}
+
+			if ((transitionToDangle == 1) && 
+				(polymerBondStatus[i][j].isItLoop == 1) && 
+				(beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) || 
+				(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1))
+			{
+				tauLL[currentIndex] = counter;
+				currentIndex++;
+				counter = 0;
+			}
+		}
+	}
+
+	return tauLL;
+}
+
 int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
 {
 	nBL = 0;
@@ -1205,6 +1304,8 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		currentTau = 0;
+		// printf("\nNext bond\n\n");
+		// sleep (5);
 
 		boundParticleID1 = 0;
 		boundParticleID2 = 0;
@@ -1213,6 +1314,7 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 		{
 
 			// printStateNumber (polymerBondStatus[i][j].isItFree, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge);
+			// usleep (100000);
 
 			if (polymerBondStatus[i][j].isItBridge == 1)
 			{
@@ -1220,20 +1322,24 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				// printf("(%d) ", currentTau);
 				// usleep (10000);
 
-				if (boundParticleID1 != 0 && boundParticleID2 != 0)
-				{
-					if (boundParticleID1 != polymerBondStatus[i][j].id1 || boundParticleID2 != polymerBondStatus[i][j].id2)
-					{
-						currentTau = 0;
-					}
-				}
+				// if (boundParticleID1 != 0 && boundParticleID2 != 0)
+				// {
+					// if (boundParticleID1 != polymerBondStatus[i][j].id1 || boundParticleID2 != polymerBondStatus[i][j].id2)
+				// 	{
+						// currentTau = 0;
+				// 	}
+				// }
 
-				boundParticleID1 = polymerBondStatus[i][j].id1;
-				boundParticleID2 = polymerBondStatus[i][j].id2;
+				// boundParticleID1 = polymerBondStatus[i][j].id1;
+				// boundParticleID2 = polymerBondStatus[i][j].id2;
+			}
+			else if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 0 && polymerBondStatus[i][j].isItFree == 0)
+			{
+				currentTau++;
 			}
 			else if (j > 0)
 			{
-				if (polymerBondStatus[i][j - 1].isItBridge == 1 && polymerBondStatus[i][j].isItLoop == 1)
+				if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 1)
 				{
 					tauBL[currentTransition] = (float)currentTau;
 					currentTransition++;
@@ -1720,8 +1826,33 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 	int bondNumber;
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int atomNumber1, atomNumber2;
 
-	for (int i = 0; i < datafile.nAtoms; ++i)
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+				(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+			{
+				if (polymerBondStatus[i][j - 1].isItBridge == 1)
+				{
+					nE_at_bridge++;
+				}
+			}
+			else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+					(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+			{
+				nE_at_bridge++;
+			}
+		}
+	}
+
+	// The following code uses a different approach for calculation, not used in the paper
+	/*for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
@@ -1743,7 +1874,7 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 				}
 			}
 		}
-	}
+	}*/
 
 	return nE_at_bridge;
 }
@@ -1756,7 +1887,58 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 
-	for (int i = 0; i < datafile.nAtoms; ++i)
+	int atomNumber1, atomNumber2;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if ((polymerBondStatus[i][j].isItBridge == 1) && 
+				(polymerBondStatus[i][j - 1].id1 == polymerBondStatus[i][j].id1) && 
+				(polymerBondStatus[i][j - 1].id2 == polymerBondStatus[i][j].id2))
+			{
+				counter++;
+			}
+			else if (counter > 0 && 
+				(beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) &&
+				(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+				(polymerBondStatus[i][j - 1].id1 == polymerBondStatus[i][j].id1) &&
+				(polymerBondStatus[i][j - 1].id2 == polymerBondStatus[i][j].id2))
+			{
+				counter++;
+			}
+
+			if (counter > 0)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				{
+					tauE_at_bridge[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+				}
+				else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+				{
+					tauE_at_bridge[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+				}
+			}
+		}
+	}
+
+	// The following code was not used in the paper
+	// The counter works for every polymer beads individually.
+	// Previous loop works for every polymer dumbbell, 
+	// which is compatible with other functions, thus error free.
+
+	/*for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		counter = 0;
 
@@ -1787,7 +1969,7 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 				}
 			}
 		}
-	}
+	}*/
 
 	return tauE_at_bridge;
 }
@@ -1799,7 +1981,35 @@ int countE_at_dangle_transitions (int nE_at_dangle, BOUND_STATUS **beadBoundStat
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 
-	for (int i = 0; i < datafile.nAtoms; ++i)
+	// for (int i = 0; i < datafile.nBonds; ++i)
+	// {
+	// 	for (int j = 1; j < nTimeframes; ++j)
+	// 	{
+	// 		atomNumber1 = ((i + 1) * 2) - 1 + m.floor (i / (coordinationNumber * 2));
+	// 		atomNumber2 = ((i + 1) * 2) + m.floor (i / (coordinationNumber * 2));
+
+	// 		if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+	// 			(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+	// 		{
+	// 			if (polymerBondStatus[i][j - 1].isItBridge == 1)
+	// 			{
+	// 				nE_at_bridge++;
+	// 			}
+	// 		}
+	// 		else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+	// 				(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+	// 		{
+	// 			nE_at_bridge++;
+	// 		}
+	// 	}
+	// }
+
+	// The following code was not used in the paper
+	// The counter works for every polymer beads individually.
+	// Previous loop works for every polymer dumbbell, 
+	// which is compatible with other functions, thus error free.
+
+	/*for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
@@ -1825,7 +2035,7 @@ int countE_at_dangle_transitions (int nE_at_dangle, BOUND_STATUS **beadBoundStat
 				}
 			}
 		}
-	}
+	}*/
 
 	return nE_at_dangle;
 }
@@ -1838,7 +2048,12 @@ float *countTauE_at_dangle (float *tauE_at_dangle, int nE_at_dangle, BOUND_STATU
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 
-	for (int i = 0; i < datafile.nAtoms; ++i)
+	// The following code was not used in the paper
+	// The counter works for every polymer beads individually.
+	// Previous loop works for every polymer dumbbell, 
+	// which is compatible with other functions, thus error free.
+
+	/*for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
@@ -1873,7 +2088,7 @@ float *countTauE_at_dangle (float *tauE_at_dangle, int nE_at_dangle, BOUND_STATU
 				}
 			}
 		}
-	}
+	}*/
 
 	return tauE_at_dangle;
 
@@ -1887,7 +2102,32 @@ int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, 
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 
-	for (int i = 0; i < datafile.nAtoms; ++i)
+	int atomNumber1, atomNumber2;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+				(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+			{
+				if (polymerBondStatus[i][j - 1].isItLoop == 1)
+				{
+					nE_at_loop++;
+				}
+			}
+		}
+	}
+
+	// The following code was not used in the paper
+	// The counter works for every polymer beads individually.
+	// Previous loop works for every polymer dumbbell, 
+	// which is compatible with other functions, thus error free.
+
+	/*for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
@@ -1906,7 +2146,7 @@ int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, 
 				}
 			}
 		}
-	}
+	}*/
 
 	return nE_at_loop;
 }
@@ -1918,8 +2158,56 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 	int bondNumber;
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int atomNumber1, atomNumber2;
 
-	for (int i = 0; i < datafile.nAtoms; ++i)
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if ((polymerBondStatus[i][j].isItLoop == 1) && 
+				(polymerBondStatus[i][j - 1].id1 == polymerBondStatus[i][j].id1) && 
+				(polymerBondStatus[i][j - 1].id2 == polymerBondStatus[i][j].id2))
+			{
+				counter++;
+			}
+			else if (counter > 0 && 
+					(beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) &&
+					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1))
+			{
+				counter++;
+			}
+
+			if (counter > 0)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				{
+					tauE_at_loop[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+				}
+				else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+				{
+					tauE_at_loop[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+				}
+			}
+		}
+	}
+
+	// The following code was not used in the paper
+	// The counter works for every polymer beads individually.
+	// Previous loop works for every polymer dumbbell, 
+	// which is compatible with other functions, thus error free.
+
+	/*for (int i = 0; i < datafile.nAtoms; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
@@ -1945,7 +2233,7 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 				}
 			}
 		}
-	}
+	}*/
 
 	return tauE_at_loop;
 }
@@ -2326,6 +2614,12 @@ int main(int argc, char const *argv[])
 
 	tauE_at_dangle = (float *) malloc (nE_at_dangle * sizeof (float));
 	tauE_at_dangle = countTauE_at_dangle (tauE_at_dangle, nE_at_dangle, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+
+	int nLL;
+	nLL = countLLtransitions (nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
+	float *tauLL;
+	tauLL = (float *) malloc (nLL * sizeof (float));
+	tauLL = countTauLL (tauLL, nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
 
 	printTauE_at (tauE_at, nE_at, folderName);
 	printTauE_at_bridge (tauE_at_bridge, nE_at_bridge, folderName);
