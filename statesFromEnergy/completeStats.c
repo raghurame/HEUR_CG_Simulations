@@ -1385,6 +1385,23 @@ float *countTauLB (float *tauLB, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return tauLB;
 }
 
+void printTauLL (float *tauLL, int nLL, const char *folderName)
+{
+	char *tauLL_file_filename;
+	tauLL_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauLL_file_filename, 500, "%s/tauLL.output", folderName);
+
+	FILE *tauLL_file;
+	tauLL_file = fopen (tauLL_file_filename, "w");
+
+	for (int i = 0; i < nLL; ++i)
+	{
+		fprintf(tauLL_file, "%f\n", tauLL[i]);
+	}
+
+	fclose (tauLL_file);
+}
+
 void printTauBL (float *tauBL, int nBL, const char *folderName)
 {
 	char *tauBL_file_filename;
@@ -2620,6 +2637,7 @@ int main(int argc, char const *argv[])
 	float *tauLL;
 	tauLL = (float *) malloc (nLL * sizeof (float));
 	tauLL = countTauLL (tauLL, nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
+	printTauLL (tauLL, nLL, folderName);
 
 	printTauE_at (tauE_at, nE_at, folderName);
 	printTauE_at_bridge (tauE_at_bridge, nE_at_bridge, folderName);
