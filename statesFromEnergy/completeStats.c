@@ -1186,6 +1186,8 @@ int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframe
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 	int atomNumber1, atomNumber2;
 
+	int debugg = 0;
+
 	printf("\nCounting loop to loop transitions...\n");
 
 	for (int i = 0; i < datafile.nBonds; ++i)
@@ -1205,13 +1207,35 @@ int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				}
 			}
 
+			if (debugg)
+			{
+				printf("%d (%d: %d/%d) + %d (%d: %d/%d) => %d, loop: %d, dangle: %d, timeframe: %d  ", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, polymerBondStatus[i][j].id2, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id1, polymerBondStatus[i][j].id2, counter, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItDangle, j);
+
+				if (counter == 1)
+				{
+					usleep (100000);
+				}
+			}
+
 			if ((counter == 1) && 
 				(polymerBondStatus[i][j].isItLoop == 1) && 
-				(beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) || 
-				(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1))
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) || 
+				(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
 			{
 				counter = 0;
 				nLL++;
+
+				if (debugg)
+				{
+					fprintf(stdout, ">counter stopped<");
+					fflush (stdout);
+					sleep (10);
+				}
+			}
+
+			if (debugg)
+			{
+				printf("\n");
 			}
 		}
 	}
@@ -1228,6 +1252,8 @@ float *countTauLL (float *tauLL, int nLL, BOND_STATUS **polymerBondStatus, int n
 	int atomNumber1, atomNumber2;
 
 	int transitionToDangle = 0;
+
+	int debugg = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -1260,14 +1286,28 @@ float *countTauLL (float *tauLL, int nLL, BOND_STATUS **polymerBondStatus, int n
 				}
 			}
 
+			if (debugg == 1)
+			{
+				fprintf(stdout, "%d (%d) + %d (%d) => %d\n", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, counter);
+				usleep (100000);
+			}
+
 			if ((transitionToDangle == 1) && 
 				(polymerBondStatus[i][j].isItLoop == 1) && 
-				(beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) || 
-				(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1))
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) || 
+				(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
 			{
 				tauLL[currentIndex] = counter;
 				currentIndex++;
+
+				if (debugg == 1)
+				{
+					printf("tauLL: %d\n", counter);
+					usleep (100000);
+				}
+
 				counter = 0;
+				transitionToDangle = 0;
 			}
 		}
 	}
@@ -1845,6 +1885,8 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 	int atomNumber1, atomNumber2;
 
+	int debugg = 0, previousCounter = 0;
+
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		for (int j = 1; j < nTimeframes; ++j)
@@ -1860,10 +1902,31 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 					nE_at_bridge++;
 				}
 			}
-			else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
-					(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+			else if ((polymerBondStatus[i][j - 1].isItBridge == 1) &&
+					((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+					(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2)))
 			{
 				nE_at_bridge++;
+			}
+
+			if (debugg == 1)
+			{
+				printf("%d (%d %d) + %d (%d %d) [bridge: %d] => %d\n", 
+					atomNumber1, 
+					beadBoundStatus[atomNumber1 - 1][j].isItBound, 
+					polymerBondStatus[i][j].id1, 
+					atomNumber2, 
+					beadBoundStatus[atomNumber2 - 1][j].isItBound, 
+					polymerBondStatus[i][j].id2,
+					polymerBondStatus[i][j].isItBridge, 
+					nE_at_bridge);
+
+				if (nE_at_bridge != previousCounter)
+				{
+					sleep (2);
+				}
+
+				previousCounter = nE_at_bridge;
 			}
 		}
 	}
@@ -1906,6 +1969,8 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 
 	int atomNumber1, atomNumber2;
 
+	int debugg = 1;
+
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		counter = 0;
@@ -1915,36 +1980,91 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
 			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
 
+			// If the bridge is stable
+			// this check prevents bridge to bridge transitions
+			// after a stable bridge was found, the counter starts 
 			if ((polymerBondStatus[i][j].isItBridge == 1) && 
 				(polymerBondStatus[i][j - 1].id1 == polymerBondStatus[i][j].id1) && 
 				(polymerBondStatus[i][j - 1].id2 == polymerBondStatus[i][j].id2))
 			{
 				counter++;
 			}
+			// Once the counter starts, the counter continues as long as both
+			// the beads are bound to the same two particles
 			else if (counter > 0 && 
-				(beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) &&
-				(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
-				(polymerBondStatus[i][j - 1].id1 == polymerBondStatus[i][j].id1) &&
-				(polymerBondStatus[i][j - 1].id2 == polymerBondStatus[i][j].id2))
+				beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && 
+				beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 &&
+				beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && 
+				beadBoundStatus[atomNumber2 - 1][j].isItBound == 1 &&
+				polymerBondStatus[i][j - 1].id1 == polymerBondStatus[i][j].id1 &&
+				polymerBondStatus[i][j - 1].id2 == polymerBondStatus[i][j].id2)
+			{
+				counter++;
+			}
+			// Sometimes, a bead is still bound (with pair interaction energy of greater than -1 kBT, but less than 0 kBT).
+			// During these situations, it is not considered as a bridge and thus, it will not have a bound particle ID.
+			// The 'if' condition below is checking for that situation.
+			// If this is the case, then the counter must continue and not break.
+			// The counter only breaks if both the beads are 'unbound', or
+			// it can break when both the beads are bound, but one of them have a different 
+			// bound particle ID from the previous timestep and it must not be 'zero'.
+			else if (counter > 0 && 
+					((polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j].id2 == 0)) &&
+					(beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) &&
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1))
 			{
 				counter++;
 			}
 
+			if (debugg == 1)
+			{
+				printf("at1: %d (%d %d) + at2: %d (%d %d) [%d] => count: %d\n", 
+					atomNumber1, 
+					beadBoundStatus[atomNumber1 - 1][j].isItBound, 
+					polymerBondStatus[i][j].id1, 
+					atomNumber2, 
+					beadBoundStatus[atomNumber2 - 1][j].isItBound, 
+					polymerBondStatus[i][j].id2, 
+					polymerBondStatus[i][j].isItBridge,
+					counter);
+
+				if (polymerBondStatus[i][j].isItBridge == 1 && (counter%100 == 0))
+				{
+					usleep (100000);
+				}
+			}
+
+			// After the counter starts,
+			// the counter stops when one of the two beads eject or
+			// when both the beads stay bounded, but to a different particles, indicating bridge to bridge transition.
 			if (counter > 0)
 			{
-				if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
-					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				if (((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0)))
 				{
 					tauE_at_bridge[currentIndex] = counter;
 					counter = 0;
 					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends: 1<\n");
+					}
 				}
-				else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
-						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+				else if ((polymerBondStatus[i][j - 1].isItBridge == 1) &&
+						((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2)) &&
+						(polymerBondStatus[i][j].id1 != 0) &&
+						(polymerBondStatus[i][j].id2 != 0))
 				{
 					tauE_at_bridge[currentIndex] = counter;
 					counter = 0;
 					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends: 2<\n");
+					}
 				}
 			}
 		}
