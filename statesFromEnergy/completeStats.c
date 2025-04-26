@@ -1969,7 +1969,7 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 
 	int atomNumber1, atomNumber2;
 
-	int debugg = 1;
+	int debugg = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -2030,7 +2030,7 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 
 				if (polymerBondStatus[i][j].isItBridge == 1 && (counter%100 == 0))
 				{
-					usleep (100000);
+					usleep (1000000);
 				}
 			}
 
@@ -2051,7 +2051,7 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 						printf(">counter ends: 1<\n");
 					}
 				}
-				else if ((polymerBondStatus[i][j - 1].isItBridge == 1) &&
+				else if ((polymerBondStatus[i][j].isItBridge == 0) &&
 						((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
 						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2)) &&
 						(polymerBondStatus[i][j].id1 != 0) &&
@@ -2297,6 +2297,8 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 	int atomNumber1, atomNumber2;
 
+	int debugg = 1;
+
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
 		counter = 0;
@@ -2319,6 +2321,16 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 				counter++;
 			}
 
+			if (debugg == 1)
+			{
+				printf("at1: %d (%d %d); at2: %d (%d %d) => count: %d\n", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, counter);
+
+				if (counter%100 == 0 && counter > 0)
+				{
+					sleep (1);
+				}
+			}
+
 			if (counter > 0)
 			{
 				if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
@@ -2327,13 +2339,28 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 					tauE_at_loop[currentIndex] = counter;
 					counter = 0;
 					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends 1<\n");
+						sleep (1);
+					}
 				}
-				else if ((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
-						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2))
+				else if (((polymerBondStatus[i][j - 1].id1 != polymerBondStatus[i][j].id1) || 
+						(polymerBondStatus[i][j - 1].id2 != polymerBondStatus[i][j].id2)) &&
+						(polymerBondStatus[i][j].id1 != 0) &&
+						(polymerBondStatus[i][j].id2 != 0) &&
+						(polymerBondStatus[i][j].isItLoop == 0))
 				{
 					tauE_at_loop[currentIndex] = counter;
 					counter = 0;
 					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends 2<\n");
+						sleep (1);
+					}
 				}
 			}
 		}
