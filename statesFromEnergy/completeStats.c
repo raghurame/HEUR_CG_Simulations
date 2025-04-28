@@ -2477,6 +2477,173 @@ float *countTauS_at (float *tauS_at, int nS_at, BOUND_STATUS **beadBoundStatus, 
 	return tauS_at;
 }
 
+int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber = 0, atomNumber2 = 0;
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int nBDBs = 0;
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 1; j < nTimeframes; ++j)
+		{
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (currentlyBridge == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyBridge = 0;
+				dangleFromBridge = 1;
+			}
+
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
+			{
+				currentlyBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				if (beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)
+				{
+					dangleFromBridge = 0;
+					nBDBs++;
+				}
+			}
+		}
+	}
+
+	return nBDBs;
+}
+
+float *count_tau_BDBs (float *tau_BDBs, int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return tau_BDBs;
+}
+
+int count_nBDBd (int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return nBDBd;
+}
+
+float *count_tau_BDBd (float *tau_BDBd, int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return tau_BDBd;
+}
+
+int count_nBDL (int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return nBDL;
+}
+
+float *count_tau_BDL (float *tau_BDL, int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return tau_BDL;
+}
+
+int count_nLDL (int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return nLDL;
+}
+
+float *count_tau_LDL (float *tau_LDL, int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return tau_LDL;
+}
+
+int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return nLDB;
+}
+
+float *count_tau_LDB (float *tau_LDB, int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
+{
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			/* code */
+		}
+	}
+
+	return tau_LDB;
+}
+
 void printTauE_at (float *tauE_at, int nE_at, const char *folderName)
 {
 	char *tauE_at_file_filename;
@@ -2778,6 +2945,32 @@ int main(int argc, char const *argv[])
 
 	tauE_at_dangle = (float *) malloc (nE_at_dangle * sizeof (float));
 	tauE_at_dangle = countTauE_at_dangle (tauE_at_dangle, nE_at_dangle, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2, polymerBondStatus, energyEntries, sortedAtoms, nDumpEntries);
+
+	// Here, I am calculating the following transitions,
+	// bridge -> dangle -> bridge (same)
+	// bridge -> dangle -> bridge (different)
+	// bridge -> dangle -> loop
+	// loop -> dangle -> loop
+	// loop -> dangle -> bridge
+	int nBDBs = 0, nBDBd = 0, nBDL = 0, nLDL = 0, nLDB = 0;
+	nBDBs = count_nBDBs (nBDBs, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	nBDBd = count_nBDBd (nBDBd, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	nBDL = count_nBDL (nBDL, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	nLDL = count_nLDL (nLDL, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	nLDB = count_nLDB (nLDB, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+
+	float *tau_BDBs, *tau_BDBd, *tau_BDL, *tau_LDL, *tau_LDB;
+	tau_BDBs = (float *) malloc (nBDBs * sizeof (float));
+	tau_BDBd = (float *) malloc (nBDBd * sizeof (float));
+	tau_BDL = (float *) malloc (nBDL * sizeof (float));
+	tau_LDL = (float *) malloc (nLDL * sizeof (float));
+	tau_LDB = (float *) malloc (nLDB * sizeof (float));
+
+	tau_BDBs = count_tau_BDBs (tau_BDBs, nBDBs, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	tau_BDBd = count_tau_BDBd (tau_BDBd, nBDBd, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	tau_BDL = count_tau_BDL (tau_BDL, nBDL, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	tau_LDL = count_tau_LDL (tau_LDL, nLDL, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
+	tau_LDB = count_tau_LDB (tau_LDB, nLDB, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
 
 	int nLL;
 	nLL = countLLtransitions (nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
