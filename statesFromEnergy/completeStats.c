@@ -2297,7 +2297,7 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 	int atomNumber1, atomNumber2;
 
-	int debugg = 1;
+	int debugg = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -2479,9 +2479,10 @@ float *countTauS_at (float *tauS_at, int nS_at, BOUND_STATUS **beadBoundStatus, 
 
 int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
-	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber = 0, atomNumber2 = 0;
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
-	int nBDBs = 0;
+	nBDBs = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -2490,25 +2491,68 @@ int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
 			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
 
-			if (currentlyBridge == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDBs);
+
+				if (dangleFromBridge == 1 || currentlyBridge == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if ((currentlyBridge == 1) && 
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
 			{
 				currentlyBridge = 0;
 				dangleFromBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
 			}
 
-			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
+			if ((polymerBondStatus[i][j - 1].isItBridge == 1) && 
+				(currentlyBridge == 0) && 
+				(dangleFromBridge == 0))
 			{
 				currentlyBridge = 1;
 				particleID1 = polymerBondStatus[i][j - 1].id1;
 				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
 			}
 
 			if (dangleFromBridge == 1)
 			{
-				if (beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 != polymerBondStatus[i][j].id2))
 				{
 					dangleFromBridge = 0;
-					nBDBs++;
+
+					if ((particleID1 == polymerBondStatus[i][j].id1) && 
+						(particleID2 == polymerBondStatus[i][j].id2))
+					{
+						nBDBs++;
+					}
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
 				}
 			}
 		}
@@ -2519,12 +2563,86 @@ int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 
 float *count_tau_BDBs (float *tau_BDBs, int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int counter = 0, currentIndex = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDBs);
+
+				if (dangleFromBridge == 1 || currentlyBridge == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if (currentlyBridge == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyBridge = 0;
+				dangleFromBridge = 1;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				counter++;
+			}
+
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
+			{
+				currentlyBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 != polymerBondStatus[i][j].id2))
+				{
+					if ((particleID1 == polymerBondStatus[i][j].id1) && 
+						(particleID2 == polymerBondStatus[i][j].id2))
+					{
+						currentIndex++;
+						tau_BDBs[currentIndex] = counter;
+					}
+
+					dangleFromBridge = 0;
+					counter = 0;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2533,12 +2651,82 @@ float *count_tau_BDBs (float *tau_BDBs, int nBDBs, BOUND_STATUS **beadBoundStatu
 
 int count_nBDBd (int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	nBDBd = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDBs);
+
+				if (dangleFromBridge == 1 || currentlyBridge == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if ((currentlyBridge == 1) && 
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyBridge = 0;
+				dangleFromBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if ((polymerBondStatus[i][j - 1].isItBridge == 1) && 
+				(currentlyBridge == 0) && 
+				(dangleFromBridge == 0))
+			{
+				currentlyBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 != polymerBondStatus[i][j].id2))
+				{
+					dangleFromBridge = 0;
+
+					if ((particleID1 != polymerBondStatus[i][j].id1) && 
+						(particleID2 != polymerBondStatus[i][j].id2))
+					{
+						nBDBd++;
+					}
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2547,12 +2735,86 @@ int count_nBDBd (int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 
 float *count_tau_BDBd (float *tau_BDBd, int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int counter = 0, currentIndex = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDBs);
+
+				if (dangleFromBridge == 1 || currentlyBridge == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if (currentlyBridge == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyBridge = 0;
+				dangleFromBridge = 1;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				counter++;
+			}
+
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
+			{
+				currentlyBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 != polymerBondStatus[i][j].id2))
+				{
+					if ((particleID1 != polymerBondStatus[i][j].id1) && 
+						(particleID2 != polymerBondStatus[i][j].id2))
+					{
+						currentIndex++;
+						tau_BDBd[currentIndex] = counter;
+					}
+
+					dangleFromBridge = 0;
+					counter = 0;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2561,12 +2823,77 @@ float *count_tau_BDBd (float *tau_BDBd, int nBDBd, BOUND_STATUS **beadBoundStatu
 
 int count_nBDL (int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	nBDL = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDL);
+
+				if (dangleFromBridge == 1 || currentlyBridge == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if ((currentlyBridge == 1) && 
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyBridge = 0;
+				dangleFromBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if ((polymerBondStatus[i][j - 1].isItBridge == 1) && 
+				(currentlyBridge == 0) && 
+				(dangleFromBridge == 0))
+			{
+				currentlyBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 == polymerBondStatus[i][j].id2))
+				{
+					dangleFromBridge = 0;
+					nBDL++;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2575,12 +2902,82 @@ int count_nBDL (int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 float *count_tau_BDL (float *tau_BDL, int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromBridge = 0, currentlyBridge = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int counter = 0, currentIndex = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDL);
+
+				if (dangleFromBridge == 1 || currentlyBridge == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if (currentlyBridge == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyBridge = 0;
+				dangleFromBridge = 1;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				counter++;
+			}
+
+			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
+			{
+				currentlyBridge = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromBridge == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 == polymerBondStatus[i][j].id2))
+				{
+					currentIndex++;
+					tau_BDL[currentIndex] = counter;
+
+					dangleFromBridge = 0;
+					counter = 0;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2589,12 +2986,77 @@ float *count_tau_BDL (float *tau_BDL, int nBDL, BOUND_STATUS **beadBoundStatus, 
 
 int count_nLDL (int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	nLDL = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDL);
+
+				if (dangleFromLoop == 1 || currentlyLoop == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if ((currentlyLoop == 1) && 
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyLoop = 0;
+				dangleFromLoop = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if ((polymerBondStatus[i][j - 1].isItLoop == 1) && 
+				(currentlyLoop == 0) && 
+				(dangleFromLoop == 0))
+			{
+				currentlyLoop = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromLoop == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 == polymerBondStatus[i][j].id2))
+				{
+					dangleFromLoop = 0;
+					nLDL++;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2604,12 +3066,82 @@ int count_nLDL (int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 float *count_tau_LDL (float *tau_LDL, int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int counter = 0, currentIndex = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDL);
+
+				if (dangleFromLoop == 1 || currentlyLoop == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if (currentlyLoop == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyLoop = 0;
+				dangleFromLoop = 1;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromLoop == 1)
+			{
+				counter++;
+			}
+
+			if (polymerBondStatus[i][j - 1].isItLoop == 1 && currentlyLoop == 0 && dangleFromLoop == 0)
+			{
+				currentlyLoop = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromLoop == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 == polymerBondStatus[i][j].id2))
+				{
+					currentIndex++;
+					tau_LDL[currentIndex] = counter;
+
+					dangleFromLoop = 0;
+					counter = 0;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2618,12 +3150,77 @@ float *count_tau_LDL (float *tau_LDL, int nLDL, BOUND_STATUS **beadBoundStatus, 
 
 int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	nLDB = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDL);
+
+				if (dangleFromLoop == 1 || currentlyLoop == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if ((currentlyLoop == 1) && 
+				((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyLoop = 0;
+				dangleFromLoop = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if ((polymerBondStatus[i][j - 1].isItLoop == 1) && 
+				(currentlyLoop == 0) && 
+				(dangleFromLoop == 0))
+			{
+				currentlyLoop = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromLoop == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 != polymerBondStatus[i][j].id2))
+				{
+					dangleFromLoop = 0;
+					nLDB++;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
@@ -2632,12 +3229,82 @@ int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 float *count_tau_LDB (float *tau_LDB, int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
+	int coordinationNumber = (nPolymers * 2) / nParticles;
+	int counter = 0, currentIndex = 0;
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
-		for (int j = 0; j < nTimeframes; ++j)
+		counter = 0;
+
+		for (int j = 1; j < nTimeframes; ++j)
 		{
-			/* code */
+			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
+			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+
+			if (debugg == 1)
+			{
+				printf("\n%d (%d %d) + %d (%d %d) => %d", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, nBDL);
+
+				if (dangleFromLoop == 1 || currentlyLoop == 1)
+				{
+					// usleep (100000);
+				}
+			}
+
+			if (currentlyLoop == 1 && ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0) || (beadBoundStatus[atomNumber1 - 1][j].isItBound == 0 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1)))
+			{
+				currentlyLoop = 0;
+				dangleFromLoop = 1;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >dangle formed from bridge<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromLoop == 1)
+			{
+				counter++;
+			}
+
+			if (polymerBondStatus[i][j - 1].isItLoop == 1 && currentlyLoop == 0 && dangleFromLoop == 0)
+			{
+				currentlyLoop = 1;
+				particleID1 = polymerBondStatus[i][j - 1].id1;
+				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (debugg == 1)
+				{
+					fprintf(stdout, " >bridge detected<");
+					fflush (stdout);
+					sleep (3);
+				}
+			}
+
+			if (dangleFromLoop == 1)
+			{
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) && 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 1) &&
+					(polymerBondStatus[i][j].id1 != polymerBondStatus[i][j].id2))
+				{
+					currentIndex++;
+					tau_LDB[currentIndex] = counter;
+
+					dangleFromLoop = 0;
+					counter = 0;
+
+					if (debugg == 1)
+					{
+						fprintf(stdout, " >bridge forms from dangle<\n");
+						fflush (stdout);
+						sleep (3);
+					}
+				}
+			}
 		}
 	}
 
