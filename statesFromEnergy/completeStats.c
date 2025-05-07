@@ -1712,6 +1712,7 @@ void printTauLL (float *tauLL, int nLL, const char *folderName)
 	char *tauLL_file_filename;
 	tauLL_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauLL_file_filename, 500, "%s/tauLL.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauLL_file_filename);
 
 	FILE *tauLL_file;
 	tauLL_file = fopen (tauLL_file_filename, "w");
@@ -1729,6 +1730,7 @@ void printTauBL (float *tauBL, int nBL, const char *folderName)
 	char *tauBL_file_filename;
 	tauBL_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauBL_file_filename, 500, "%s/tauBL.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauBL_file_filename);
 
 	FILE *tauBL_file;
 	tauBL_file = fopen (tauBL_file_filename, "w");
@@ -1746,6 +1748,7 @@ void printTauLB (float *tauLB, int nLB, const char *folderName)
 	char *tauLB_file_filename;
 	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauLB_file_filename, 500, "%s/tauLB.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauLB_file_filename);
 
 	FILE *tauLB_file;
 	tauLB_file = fopen (tauLB_file_filename, "w");
@@ -1763,6 +1766,8 @@ void printTauBB (float *tauBB, int nBB, const char *folderName)
 	char *tauBB_file_filename;
 	tauBB_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauBB_file_filename, 500, "%s/tauBB.output", folderName);
+	fprintf (stdout, "Printing %s\n", tauBB_file_filename);
+	fflush (stdout);
 
 	FILE *tauBB_file;
 	tauBB_file = fopen (tauBB_file_filename, "w");
@@ -1780,6 +1785,7 @@ void printTauE (float *tauLB, int nLB, const char *folderName)
 	char *tauLB_file_filename;
 	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauLB_file_filename, 500, "%s/tauE.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauLB_file_filename);
 
 	FILE *tauLB_file;
 	tauLB_file = fopen (tauLB_file_filename, "w");
@@ -1797,6 +1803,7 @@ void printTauEm (float *tauLB, int nLB, const char *folderName)
 	char *tauLB_file_filename;
 	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauLB_file_filename, 500, "%s/tauEm.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauLB_file_filename);
 
 	FILE *tauLB_file;
 	tauLB_file = fopen (tauLB_file_filename, "w");
@@ -1814,6 +1821,7 @@ void printTauS (float *tauLB, int nLB, const char *folderName)
 	char *tauLB_file_filename;
 	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauLB_file_filename, 500, "%s/tauS.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauLB_file_filename);
 
 	FILE *tauLB_file;
 	tauLB_file = fopen (tauLB_file_filename, "w");
@@ -1831,6 +1839,7 @@ void printTauSm (float *tauLB, int nLB, const char *folderName)
 	char *tauLB_file_filename;
 	tauLB_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauLB_file_filename, 500, "%s/tauSm.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauLB_file_filename);
 
 	FILE *tauLB_file;
 	tauLB_file = fopen (tauLB_file_filename, "w");
@@ -3838,6 +3847,7 @@ void printTauE_at (float *tauE_at, int nE_at, const char *folderName)
 	char *tauE_at_file_filename;
 	tauE_at_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauE_at_file_filename, 500, "%s/tauE_at.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauE_at_file_filename);
 
 	FILE *tauE_at_file;
 	tauE_at_file = fopen (tauE_at_file_filename, "w");
@@ -3923,6 +3933,7 @@ void printTauBDBs (float *tau_BDBs, int nBDBs, const char *folderName)
 	char *filename;
 	filename = (char *) malloc (1000 * sizeof (char));
 	snprintf (filename, 1000, "%s/tau_BDBs.output", folderName);
+	fprintf(stdout, "Printing %s\n", filename);
 
 	FILE *tau_file_output;
 	tau_file_output = fopen (filename, "w");
@@ -3940,6 +3951,7 @@ void printTauBDBd (float *tau_BDBd, int nBDBd, const char *folderName)
 	char *filename;
 	filename = (char *) malloc (1000 * sizeof (char));
 	snprintf (filename, 1000, "%s/tau_BDBd.output", folderName);
+	fprintf(stdout, "Printing %s\n", filename);
 
 	FILE *tau_file_output;
 	tau_file_output = fopen (filename, "w");
@@ -3957,6 +3969,7 @@ void printTauBDL (float *tau_BDL, int nBDL, const char *folderName)
 	char *filename;
 	filename = (char *) malloc (1000 * sizeof (char));
 	snprintf (filename, 1000, "%s/tau_BDL.output", folderName);
+	fprintf(stdout, "Printing %s\n", filename);
 
 	FILE *tau_file_output;
 	tau_file_output = fopen (filename, "w");
@@ -3974,6 +3987,7 @@ void printTauLDL (float *tau_LDL, int nLDL, const char *folderName)
 	char *filename;
 	filename = (char *) malloc (1000 * sizeof (char));
 	snprintf (filename, 1000, "%s/tau_LDL.output", folderName);
+	fprintf(stdout, "Printing %s\n", filename);
 
 	FILE *tau_file_output;
 	tau_file_output = fopen (filename, "w");
@@ -3991,6 +4005,7 @@ void printTauLDB (float *tau_LDB, int nLDB, const char *folderName)
 	char *filename;
 	filename = (char *) malloc (1000 * sizeof (char));
 	snprintf (filename, 1000, "%s/tau_LDB.output", folderName);
+	fprintf(stdout, "Printing %s\n", filename);
 
 	FILE *tau_file_output;
 	tau_file_output = fopen (filename, "w");
@@ -4062,15 +4077,16 @@ int main(int argc, char const *argv[])
 	sortedAtoms = sortAtoms (sortedAtoms, dataAtoms, datafile.nAtoms);
 
 	int nTimeframes = countNTimeframes (argv[1]), N_TIMEFRAMES_TO_CONSIDER2;
+	N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
 
-	if (N_TIMEFRAMES_TO_CONSIDER >= nTimeframes)
-	{
-		N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
-	}
-	else
-	{
-		N_TIMEFRAMES_TO_CONSIDER2 = N_TIMEFRAMES_TO_CONSIDER;
-	}
+	// if (N_TIMEFRAMES_TO_CONSIDER <= nTimeframes)
+	// {
+	// 	N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
+	// }
+	// else
+	// {
+	// 	N_TIMEFRAMES_TO_CONSIDER2 = N_TIMEFRAMES_TO_CONSIDER;
+	// }
 
 	BOND_STATUS **polymerBondStatus;
 	polymerBondStatus = (BOND_STATUS **) malloc (datafile.nBonds * sizeof (BOND_STATUS *));
@@ -4121,18 +4137,20 @@ int main(int argc, char const *argv[])
 	printf("Skipping %d timeframes initially...\n", timeframesToSkip);
 	printf("To consider: %d\n", N_TIMEFRAMES_TO_CONSIDER2);
 
+	timeframesToSkip = 0;
+
 	int effectiveCurrentTimeframe = 0;
 
 	while (file_status > 0)
 	{
-		printf("Scanning timeframe: %d (%d) / %d                  \r", currentTimeframe + 1, effectiveCurrentTimeframe + 1, nTimeframes);
+		printf("Scanning timeframe: %d (%d) / %d                  \r", currentTimeframe + 1, file_status, nTimeframes);
 		fflush (stdout);
 
 		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
 		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries, energyColumn);
 
-		if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
-		{
+		// if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
+		// {
 			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
 
 			beadBoundStatus = findBoundStates (beadBoundStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
@@ -4143,10 +4161,10 @@ int main(int argc, char const *argv[])
 				printStates (polymerStates, outputStates, datafile); }
 
 			effectiveCurrentTimeframe += 1;
-		}
+		// }
 
-		if (currentTimeframe > nTimeframes) {
-			goto leaveThisLoop; }
+		// if (currentTimeframe > nTimeframes) {
+		// 	goto leaveThisLoop; }
 
 		file_status = fgetc (inputDump);
 		currentTimeframe++;
@@ -4164,6 +4182,8 @@ int main(int argc, char const *argv[])
 	fclose (outputStates);
 
 	int nBB = countBBtransitions (nBB, polymerBondStatus, beadBoundStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+	fprintf(stdout, "nBB: %d\n", nBB);
+	fflush (stdout);
 	float *tauBB;
 
 	tauBB = (float *) malloc (nBB * sizeof (float));
@@ -4233,6 +4253,9 @@ int main(int argc, char const *argv[])
 	nLDL = count_nLDL (nLDL, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
 	nLDB = count_nLDB (nLDB, beadBoundStatus, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, sortedAtoms);
 
+	fprintf(stdout, "nBDBs: %d\nnBDBd: %d\nnBDL: %d\nnLDL: %d\nnLDB: %d\n", nBDBs, nBDBd, nBDL, nLDL, nLDB);
+	fflush (stdout);
+
 	float *tau_BDBs, *tau_BDBd, *tau_BDL, *tau_LDL, *tau_LDB;
 	tau_BDBs = (float *) malloc (nBDBs * sizeof (float));
 	tau_BDBd = (float *) malloc (nBDBd * sizeof (float));
@@ -4248,6 +4271,10 @@ int main(int argc, char const *argv[])
 
 	int nLL;
 	nLL = countLLtransitions (nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
+
+	fprintf(stdout, "nLL: %d\n", nLL);
+	fflush (stdout);
+	
 	float *tauLL;
 	tauLL = (float *) malloc (nLL * sizeof (float));
 	tauLL = countTauLL (tauLL, nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
@@ -4263,6 +4290,7 @@ int main(int argc, char const *argv[])
 	printTauBDL (tau_BDL, nBDL, folderName);
 	printTauLDL (tau_LDL, nLDL, folderName);
 	printTauLDB (tau_LDB, nLDB, folderName);
+	fflush (stdout);
 
 	tauS_at = (float *) malloc (nS_at * sizeof (float));
 	tauS_at = countTauS_at (tauS_at, nS_at, beadBoundStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
