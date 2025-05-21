@@ -8,14 +8,14 @@
 
 // These global variables are no longer needed
 // I am taking these values from data file
-#define NPARTICLES 100
-#define NPOLYMERS 4000
-#define NBEADS 2
-#define COORDINATION_NUMBER 20
+// #define NPARTICLES 100
+// #define NPOLYMERS 4000
+// #define NBEADS 2
+// #define COORDINATION_NUMBER 20
 
 // This is important. Set this to high number
 // Too big number requires high memory
-#define N_TIMEFRAMES_TO_CONSIDER 100000
+// #define N_TIMEFRAMES_TO_CONSIDER 20000
 
 typedef struct blocks
 {
@@ -379,10 +379,12 @@ int countDumpEntries (FILE *inputDump, int nDumpEntries)
 	return nDumpEntries;
 }
 
-DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries, int nDumpEntries, int energyColumn)
+DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries, int nDumpEntries, int energyColumn, int *status)
 {
 	char lineString[3000];
-	int nDumpEntries_current;
+	int nDumpEntries_current = 0;
+	int debugg = 0;
+	(*status) = 0;
 
 	for (int i = 0; i < 9; ++i)
 	{
@@ -392,17 +394,42 @@ DUMP_ENERGY *saveDumpEnergyEntries (FILE *inputDump, DUMP_ENERGY *energyEntries,
 			sscanf (lineString, "%d\n", &nDumpEntries_current); }
 	}
 
+	// fprintf(stdout, "nDumpEntries_current: %d\n", nDumpEntries_current);
+	// fflush (stdout);
+
 	for (int i = 0; i < nDumpEntries_current; ++i)
 	{
-		fgets (lineString, 3000, inputDump);
+		// fgets (lineString, 3000, inputDump);
+
+		if (fgets (lineString, 3000, inputDump) != NULL)
+		{
+			(*status) = 1;
+		}
+		else
+		{
+			(*status) = 0;
+			return energyEntries;
+		}
 
 		if (energyColumn == 4)
 		{
 			sscanf (lineString, "%d %d %*f %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].energy);
+
+			if (debugg == 1)
+			{
+				fprintf(stdout, "%d %d %f [%d]\n", energyEntries[i].atom1, energyEntries[i].atom2, energyEntries[i].energy, (*status));
+				usleep (100000);
+			}
 		}
 		else if (energyColumn == 3)
 		{
 			sscanf (lineString, "%d %d %f\n", &energyEntries[i].atom1, &energyEntries[i].atom2, &energyEntries[i].energy);
+
+			if (debugg == 1)
+			{
+				fprintf(stdout, "%d %d %f [%d]\n", energyEntries[i].atom1, energyEntries[i].atom2, energyEntries[i].energy, (*status));
+				usleep (100000);
+			}
 		}
 
 /*		if (i < 5 || i > (nDumpEntries_current - 5))
@@ -1241,6 +1268,9 @@ int countBBtransitions (int nBB, BOND_STATUS **polymerBondStatus, BOUND_STATUS *
 		}
 	}
 
+	fprintf(stdout, "nBB: %d\n", nBB);
+	fflush (stdout);
+
 	return nBB;
 }
 
@@ -1616,12 +1646,25 @@ int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nBL;
 }
 
-float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int bbcorrection)
 {
 	int currentTransition = 0, currentTau = 0;
 	int boundParticleID1 = 0, boundParticleID2 = 0;
 
 	printf("\nCalculating transition time from bridge to loop...\n");
+
+	if (bbcorrection == 1)
+	{
+		fprintf(stdout, "Correcting the bridge to loop transitions based on bridge to bridge transitions...\n");
+	}
+	else if (bbcorrection == 0)
+	{
+		fprintf(stdout, "Not correcting for bridge to bridge transitions in tauBL...\n");
+	}
+	else
+	{
+		fprintf(stdout, "Undefined behaviour for bridge to bridge correction...\n");
+	}
 
 	for (int i = 0; i < datafile.nBonds; ++i)
 	{
@@ -1644,16 +1687,23 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				// printf("(%d) ", currentTau);
 				// usleep (10000);
 
-				// if (boundParticleID1 != 0 && boundParticleID2 != 0)
-				// {
-					// if (boundParticleID1 != polymerBondStatus[i][j].id1 || boundParticleID2 != polymerBondStatus[i][j].id2)
-				// 	{
-						// currentTau = 0;
-				// 	}
-				// }
+				if ((boundParticleID1 != 0) && (boundParticleID2 != 0) && (polymerBondStatus[i][j].id1 != 0) && (polymerBondStatus[i][j].id2 != 0) && (bbcorrection == 1))
+				{
+					if ((boundParticleID1 != polymerBondStatus[i][j].id1) || (boundParticleID2 != polymerBondStatus[i][j].id2))
+					{
+						currentTau = 0;
+					}
+				}
 
-				// boundParticleID1 = polymerBondStatus[i][j].id1;
-				// boundParticleID2 = polymerBondStatus[i][j].id2;
+				if (polymerBondStatus[i][j].id1 != 0)
+				{
+					boundParticleID1 = polymerBondStatus[i][j].id1;
+				}
+
+				if (polymerBondStatus[i][j].id2 != 0)
+				{
+					boundParticleID2 = polymerBondStatus[i][j].id2;
+				}
 			}
 			else if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 0 && polymerBondStatus[i][j].isItFree == 0)
 			{
@@ -2347,6 +2397,53 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 				counter++;
 			}
 
+			// After the counter starts,
+			if (counter > 0)
+			{
+				// The counter stops when one of the two beads eject or,
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				{
+					tauE_at_bridge[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends: 1<\n");
+					}
+				}
+				// when both the beads stay bounded, but to a different particles, indicating bridge to bridge transition.
+				else if (((particleID1 != polymerBondStatus[i][j].id1) || 
+						(particleID2 != polymerBondStatus[i][j].id2)) &&
+						(polymerBondStatus[i][j].id1 != 0) &&
+						(polymerBondStatus[i][j].id2 != 0))
+				{
+					tauE_at_bridge[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends: 2<\n");
+					}
+				}
+				// when both of the beads are still bounded, but they are now a loop.
+				else if ((polymerBondStatus[i][j].id1 == polymerBondStatus[i][j].id2) &&
+						(polymerBondStatus[i][j].id1 != 0) &&
+						(polymerBondStatus[i][j].id2 != 0))
+				{
+					tauE_at_bridge[currentIndex] = counter;
+					counter = 0;
+					currentIndex++;
+
+					if (debugg == 1)
+					{
+						printf(">counter ends: 3<\n");
+					}
+				}
+			}
+
 			// If the bridge is stable
 			// this check prevents bridge to bridge transitions
 			// after a stable bridge was found, the counter starts 
@@ -2392,53 +2489,6 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 				if (polymerBondStatus[i][j].isItBridge == 1 && (counter%100 == 0))
 				{
 					usleep (1000000);
-				}
-			}
-
-			// After the counter starts,
-			if (counter > 0)
-			{
-				// The counter stops when one of the two beads eject or,
-				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
-					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
-				{
-					tauE_at_bridge[currentIndex] = counter;
-					counter = 0;
-					currentIndex++;
-
-					if (debugg == 1)
-					{
-						printf(">counter ends: 1<\n");
-					}
-				}
-				// when both the beads stay bounded, but to a different particles, indicating bridge to bridge transition.
-				else if (((particleID1 != polymerBondStatus[i][j].id1) || 
-						(particleID2 != polymerBondStatus[i][j].id2)) &&
-						(polymerBondStatus[i][j].id1 != 0) &&
-						(polymerBondStatus[i][j].id2 != 0))
-				{
-					tauE_at_bridge[currentIndex] = counter;
-					counter = 0;
-					currentIndex++;
-
-					if (debugg == 1)
-					{
-						printf(">counter ends: 2<\n");
-					}
-				}
-				// when both of the beads are still bounded, but they are now a loop.
-				else if ((polymerBondStatus[i][j].id1 == polymerBondStatus[i][j].id2) &&
-						(polymerBondStatus[i][j].id1 != 0) &&
-						(polymerBondStatus[i][j].id2 != 0))
-				{
-					tauE_at_bridge[currentIndex] = counter;
-					counter = 0;
-					currentIndex++;
-
-					if (debugg == 1)
-					{
-						printf(">counter ends: 3<\n");
-					}
 				}
 			}
 		}
@@ -4020,9 +4070,9 @@ void printTauLDB (float *tau_LDB, int nLDB, const char *folderName)
 
 int main(int argc, char const *argv[])
 {
-	if (argc != 5)
+	if (argc != 7)
 	{
-		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n{~} argv[3] = dt for calculations.\n{~} argv[4] = Column number for energy entries\n\n");
+		printf("ERROR: INCORRECT ARGUMENTS PASSED.\n\n Required arguments:\n\n{~} argv[0] = ./program\n{~} argv[1] = input dump file (ascii text or *.gz)\n{~} argv[2] = input data file.\n{~} argv[3] = dt for calculations.\n{~} argv[4] = Column number for energy entries\n{~} argv[5] = Number of timeframes to consider\n{~} argv[6] = Bridge to bridge correction (0 or 1)\n\n");
 		exit (1);
 	}
 
@@ -4031,7 +4081,13 @@ int main(int argc, char const *argv[])
 	pipeString = (char *) malloc (500 * sizeof (char));
 	folderName = (char *) malloc (500 * sizeof (char));
 	snprintf (pipeString, 500, "gzcat %s", argv[1]);
-	snprintf (folderName, 500, "stats_%s_%s_%d_%d", argv[1], argv[2], atoi (argv[3]), atoi (argv[4]));
+	snprintf (folderName, 500, "stats_%s_%s_%d_%d_%d_%d", argv[1], argv[2], atoi (argv[3]), atoi (argv[4]), atoi (argv[5]), atoi (argv[6]));
+
+	int N_TIMEFRAMES_TO_CONSIDER = atoi (argv[5]);
+	int bbcorrection = atoi (argv[6]);
+
+	fprintf(stdout, "N_TIMEFRAMES_TO_CONSIDER: %d\ndt: %d\nbbcorrection: %d\n\n", N_TIMEFRAMES_TO_CONSIDER, atoi (argv[3]), bbcorrection);
+	fflush (stdout);
 
 	int energyColumn = atoi (argv[4]);
 
@@ -4076,8 +4132,10 @@ int main(int argc, char const *argv[])
 	sortedAtoms = (DATA_ATOMS *) malloc (datafile.nAtoms * sizeof (DATA_ATOMS));
 	sortedAtoms = sortAtoms (sortedAtoms, dataAtoms, datafile.nAtoms);
 
-	int nTimeframes = countNTimeframes (argv[1]), N_TIMEFRAMES_TO_CONSIDER2;
-	N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
+	int nTimeframes = 0; //countNTimeframes (argv[1]);
+	int N_TIMEFRAMES_TO_CONSIDER2;
+	//N_TIMEFRAMES_TO_CONSIDER2 = nTimeframes;
+	N_TIMEFRAMES_TO_CONSIDER2 = N_TIMEFRAMES_TO_CONSIDER;
 
 	// if (N_TIMEFRAMES_TO_CONSIDER <= nTimeframes)
 	// {
@@ -4125,46 +4183,49 @@ int main(int argc, char const *argv[])
 	}
 
 	energyEntries = (DUMP_ENERGY *) malloc (nDumpEntries * 2 * sizeof (DUMP_ENERGY));
+	printf("Allocating %d mem (type DUMP_ENERGY) for variable energyEntries\n", nDumpEntries * 2);
 	int currentTimeframe = 0;
 
 	STATES polymerStates;
 
 	int timeframesToSkip = 0;
 
-	if (nTimeframes > N_TIMEFRAMES_TO_CONSIDER2) {
-		timeframesToSkip = nTimeframes - N_TIMEFRAMES_TO_CONSIDER2; }
-
 	printf("Skipping %d timeframes initially...\n", timeframesToSkip);
 	printf("To consider: %d\n", N_TIMEFRAMES_TO_CONSIDER2);
 
 	timeframesToSkip = 0;
+	int status = 0;
 
 	int effectiveCurrentTimeframe = 0;
 
 	while (file_status > 0)
 	{
-		printf("Scanning timeframe: %d (%d) / %d                  \r", currentTimeframe + 1, file_status, nTimeframes);
+		printf("Scanning timeframe: %d (%d) / %d                  \r", currentTimeframe + 1, file_status, N_TIMEFRAMES_TO_CONSIDER2);
 		fflush (stdout);
 
 		energyEntries = initEnergyEntries (energyEntries, nDumpEntries);
-		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries, energyColumn);
+		energyEntries = saveDumpEnergyEntries (inputDump, energyEntries, nDumpEntries, energyColumn, &status);
 
-		// if (((currentTimeframe + 1) > timeframesToSkip) && ((currentTimeframe % dt) == 0))
-		// {
+		if (status == 0)
+		{
+			goto leaveThisLoop;
+		}
+
+		if ((currentTimeframe % dt) == 0)
+		{
 			polymerBondStatus = checkBondStatus (polymerBondStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
 
 			beadBoundStatus = findBoundStates (beadBoundStatus, energyEntries, nDumpEntries, datafile, N_TIMEFRAMES_TO_CONSIDER2, effectiveCurrentTimeframe, sortedAtoms);
 
 			polymerStates = countStates (polymerStates, polymerBondStatus, datafile, effectiveCurrentTimeframe);
 
-			if ((currentTimeframe + 1) < nTimeframes) {
-				printStates (polymerStates, outputStates, datafile); }
+			printStates (polymerStates, outputStates, datafile);
 
 			effectiveCurrentTimeframe += 1;
-		// }
+		}
 
-		// if (currentTimeframe > nTimeframes) {
-		// 	goto leaveThisLoop; }
+		if (currentTimeframe > N_TIMEFRAMES_TO_CONSIDER2) {
+			goto leaveThisLoop; }
 
 		file_status = fgetc (inputDump);
 		currentTimeframe++;
@@ -4274,7 +4335,7 @@ int main(int argc, char const *argv[])
 
 	fprintf(stdout, "nLL: %d\n", nLL);
 	fflush (stdout);
-	
+
 	float *tauLL;
 	tauLL = (float *) malloc (nLL * sizeof (float));
 	tauLL = countTauLL (tauLL, nLL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, beadBoundStatus, sortedAtoms);
@@ -4303,7 +4364,7 @@ int main(int argc, char const *argv[])
 	int nBL = countBLtransitions (nBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
 	tauBL = (float *) malloc (nBL * sizeof (float));
-	tauBL = countTauBL (tauBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+	tauBL = countTauBL (tauBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, bbcorrection);
 	printTauBL (tauBL, nBL, folderName);
 	
 	tauLB = (float *) malloc (nLB * sizeof (float));
@@ -4453,4 +4514,36 @@ for dirname, dirpath, files in os.walk ("."):
                     os.system ("cp {}/completeStats.sh .".format (pd))
                     os.chdir (pd)
                     print (dirname)
+
+
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1;
+
+wc -l eps5/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauBL.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauBB.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauLB.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauE_at_bridge.output
+
+
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1;
+
+wc -l eps5/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_BDBd.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_BDBs.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_BDL.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_LDB.output
+wc -l eps5/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_LDL.output
+
+
+head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1;
+head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1;
+
+
 */
