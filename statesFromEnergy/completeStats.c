@@ -1120,8 +1120,8 @@ int countBBtransitions (int nBB, BOND_STATUS **polymerBondStatus, BOUND_STATUS *
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -1311,8 +1311,8 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, BOUND_STATUS *
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -1508,8 +1508,8 @@ int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframe
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && polymerBondStatus[i][j - 1].isItLoop == 1)
 			{
@@ -1574,8 +1574,8 @@ float *countTauLL (float *tauLL, int nLL, BOND_STATUS **polymerBondStatus, int n
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (beadBoundStatus[atomNumber1 - 1][j].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 1 && polymerBondStatus[i][j].isItLoop == 1)
 			{
@@ -2238,8 +2238,8 @@ int countE_at_bridge_transitions (int nE_at_bridge, BOUND_STATUS **beadBoundStat
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			// If the bridge is stable
 			// this check prevents bridge to bridge transitions at the beginning
@@ -2381,8 +2381,8 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			// Once the counter starts, the counter continues as long as both
 			// the beads are bound to the same two particles
@@ -2546,8 +2546,8 @@ int countE_at_dangle_transitions (int nE_at_dangle, BOUND_STATUS **beadBoundStat
 	// {
 	// 	for (int j = 1; j < nTimeframes; ++j)
 	// 	{
-	// 		atomNumber1 = ((i + 1) * 2) - 1 + m.floor (i / (coordinationNumber * 2));
-	// 		atomNumber2 = ((i + 1) * 2) + m.floor (i / (coordinationNumber * 2));
+	// 		atomNumber1 = ((i + 1) * 2) - 1 + m.floor ((i * 2) / (coordinationNumber));
+	// 		atomNumber2 = ((i + 1) * 2) + m.floor ((i * 2) / (coordinationNumber));
 
 	// 		if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
 	// 			(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
@@ -2669,8 +2669,8 @@ int countE_at_loop_transitions (int nE_at_loop, BOUND_STATUS **beadBoundStatus, 
 	{
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
 				(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
@@ -2730,8 +2730,8 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (counter > 0 && 
 				(beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 1) &&
@@ -2919,8 +2919,8 @@ int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3007,8 +3007,8 @@ float *count_tau_BDBs (float *tau_BDBs, int nBDBs, BOUND_STATUS **beadBoundStatu
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3128,8 +3128,8 @@ int count_nBDBd (int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3216,8 +3216,8 @@ float *count_tau_BDBd (float *tau_BDBd, int nBDBd, BOUND_STATUS **beadBoundStatu
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3330,8 +3330,8 @@ int count_nBDL (int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3413,8 +3413,8 @@ float *count_tau_BDL (float *tau_BDL, int nBDL, BOUND_STATUS **beadBoundStatus, 
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3523,8 +3523,8 @@ int count_nLDL (int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3607,8 +3607,8 @@ float *count_tau_LDL (float *tau_LDL, int nLDL, BOUND_STATUS **beadBoundStatus, 
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3721,8 +3721,8 @@ int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -3791,7 +3791,7 @@ int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 float *count_tau_LDB (float *tau_LDB, int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
-	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int debugg = 1, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 	int counter = 0, currentIndex = 0;
@@ -3804,8 +3804,8 @@ float *count_tau_LDB (float *tau_LDB, int nLDB, BOUND_STATUS **beadBoundStatus, 
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
-			atomNumber1 = ((i + 1) * 2) - 1 + floor (i / (coordinationNumber * 2));
-			atomNumber2 = ((i + 1) * 2) + floor (i / (coordinationNumber * 2));
+			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
+			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
 			if (debugg == 1)
 			{
@@ -4515,35 +4515,227 @@ for dirname, dirpath, files in os.walk ("."):
                     os.chdir (pd)
                     print (dirname)
 
+FOR LATEX PARTICLE SIMULATION
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauBL.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauBB.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauLB.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1;
+BL:
 
-wc -l eps5/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauBL.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauBL.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauBB.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauBB.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauLB.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauLB.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps6/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps7/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps8/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps9/stats_dump.short_data.poly_1_4/tauE_at_bridge.output; wc -l eps10/stats_dump.short_data.poly_1_4/tauE_at_bridge.output
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tauBL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauBL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tauBL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tauBL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tauBL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tauBL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tauBL.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauBL.output
+
+BB:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tauBB.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauBB.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tauBB.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tauBB.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tauBB.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tauBB.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tauBB.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauBB.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauBB.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauBB.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauBB.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauBB.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauBB.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauBB.output
+
+LB:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tauLB.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauLB.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tauLB.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tauLB.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tauLB.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tauLB.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tauLB.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauLB.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauLB.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauLB.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauLB.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauLB.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauLB.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauLB.output
+
+LL:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tauLL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauLL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tauLL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tauLL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tauLL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tauLL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tauLL.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauLL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauLL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauLL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauLL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauLL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauLL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauLL.output
+
+tauE_bridge:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauE_at_bridge.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tauE_at_bridge.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tauE_at_bridge.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tauE_at_bridge.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tauE_at_bridge.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tauE_at_bridge.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauE_at_bridge.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauE_at_bridge.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauE_at_bridge.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauE_at_bridge.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauE_at_bridge.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauE_at_bridge.output
+
+BDBd:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tau_BDBd.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tau_BDBd.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tau_BDBd.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tau_BDBd.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tau_BDBd.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tau_BDBd.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tau_BDBd.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tau_BDBd.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tau_BDBd.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tau_BDBd.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tau_BDBd.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tau_BDBd.output
+
+BDBs:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tau_BDBs.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tau_BDBs.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tau_BDBs.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tau_BDBs.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tau_BDBs.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tau_BDBs.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tau_BDBs.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tau_BDBs.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tau_BDBs.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tau_BDBs.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tau_BDBs.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tau_BDBs.output
+
+BDL:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tau_BDL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tau_BDL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tau_BDL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tau_BDL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tau_BDL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tau_BDL.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tau_BDL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tau_BDL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tau_BDL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tau_BDL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tau_BDL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tau_BDL.output
+
+LDB:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tau_LDB.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tau_LDB.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tau_LDB.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tau_LDB.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tau_LDB.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tau_LDB.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tau_LDB.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tau_LDB.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tau_LDB.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tau_LDB.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tau_LDB.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tau_LDB.output
+
+LDL:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tau_LDL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tau_LDL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tau_LDL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tau_LDL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tau_LDL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tau_LDL.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tau_LDL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tau_LDL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tau_LDL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tau_LDL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tau_LDL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tau_LDL.output
 
 
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_BDBd.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_BDBs.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_BDL.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_LDB.output_n999999_c1_2.block| tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_tau_LDL.output_n999999_c1_2.block| tail -1;
+Bridges:
 
-wc -l eps5/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_BDBd.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_BDBd.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_BDBs.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_BDBs.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_BDL.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_BDL.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_LDB.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_LDB.output
-wc -l eps5/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps6/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps7/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps8/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps9/stats_dump.short_data.poly_1_4/tau_LDL.output; wc -l eps10/stats_dump.short_data.poly_1_4/tau_LDL.output
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1;
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1;
 
 
-head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c1_2.block | tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c2_2.block | tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c3_2.block | tail -1;
-head -10 eps5/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4/average_polymerStates.timeseries_n999999_c4_2.block | tail -1;
+Loop:
 
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1;
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1;
+
+
+Dangle:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1;
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1;
+
+
+Free:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1;
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1;
+
+
+FOR GHOST PARTICLE SIMULATION:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+BL:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tauBL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tauBL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tauBL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tauBL.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tauBL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tauBL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tauBL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tauBL.output
+
+BB:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauBB.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tauBB.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tauBB.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tauBB.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tauBB.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauBB.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tauBB.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tauBB.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tauBB.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tauBB.output
+
+LB:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLB.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tauLB.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tauLB.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tauLB.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tauLB.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLB.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tauLB.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tauLB.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tauLB.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tauLB.output
+
+LL:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauLL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tauLL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tauLL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tauLL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tauLL.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauLL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tauLL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tauLL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tauLL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tauLL.output
+
+tauE_bridge:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tauE_at_bridge.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tauE_at_bridge.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tauE_at_bridge.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tauE_at_bridge.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tauE_at_bridge.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tauE_at_bridge.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tauE_at_bridge.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tauE_at_bridge.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tauE_at_bridge.output
+
+BDBd:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBd.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBd.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBd.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBd.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBd.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBd.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBd.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBd.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBd.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBd.output
+
+BDBs:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDBs.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBs.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBs.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBs.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDBs.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDBs.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBs.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBs.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBs.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDBs.output
+
+BDL:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_BDL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tau_BDL.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_BDL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tau_BDL.output
+
+LDB:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDB.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDB.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDB.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDB.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDB.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDB.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDB.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDB.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDB.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDB.output
+
+LDL:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_tau_LDL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_0/tau_LDL.output
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_tau_LDL.output_n999999_c1_2.block| tail -1;
+wc -l eps7/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDL.output; wc -l eps8/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDL.output; wc -l eps9/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDL.output; wc -l eps10/stats_dump*.stat.gz_input.data_1_3_*_1/tau_LDL.output
+
+
+Bridges:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c1_2.block | tail -1;
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c1_2.block | tail -1;
+
+
+Loop:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c2_2.block | tail -1;
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c2_2.block | tail -1;
+
+
+Dangle:
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c3_2.block | tail -1;
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c3_2.block | tail -1;
+
+
+Free:
+
+hhead -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_0/average_polymerStates.timeseries_n999999_c4_2.block | tail -1;
+
+head -10 eps7/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps8/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps9/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1; head -10 eps10/stats_dump*.stat.gz_input.data_1_3_*_1/average_polymerStates.timeseries_n999999_c4_2.block | tail -1;
 
 */
