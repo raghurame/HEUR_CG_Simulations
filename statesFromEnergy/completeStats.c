@@ -1646,6 +1646,130 @@ int countBLtransitions (int nBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 	return nBL;
 }
 
+float *initTauBL (int nBL, float *tauBL)
+{
+	for (int i = 0; i < nBL; ++i)
+	{
+		tauBL[i] = 0;
+	}
+
+	return tauBL;
+}
+
+float *countTauBL2 (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile)
+{
+	int currentTransition = 0, currentTau = 0;
+	int boundParticleID1 = 0, boundParticleID2 = 0;
+	int bbcorrection = 1;
+	int debugg = 0;
+	int intermediateBridge = 0;
+
+	printf("\nCalculating transition time from bridge to loop (version 2.0)...\n");
+
+	if (bbcorrection == 1)
+	{
+		fprintf(stdout, "In tauBL2.0, only the bridge to loop transitions with a bridge as an intermediate are counted. The rest of the B -> L transitions are discarded...\n");
+	}
+
+	for (int i = 0; i < datafile.nBonds; ++i)
+	{
+		currentTau = 0;
+		intermediateBridge = 0;
+
+		if (debugg == 1)
+		{
+			printf("\nNext bond\n\n");
+			sleep (3);
+		}
+
+		boundParticleID1 = 0;
+		boundParticleID2 = 0;
+
+		for (int j = 0; j < nTimeframes; ++j)
+		{
+			if (debugg == 1)
+			{
+				printStateNumber (polymerBondStatus[i][j].isItFree, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge);
+				usleep (100000);
+			}
+
+			if (j > 0)
+			{
+				if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 1 && intermediateBridge == 1)
+				{
+					tauBL[currentTransition] = (float)currentTau;
+					currentTransition++;
+					currentTau = 0;
+					intermediateBridge = 0;
+
+					if (debugg == 1)
+					{
+						printf("--> %d\n", currentTransition);
+						sleep (1);
+					}
+				}
+				else if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 1 && intermediateBridge == 0)
+				{
+					currentTau = 0;
+					intermediateBridge = 0;
+
+					if (debugg == 1)
+					{
+						printf("timer discarded\n");
+						sleep (1);
+					}
+				}
+			}
+
+			if (polymerBondStatus[i][j].isItBridge == 1)
+			{
+				currentTau++;
+
+				if (debugg == 1)
+				{
+					printf("(%d) ", currentTau);
+					usleep (10000);
+				}
+
+				if ((boundParticleID1 != 0) && (boundParticleID2 != 0) && (polymerBondStatus[i][j].id1 != 0) && (polymerBondStatus[i][j].id2 != 0) && (bbcorrection == 1))
+				{
+					if ((boundParticleID1 != polymerBondStatus[i][j].id1) || (boundParticleID2 != polymerBondStatus[i][j].id2))
+					{
+						intermediateBridge = 1;
+
+						if (debugg == 1)
+						{
+							printf("[b2b] ");
+						}
+					}
+				}
+
+				if (polymerBondStatus[i][j].id1 != 0)
+				{
+					boundParticleID1 = polymerBondStatus[i][j].id1;
+				}
+
+				if (polymerBondStatus[i][j].id2 != 0)
+				{
+					boundParticleID2 = polymerBondStatus[i][j].id2;
+				}
+			}
+
+			else if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 0 && polymerBondStatus[i][j].isItFree == 0)
+			{
+				currentTau++;
+			}
+		}
+
+		if (debugg == 1)
+		{
+			printf("\n");
+		}
+	}
+
+	return tauBL;
+}
+
 float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, int bbcorrection)
 {
 	int currentTransition = 0, currentTau = 0;
@@ -1780,6 +1904,24 @@ void printTauBL (float *tauBL, int nBL, const char *folderName)
 	char *tauBL_file_filename;
 	tauBL_file_filename = (char *) malloc (500 * sizeof (char));
 	snprintf (tauBL_file_filename, 500, "%s/tauBL.output", folderName);
+	fprintf(stdout, "Printing %s\n", tauBL_file_filename);
+
+	FILE *tauBL_file;
+	tauBL_file = fopen (tauBL_file_filename, "w");
+
+	for (int i = 0; i < nBL; ++i)
+	{
+		fprintf(tauBL_file, "%f\n", tauBL[i]);
+	}
+
+	fclose (tauBL_file);
+}
+
+void printTauBL2 (float *tauBL, int nBL, const char *folderName)
+{
+	char *tauBL_file_filename;
+	tauBL_file_filename = (char *) malloc (500 * sizeof (char));
+	snprintf (tauBL_file_filename, 500, "%s/tauBL2.output", folderName);
 	fprintf(stdout, "Printing %s\n", tauBL_file_filename);
 
 	FILE *tauBL_file;
@@ -3791,7 +3933,7 @@ int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 
 float *count_tau_LDB (float *tau_LDB, int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerBondStatus, int nTimeframes, DATAFILE_INFO datafile, DATA_ATOMS *sortedAtoms)
 {
-	int debugg = 1, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
+	int debugg = 0, particleID1 = 0, particleID2 = 0, dangleFromLoop = 0, currentlyLoop = 0, atomNumber1 = 0, atomNumber2 = 0;
 	int nPolymers = datafile.nBonds, nParticles = datafile.nAtoms - (datafile.nBonds * 2);
 	int coordinationNumber = (nPolymers * 2) / nParticles;
 	int counter = 0, currentIndex = 0;
@@ -4360,12 +4502,20 @@ int main(int argc, char const *argv[])
 	// computing transitions
 	polymerBondStatus = correctingDangles (polymerBondStatus, datafile, N_TIMEFRAMES_TO_CONSIDER2);
 
-	float *tauBL, *tauLB;
+	float *tauBL, *tauBL2, *tauLB;
 	int nBL = countBLtransitions (nBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile), nLB = countLBtransitions (nLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
 
 	tauBL = (float *) malloc (nBL * sizeof (float));
+	tauBL2 = (float *) malloc (nBL * sizeof (float));
+
+	tauBL = initTauBL (nBL, tauBL);
+	tauBL2 = initTauBL (nBL, tauBL2);
+
 	tauBL = countTauBL (tauBL, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile, bbcorrection);
+	tauBL2 = countTauBL2 (tauBL2, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
+
 	printTauBL (tauBL, nBL, folderName);
+	printTauBL2 (tauBL2, nBL, folderName);
 	
 	tauLB = (float *) malloc (nLB * sizeof (float));
 	tauLB = countTauLB (tauLB, polymerBondStatus, N_TIMEFRAMES_TO_CONSIDER2, datafile);
