@@ -1661,8 +1661,9 @@ float *countTauBL2 (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimefram
 	int currentTransition = 0, currentTau = 0;
 	int boundParticleID1 = 0, boundParticleID2 = 0;
 	int bbcorrection = 1;
-	int debugg = 0;
+	int debugg = 1;
 	int intermediateBridge = 0;
+	int tempPrint = 0;
 
 	printf("\nCalculating transition time from bridge to loop (version 2.0)...\n");
 
@@ -1689,12 +1690,15 @@ float *countTauBL2 (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimefram
 		{
 			if (debugg == 1)
 			{
+				printf("\n");
 				printStateNumber (polymerBondStatus[i][j].isItFree, polymerBondStatus[i][j].isItDangle, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItBridge);
+				printf("  %d %d  ", polymerBondStatus[i][j].id1, polymerBondStatus[i][j].id2);
 				usleep (100000);
 			}
 
 			if (j > 0)
 			{
+				// if it becomes a loop from an intermediate bridge
 				if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 1 && intermediateBridge == 1)
 				{
 					tauBL[currentTransition] = (float)currentTau;
@@ -1705,9 +1709,10 @@ float *countTauBL2 (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimefram
 					if (debugg == 1)
 					{
 						printf("--> %d\n", currentTransition);
-						sleep (1);
+						sleep (5);
 					}
 				}
+				// if it becomes a loop without an intermediate bridge state, (i.e) direct bridge to loop
 				else if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 1 && intermediateBridge == 0)
 				{
 					currentTau = 0;
@@ -1716,42 +1721,71 @@ float *countTauBL2 (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimefram
 					if (debugg == 1)
 					{
 						printf("timer discarded\n");
-						sleep (1);
 					}
 				}
 			}
 
+			// counter starts if the dumbbell is in a bridge state
+			// counter continues if it a bridge
 			if (polymerBondStatus[i][j].isItBridge == 1)
 			{
 				currentTau++;
 
 				if (debugg == 1)
 				{
-					printf("(%d) ", currentTau);
+					printf("(%d) \n", currentTau);
 					usleep (10000);
 				}
 
-				if ((boundParticleID1 != 0) && (boundParticleID2 != 0) && (polymerBondStatus[i][j].id1 != 0) && (polymerBondStatus[i][j].id2 != 0) && (bbcorrection == 1))
+				// turns on the 'intermediateBridge' if it detects a bridge to bridge transition
+				if ((boundParticleID1 != 0) && (boundParticleID2 != 0) && (polymerBondStatus[i][j].id1 != 0) && (polymerBondStatus[i][j].id2 != 0) && (bbcorrection == 1) && (currentTau > 1))
 				{
 					if ((boundParticleID1 != polymerBondStatus[i][j].id1) || (boundParticleID2 != polymerBondStatus[i][j].id2))
 					{
-						intermediateBridge = 1;
-
-						if (debugg == 1)
+						if ((boundParticleID1 != polymerBondStatus[i][j].id2) && (boundParticleID2 != polymerBondStatus[i][j].id1))
 						{
-							printf("[b2b] ");
+							intermediateBridge = 1;
+
+							if (debugg == 1)
+							{
+								printf("\n[b2b] %d -> %d; %d -> %d\n", boundParticleID1, polymerBondStatus[i][j].id1, boundParticleID2, polymerBondStatus[i][j].id2);
+							}
 						}
 					}
 				}
 
-				if (polymerBondStatus[i][j].id1 != 0)
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
 				{
+					if ((polymerBondStatus[i][j].id1 != boundParticleID1) && (debugg == 1))
+					{
+						printf("\nboundParticleID1: %d -> ", boundParticleID1);
+						tempPrint = 1;
+					}
+					
 					boundParticleID1 = polymerBondStatus[i][j].id1;
+
+					if (tempPrint == 1)
+					{
+						printf(" %d [state: %d/%d]\n", boundParticleID1, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItLoop);
+						tempPrint = 0;
+					}
 				}
 
-				if (polymerBondStatus[i][j].id2 != 0)
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
 				{
+					if ((polymerBondStatus[i][j].id2 != boundParticleID2) && (debugg == 1))
+					{
+						printf("\nboundParticleID2: %d -> ", boundParticleID2);
+						tempPrint = 1;
+					}
+
 					boundParticleID2 = polymerBondStatus[i][j].id2;
+
+					if (tempPrint == 1)
+					{
+						printf(" %d [state: %d/%d]\n", boundParticleID2, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItLoop);
+						tempPrint = 0;
+					}
 				}
 			}
 
@@ -1774,6 +1808,8 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 {
 	int currentTransition = 0, currentTau = 0;
 	int boundParticleID1 = 0, boundParticleID2 = 0;
+	int tempPrint = 0;
+	int debugg = 0;
 
 	printf("\nCalculating transition time from bridge to loop...\n");
 
@@ -1808,6 +1844,67 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 			if (polymerBondStatus[i][j].isItBridge == 1)
 			{
 				currentTau++;
+
+				if (debugg == 1)
+				{
+					printf("(%d) \n", currentTau);
+					usleep (10000);
+				}
+
+				// turns on the 'intermediateBridge' if it detects a bridge to bridge transition
+				if ((boundParticleID1 != 0) && (boundParticleID2 != 0) && (polymerBondStatus[i][j].id1 != 0) && (polymerBondStatus[i][j].id2 != 0) && (bbcorrection == 1) && (currentTau > 1))
+				{
+					if ((boundParticleID1 != polymerBondStatus[i][j].id1) || (boundParticleID2 != polymerBondStatus[i][j].id2))
+					{
+						if ((boundParticleID1 != polymerBondStatus[i][j].id2) && (boundParticleID2 != polymerBondStatus[i][j].id1))
+						{
+							currentTau = 0;
+
+							if (debugg == 1)
+							{
+								printf("\n[b2b] %d -> %d; %d -> %d\n", boundParticleID1, polymerBondStatus[i][j].id1, boundParticleID2, polymerBondStatus[i][j].id2);
+							}
+						}
+					}
+				}
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					if ((polymerBondStatus[i][j].id1 != boundParticleID1) && (debugg == 1))
+					{
+						printf("\nboundParticleID1: %d -> ", boundParticleID1);
+						tempPrint = 1;
+					}
+					
+					boundParticleID1 = polymerBondStatus[i][j].id1;
+
+					if (tempPrint == 1)
+					{
+						printf(" %d [state: %d/%d]\n", boundParticleID1, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItLoop);
+						tempPrint = 0;
+					}
+				}
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					if ((polymerBondStatus[i][j].id2 != boundParticleID2) && (debugg == 1))
+					{
+						printf("\nboundParticleID2: %d -> ", boundParticleID2);
+						tempPrint = 1;
+					}
+
+					boundParticleID2 = polymerBondStatus[i][j].id2;
+
+					if (tempPrint == 1)
+					{
+						printf(" %d [state: %d/%d]\n", boundParticleID2, polymerBondStatus[i][j].isItBridge, polymerBondStatus[i][j].isItLoop);
+						tempPrint = 0;
+					}
+				}
+
+				// Old code block
+				/*
+				currentTau++;
 				// printf("(%d) ", currentTau);
 				// usleep (10000);
 
@@ -1828,6 +1925,7 @@ float *countTauBL (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				{
 					boundParticleID2 = polymerBondStatus[i][j].id2;
 				}
+				*/
 			}
 			else if (currentTau > 0 && polymerBondStatus[i][j].isItLoop == 0 && polymerBondStatus[i][j].isItFree == 0)
 			{
@@ -4675,6 +4773,14 @@ wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauBL.output; wc -l eps6/stats_dum
 
 head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauBL.output_n999999_c1_2.block| tail -1;
 wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauBL.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauBL.output
+
+BL2:
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_0/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_0/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_0/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_0/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_0/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_0/average_tauBL2.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_0/tauBL2.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_0/tauBL2.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_0/tauBL2.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_0/tauBL2.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_0/tauBL2.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_0/tauBL2.output
+
+head -10 eps5/stats_dump.short_data.poly_1_4_*_1/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps6/stats_dump.short_data.poly_1_4_*_1/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps7/stats_dump.short_data.poly_1_4_*_1/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps8/stats_dump.short_data.poly_1_4_*_1/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps9/stats_dump.short_data.poly_1_4_*_1/average_tauBL2.output_n999999_c1_2.block| tail -1; head -10 eps10/stats_dump.short_data.poly_1_4_*_1/average_tauBL2.output_n999999_c1_2.block| tail -1;
+wc -l eps5/stats_dump.short_data.poly_1_4_*_1/tauBL2.output; wc -l eps6/stats_dump.short_data.poly_1_4_*_1/tauBL2.output; wc -l eps7/stats_dump.short_data.poly_1_4_*_1/tauBL2.output; wc -l eps8/stats_dump.short_data.poly_1_4_*_1/tauBL2.output; wc -l eps9/stats_dump.short_data.poly_1_4_*_1/tauBL2.output; wc -l eps10/stats_dump.short_data.poly_1_4_*_1/tauBL2.output
 
 BB:
 
