@@ -1421,8 +1421,11 @@ float *countTauBB (float *tauBB, BOND_STATUS **polymerBondStatus, BOUND_STATUS *
 				currentlyBridge = 1;
 				dangleFromBridge = 0;
 
-				particleID1 = polymerBondStatus[i][j].id1;
-				particleID2 = polymerBondStatus[i][j].id2;
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j].id1;
+					particleID2 = polymerBondStatus[i][j].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -1519,7 +1522,7 @@ int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				}
 			}
 
-			if (debugg)
+			if (debugg == 1)
 			{
 				printf("%d (%d: %d/%d) + %d (%d: %d/%d) => %d, loop: %d, dangle: %d, timeframe: %d  ", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, polymerBondStatus[i][j].id2, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id1, polymerBondStatus[i][j].id2, counter, polymerBondStatus[i][j].isItLoop, polymerBondStatus[i][j].isItDangle, j);
 
@@ -1537,7 +1540,7 @@ int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				counter = 0;
 				nLL++;
 
-				if (debugg)
+				if (debugg == 1)
 				{
 					fprintf(stdout, ">counter stopped<");
 					fflush (stdout);
@@ -1545,7 +1548,7 @@ int countLLtransitions (int nLL, BOND_STATUS **polymerBondStatus, int nTimeframe
 				}
 			}
 
-			if (debugg)
+			if (debugg == 1)
 			{
 				printf("\n");
 			}
@@ -1661,7 +1664,7 @@ float *countTauBL2 (float *tauBL, BOND_STATUS **polymerBondStatus, int nTimefram
 	int currentTransition = 0, currentTau = 0;
 	int boundParticleID1 = 0, boundParticleID2 = 0;
 	int bbcorrection = 1;
-	int debugg = 1;
+	int debugg = 0;
 	int intermediateBridge = 0;
 	int tempPrint = 0;
 
@@ -2204,8 +2207,12 @@ float *countTauE (float *tauE, BOND_STATUS **polymerBondStatus, int nTimeframes,
 					if ((polymerBondStatus[i][j - 1].id1*polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j - 1].id2*polymerBondStatus[i][j].id2 == 0))
 					{
 						justEjected = 1;
-						boundParticleID1 = polymerBondStatus[i][j].id1;
-						boundParticleID2 = polymerBondStatus[i][j].id2;
+
+						if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+						{
+							boundParticleID1 = polymerBondStatus[i][j].id1;
+							boundParticleID2 = polymerBondStatus[i][j].id2;
+						}
 					}
 				}
 			}
@@ -2291,8 +2298,12 @@ float *countTauEm (float *tauEm, BOND_STATUS **polymerBondStatus, int nTimeframe
 				if ((polymerBondStatus[i][j - 1].id1*polymerBondStatus[i][j].id1 == 0) || (polymerBondStatus[i][j - 1].id2*polymerBondStatus[i][j].id2 == 0))
 				{
 					justEjected = 1;
-					boundParticleID1 = polymerBondStatus[i][j].id1;
-					boundParticleID2 = polymerBondStatus[i][j].id2;
+
+					if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+					{
+						boundParticleID1 = polymerBondStatus[i][j].id1;
+						boundParticleID2 = polymerBondStatus[i][j].id2;
+					}
 				}
 			}
 
@@ -2694,8 +2705,11 @@ float *countTauE_at_bridge (float *tauE_at_bridge, int nE_at_bridge, BOUND_STATU
 			{
 				counter++;
 
-				particleID1 = polymerBondStatus[i][j].id1;
-				particleID2 = polymerBondStatus[i][j].id2;
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j].id1;
+					particleID2 = polymerBondStatus[i][j].id2;
+				}
 			}
 
 			// Sometimes, a bead is still bound (with pair interaction energy of greater than -1 kBT, but less than 0 kBT).
@@ -2970,6 +2984,7 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 
 		for (int j = 1; j < nTimeframes; ++j)
 		{
+
 			atomNumber1 = ((i + 1) * 2) - 1 + floor ((i * 2) / (coordinationNumber));
 			atomNumber2 = ((i + 1) * 2) + floor ((i * 2) / (coordinationNumber));
 
@@ -2980,29 +2995,11 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 				counter++;
 			}
 
-			if ((polymerBondStatus[i][j].isItLoop == 1) && 
-				(polymerBondStatus[i][j - 1].isItLoop == 1) &&
-				(counter == 0))
-			{
-				counter++;
-				particleID1 = polymerBondStatus[i][j].id1;
-				particleID2 = polymerBondStatus[i][j].id2;
-			}
-
-			if (debugg == 1)
-			{
-				printf("at1: %d (%d %d); at2: %d (%d %d) => count: %d\n", atomNumber1, beadBoundStatus[atomNumber1 - 1][j].isItBound, polymerBondStatus[i][j].id1, atomNumber2, beadBoundStatus[atomNumber2 - 1][j].isItBound, polymerBondStatus[i][j].id2, counter);
-
-				if (counter%100 == 0 && counter > 0)
-				{
-					sleep (1);
-				}
-			}
-
 			if (counter > 0)
 			{
-				if ((beadBoundStatus[atomNumber1 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
-					(beadBoundStatus[atomNumber2 - 1][j - 1].isItBound == 1 && beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
+				// One bead is unbound, indicating loop to dangle/free transition
+				if ((beadBoundStatus[atomNumber1 - 1][j].isItBound == 0) || 
+					(beadBoundStatus[atomNumber2 - 1][j].isItBound == 0))
 				{
 					tauE_at_loop[currentIndex] = counter;
 					counter = 0;
@@ -3014,6 +3011,9 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 						sleep (1);
 					}
 				}
+
+				// it is possible that both the beads are still bound and
+				// they are bound to a different particles, indicating loop to bridge transition
 				else if (((particleID1 != polymerBondStatus[i][j].id1) || 
 						(particleID2 != polymerBondStatus[i][j].id2)) &&
 						(polymerBondStatus[i][j].id1 != 0) &&
@@ -3029,6 +3029,38 @@ float *countTauE_at_loop (float *tauE_at_loop, int nE_at_loop, BOUND_STATUS **be
 						printf(">counter ends 2<\n");
 						sleep (1);
 					}
+				}
+			}
+
+			// If the loop is stable
+			// after a stable loop was found, the counter starts 
+			if ((polymerBondStatus[i][j].isItLoop == 1) && 
+				(counter == 0))
+			{
+				counter++;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j].id1;
+					particleID2 = polymerBondStatus[i][j].id2;
+				}
+			}
+
+			if (debugg == 1)
+			{
+				printf("at1: %d (%d %d) + at2: %d (%d %d) [%d] => count: %d\n", 
+					atomNumber1, 
+					beadBoundStatus[atomNumber1 - 1][j].isItBound, 
+					polymerBondStatus[i][j].id1, 
+					atomNumber2, 
+					beadBoundStatus[atomNumber2 - 1][j].isItBound, 
+					polymerBondStatus[i][j].id2, 
+					polymerBondStatus[i][j].isItBridge,
+					counter);
+
+				if (polymerBondStatus[i][j].isItLoop == 1 && (counter%100 == 0))
+				{
+					usleep (1000000);
 				}
 			}
 		}
@@ -3177,8 +3209,12 @@ int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 			{
 				currentlyBridge = 0;
 				dangleFromBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3193,8 +3229,12 @@ int count_nBDBs (int nBDBs, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 				(dangleFromBridge == 0))
 			{
 				currentlyBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3281,8 +3321,12 @@ float *count_tau_BDBs (float *tau_BDBs, int nBDBs, BOUND_STATUS **beadBoundStatu
 			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
 			{
 				currentlyBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3386,8 +3430,12 @@ int count_nBDBd (int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 			{
 				currentlyBridge = 0;
 				dangleFromBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3402,8 +3450,12 @@ int count_nBDBd (int nBDBd, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polyme
 				(dangleFromBridge == 0))
 			{
 				currentlyBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3490,8 +3542,12 @@ float *count_tau_BDBd (float *tau_BDBd, int nBDBd, BOUND_STATUS **beadBoundStatu
 			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
 			{
 				currentlyBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3588,8 +3644,12 @@ int count_nBDL (int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 			{
 				currentlyBridge = 0;
 				dangleFromBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3604,8 +3664,12 @@ int count_nBDL (int nBDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 				(dangleFromBridge == 0))
 			{
 				currentlyBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3687,8 +3751,12 @@ float *count_tau_BDL (float *tau_BDL, int nBDL, BOUND_STATUS **beadBoundStatus, 
 			if (polymerBondStatus[i][j - 1].isItBridge == 1 && currentlyBridge == 0 && dangleFromBridge == 0)
 			{
 				currentlyBridge = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3781,8 +3849,12 @@ int count_nLDL (int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 			{
 				currentlyLoop = 0;
 				dangleFromLoop = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3797,8 +3869,12 @@ int count_nLDL (int nLDL, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 				(dangleFromLoop == 0))
 			{
 				currentlyLoop = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3881,8 +3957,12 @@ float *count_tau_LDL (float *tau_LDL, int nLDL, BOUND_STATUS **beadBoundStatus, 
 			if (polymerBondStatus[i][j - 1].isItLoop == 1 && currentlyLoop == 0 && dangleFromLoop == 0)
 			{
 				currentlyLoop = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3979,8 +4059,12 @@ int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 			{
 				currentlyLoop = 0;
 				dangleFromLoop = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -3995,8 +4079,12 @@ int count_nLDB (int nLDB, BOUND_STATUS **beadBoundStatus, BOND_STATUS **polymerB
 				(dangleFromLoop == 0))
 			{
 				currentlyLoop = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
@@ -4078,8 +4166,12 @@ float *count_tau_LDB (float *tau_LDB, int nLDB, BOUND_STATUS **beadBoundStatus, 
 			if (polymerBondStatus[i][j - 1].isItLoop == 1 && currentlyLoop == 0 && dangleFromLoop == 0)
 			{
 				currentlyLoop = 1;
-				particleID1 = polymerBondStatus[i][j - 1].id1;
-				particleID2 = polymerBondStatus[i][j - 1].id2;
+
+				if (polymerBondStatus[i][j].id1 != 0 && polymerBondStatus[i][j].id2 != 0)
+				{
+					particleID1 = polymerBondStatus[i][j - 1].id1;
+					particleID2 = polymerBondStatus[i][j - 1].id2;
+				}
 
 				if (debugg == 1)
 				{
